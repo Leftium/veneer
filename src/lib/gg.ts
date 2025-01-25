@@ -89,9 +89,10 @@ export function gg(...args: [...unknown[]]) {
 		return args[0]
 	}
 
-	const stack = getStack()
+	// Ignore first two stack frames, which are always calls to getstack() and gg().
+	const stack = getStack().splice(2)
 
-	const caller = getStack()[2].toString() || ''
+	const caller = stack[0].toString() || ''
 
 	const callerClean = caller.replace(timestampColumnNumberRegex, '$2') // Strip timestamp and/or column number.
 	const callerSwapped = callerClean.includes('@')
