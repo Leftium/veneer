@@ -84,6 +84,8 @@ const callSiteCommonPathPrefix =
 
 const ggLog = debugFactory('gg')
 
+const callerToLogger = new Map()
+
 export function gg(...args: [...unknown[]]) {
 	if (!GG_ENABLED) {
 		return args[0]
@@ -102,7 +104,8 @@ export function gg(...args: [...unknown[]]) {
 
 	// console.table({ caller, callerClean, callerSwapped, caller })
 
-	const ggLogCaller = ggLog.extend(caller + ':')
+	const ggLogCaller =
+		callerToLogger.get(caller) || callerToLogger.set(caller, ggLog.extend(caller)).get(caller)
 	if (args.length === 0) {
 		ggLogCaller(callSite)
 		return { caller: callSite, stack }

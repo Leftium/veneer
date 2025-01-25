@@ -2,6 +2,7 @@
 	import { gg } from '$lib/gg'
 
 	gg('Hello from script tag.')
+	gg()
 </script>
 
 <h1>Welcome to SvelteKit</h1>
