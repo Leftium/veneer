@@ -21,6 +21,7 @@
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
 		"@types/callsite": "^1.0.34",
 		"@types/debug": "^4.1.12",
+		"@types/node": "^22.10.10",
 		"@yohns/picocss": "^2.2.8",
 		"debug": "^4.4.0",
 		"dotenv": "^16.4.7",
