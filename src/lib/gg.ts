@@ -9,7 +9,10 @@ const ggConfig = {
 	enabled: true,
 	showPrefixTest: false,
 	showStatusAndTroubleShootingMessageOnLoad: true,
-	sourceRootMatcher: /.*?\/src|chunks\//i,
+	sourceRootMatcher: /.*?(\/(?<name>src|chunks)\/)/i,
+	openInEditorUrl: function (fileName: string) {
+		return `http://localhost:5173/__open-in-editor?file=${encodeURIComponent(fileName)}`
+	},
 }
 
 const ggLog = debugFactory('gg')
@@ -50,20 +53,19 @@ export function gg(...args: [...unknown[]]) {
 	const stack = StackTrace.getSync().splice(1)
 
 	const stackframe = stack[0]
-	const fileName = stackframe.fileName
-		?.replace(ggConfig.sourceRootMatcher, '')
-		.replace(timestampRegex, '')
+	const fileNameTimeStampStripped = stackframe.fileName?.replace(timestampRegex, '') || ''
+	const fileNameWithRoot = fileNameTimeStampStripped.replace(ggConfig.sourceRootMatcher, '$<name>/')
+	const fileNameShort = fileNameWithRoot.replace(ggConfig.sourceRootMatcher, '')
 
-	const caller = `${fileName}@${stackframe.functionName}`
-
+	const caller = `${fileNameShort}@${stackframe.functionName}`
 	const ggLogCaller =
 		callerToLogger.get(caller) || callerToLogger.set(caller, ggLog.extend(caller)).get(caller)
+
 	if (args.length === 0) {
-		ggLogCaller(stackframe.fileName)
+		ggLogCaller(ggConfig.openInEditorUrl(fileNameWithRoot))
 		return stack
 	}
 
 	ggLogCaller(...(args as [formatter: unknown, ...args: unknown[]]))
-
 	return args[0]
 }
