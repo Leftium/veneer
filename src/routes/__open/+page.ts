@@ -4,5 +4,5 @@ export const load = async ({ fetch, url }) => {
 	console.log(`Fetching: ${fetchUrl}`)
 	fetch(fetchUrl)
 
-	return { fetchUrl }
+	return {}
 }
