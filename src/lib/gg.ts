@@ -11,7 +11,8 @@ const ggConfig = {
 	showStatusAndTroubleShootingMessageOnLoad: true,
 	sourceRootMatcher: /.*?(\/(?<name>src|chunks)\/)/i,
 	openInEditorUrl: function (fileName: string) {
-		return `http://localhost:5173/__open-in-editor?file=${encodeURIComponent(fileName)}`
+		return `http://localhost:5173/__open?file=${encodeURIComponent(fileName)}`
+		// return `http://localhost:5173/__open-in-editor?file=${encodeURIComponent(fileName)}`
 	},
 }
 
@@ -69,3 +70,6 @@ export function gg(...args: [...unknown[]]) {
 	ggLogCaller(...(args as [formatter: unknown, ...args: unknown[]]))
 	return args[0]
 }
+
+gg.disable = debugFactory.disable
+gg.enable = debugFactory.enable

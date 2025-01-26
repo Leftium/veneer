@@ -1,8 +1,16 @@
 <script lang="ts">
 	import { gg } from '$lib/gg'
 
-	gg('Hello from script tag.')
+	const namespaces = gg.disable()
+
+	// Force gg output:
+	gg.enable('gg:*')
+
+	gg('Hello from +page script tag. (Forced output, even if localStorage.debug/DEBUG not set.)')
 	gg()
+
+	// Restore namespaces
+	gg.enable(namespaces)
 </script>
 
 <h1>Welcome to SvelteKit</h1>
