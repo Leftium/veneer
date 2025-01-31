@@ -2,17 +2,20 @@
 	import { onMount } from 'svelte'
 	import type { HTMLTextareaAttributes, FormEventHandler } from 'svelte/elements'
 
+	type Props = {
+		textareaElement?: HTMLTextAreaElement
+		fullscreen?: boolean
+		value?: string
+	}
+
 	let {
-		textareaElement = $bindable(),
-		value = $bindable(),
+		textareaElement = $bindable(undefined),
+		value = $bindable(''),
 		oninput,
-		fullscreen = $bindable(),
+		fullscreen = $bindable(false),
 		children,
 		...props
-	}: HTMLTextareaAttributes & {
-		textareaElement?: HTMLTextAreaElement
-		fullscreen: boolean
-	} = $props()
+	}: HTMLTextareaAttributes & Props = $props()
 
 	let growWrapElement: HTMLElement | undefined = $state()
 
