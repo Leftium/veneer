@@ -1,4 +1,5 @@
 <script lang="ts">
+	import AutogrowingTextarea from '$lib/components/AutogrowingTextarea.svelte'
 	import { gg } from '$lib/gg'
 
 	const namespaces = gg.disable()
@@ -13,5 +14,9 @@
 	gg.enable(namespaces)
 </script>
 
+<AutogrowingTextarea />
+
 <h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<p>
+	Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation
+</p>
