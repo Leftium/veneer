@@ -6,25 +6,22 @@
 	}
 </script>
 
-<main class="container">
+<full-height>
 	<article>
-		<header>This page was only opened in order to launch VS Code.</header>
+		<header>This page just launches an editor (like VS Code).</header>
 		<ul>
-			<li>It is safe to close this window.</li>
-			<li>This page should automatically close. (Requires JS.)</li>
+			<li>You may safely close this window.</li>
+			<li>This page automatically closes (if JavaScript enabled).</li>
 		</ul>
 	</article>
-</main>
+</full-height>
 
 <style>
-	:global(html),
-	:global(body),
-	main {
-		height: 100%;
-	}
+	full-height {
+		display: grid;
+		height: 100svh;
 
-	main {
 		align-content: center;
-		max-width: fit-content;
+		justify-content: center;
 	}
 </style>
