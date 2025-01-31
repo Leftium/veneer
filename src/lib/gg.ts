@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv'
 
 import debugFactory from 'debug'
-import StackTrace from 'stacktrace-js'
+import ErrorStackParser from 'error-stack-parser'
 
 import { browser } from '$app/environment'
 
@@ -51,7 +51,7 @@ export function gg(...args: [...unknown[]]) {
 	}
 
 	// Ignore first stack frame, which is always call to gg().
-	const stack = StackTrace.getSync().splice(1)
+	const stack = ErrorStackParser.parse(new Error()).splice(1)
 
 	const stackframe = stack[0]
 	const fileNameTimeStampStripped = stackframe.fileName?.replace(timestampRegex, '') || ''
