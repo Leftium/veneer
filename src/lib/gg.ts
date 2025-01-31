@@ -11,8 +11,7 @@ const ggConfig = {
 	showStatusAndTroubleShootingMessageOnLoad: true,
 	sourceRootMatcher: /.*?(\/(?<name>src|chunks)\/)/i,
 	openInEditorUrl: function (fileName: string) {
-		return `http://localhost:5173/__open?file=${encodeURIComponent(fileName)}`
-		// return `http://localhost:5173/__open-in-editor?file=${encodeURIComponent(fileName)}`
+		return `http://localhost:5173/__open-in-editor?file=${encodeURIComponent(fileName)}`
 	},
 }
 
@@ -34,10 +33,19 @@ if (ggConfig.showStatusAndTroubleShootingMessageOnLoad) {
 	if (browser) {
 		ggMessage += `\n${ggLogTest.enabled ? '✅' : '❌'} localStorage.debug: ${localStorage?.debug}${suggestedValue}`
 		ggMessage += `\nℹ️ "Verbose" log level must be enabled (in the devtools JS console).`
+
+		const { status } = await fetch('/__open-in-editor?file=+')
+
+		if (status === 222) {
+			ggMessage += `\n✅ open-in-editor plugin detected! (${status})`
+		} else {
+			ggMessage += `\n⚠️ open-in-editor plugin not detected. (${status})`
+		}
 	} else {
 		dotenv.config() // Load the environment variables
 		ggMessage += `\n${ggLogTest.enabled ? '✅' : '❌'} DEBUG env variable: ${process?.env?.DEBUG}${suggestedValue}`
 	}
+
 	console.log(ggMessage)
 }
 
