@@ -17,39 +17,38 @@ const ggConfig = {
 const ggLog = debugFactory('gg')
 
 // Log some gg info to the JS console/terminal:
-;(async () => {
-	if (ggConfig.showStatusAndTroubleShootingMessageOnLoad) {
-		const ggLogTest = ggLog.extend('TEST')
 
-		let ggMessage =
-			`Loaded gg module. To enable logger/debugger output:\n` +
-			`${ggConfig.enabled ? '✅' : '❌'} ggConfig.enabled: ${ggConfig.enabled}`
+if (ggConfig.showStatusAndTroubleShootingMessageOnLoad) {
+	const ggLogTest = ggLog.extend('TEST')
 
-		if (!ggConfig.enabled) {
-			ggMessage += ' (Update value in gg.ts file.)'
-		}
+	let ggMessage =
+		`Loaded gg module. To enable logger/debugger output:\n` +
+		`${ggConfig.enabled ? '✅' : '❌'} ggConfig.enabled: ${ggConfig.enabled}`
 
-		const suggestedValue = ggLogTest.enabled ? '' : ` (Try setting to 'gg:*')`
-
-		if (browser) {
-			ggMessage += `\n${ggLogTest.enabled ? '✅' : '❌'} localStorage.debug: ${localStorage?.debug}${suggestedValue}`
-			ggMessage += `\nℹ️ "Verbose" log level must be enabled (in the devtools JS console).`
-
-			const { status } = await fetch('/__open-in-editor?file=+')
-
-			if (status === 222) {
-				ggMessage += `\n✅ open-in-editor plugin detected! (${status})`
-			} else {
-				ggMessage += `\n⚠️ open-in-editor plugin not detected. (${status})`
-			}
-		} else {
-			dotenv.config() // Load the environment variables
-			ggMessage += `\n${ggLogTest.enabled ? '✅' : '❌'} DEBUG env variable: ${process?.env?.DEBUG}${suggestedValue}`
-		}
-
-		console.log(ggMessage)
+	if (!ggConfig.enabled) {
+		ggMessage += ' (Update value in gg.ts file.)'
 	}
-})()
+
+	const suggestedValue = ggLogTest.enabled ? '' : ` (Try setting to 'gg:*')`
+
+	if (browser) {
+		ggMessage += `\n${ggLogTest.enabled ? '✅' : '❌'} localStorage.debug: ${localStorage?.debug}${suggestedValue}`
+		ggMessage += `\nℹ️ "Verbose" log level must be enabled (in the devtools JS console).`
+
+		const { status } = await fetch('/__open-in-editor?file=+')
+
+		if (status === 222) {
+			ggMessage += `\n✅ open-in-editor plugin detected! (${status})`
+		} else {
+			ggMessage += `\n⚠️ open-in-editor plugin not detected. (${status})`
+		}
+	} else {
+		dotenv.config() // Load the environment variables
+		ggMessage += `\n${ggLogTest.enabled ? '✅' : '❌'} DEBUG env variable: ${process?.env?.DEBUG}${suggestedValue}`
+	}
+
+	console.log(ggMessage)
+}
 
 const callerToLogger = new Map()
 
