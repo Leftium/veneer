@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit'
 
 import { GCP_API_KEY } from '$env/static/private'
+import { gg } from '$lib/gg'
 
 function makeFetchSheetUrl(id: string) {
 	const u = new URL(`https://sheets.googleapis.com/v4/spreadsheets/${id}`)
@@ -103,6 +104,14 @@ type GoogleSheetsApiResult = {
 	}[]
 }
 
+type GoogleSheetData = {
+	title: string
+	sheetTitle: string
+	values: (string | (string | Date)[])[][]
+	hiddenColumns: number[]
+	hiddenRows: number[]
+}
+
 function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 	const data = json?.sheets?.[0]?.data[0]
 	if (!data) {
@@ -127,7 +136,24 @@ function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 	return { title, sheetTitle, values, hiddenColumns, hiddenRows }
 }
 
+function stripHidden(json: GoogleSheetData, unhideCols = false, unhideRows = false) {
+	const { hiddenColumns, hiddenRows } = json
+
+	const values = json.values
+		.filter((_, rowIndex) => unhideRows || !hiddenRows.includes(rowIndex))
+		.map((row) => row.filter((_, cellIndex) => unhideCols || !hiddenColumns.includes(cellIndex)))
+
+	return {
+		...json,
+		values,
+		hiddenColumns: unhideCols ? hiddenColumns : [],
+		hiddenRows: unhideRows ? hiddenRows : [],
+	}
+}
+
 export const GET = async ({ url, fetch }) => {
+	const unhideRows = url.searchParams.has('allrows')
+	const unhideCols = url.searchParams.has('allcols')
 	const urls = url.searchParams.getAll('u')
 
 	const data = await Promise.all(
@@ -158,6 +184,7 @@ export const GET = async ({ url, fetch }) => {
 			if (type === 'sheet') {
 				json = JSON.parse(text)
 				json = adjustGoogleSheetData(json)
+				json = stripHidden(json, unhideCols, unhideRows)
 			}
 
 			return {
