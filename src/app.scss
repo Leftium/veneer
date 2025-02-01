@@ -1,3 +1,9 @@
 @use '@yohns/picocss/scss/pico' with (
 	$theme-color: 'blue'
 );
+
+@use 'open-props-scss' as *;
+
+main.container {
+	padding: $size-2;
+}
