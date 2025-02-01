@@ -6,10 +6,8 @@
 	import * as linkify from 'linkifyjs'
 
 	let value = $state(undent`
-        신청
-        https://forms.gle/egp2YUahB5kn7ysNA
-        확인
-        https://docs.google.com/spreadsheets/d/1Gqv0KjhVGWZrAr-f7TrORxDgn8ODE0N97QPNIHkERcE
+        신청 : https://forms.gle/7nGG9LPxJerC6SGN9
+        확인 : https://docs.google.com/spreadsheets/d/1vfSQYmHLU7Y2nSanbCAOIIgWxBsC_j4__LCpEY0SSIM
     `)
 
 	const links = $derived(linkify.find(value))
