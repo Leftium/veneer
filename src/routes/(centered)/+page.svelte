@@ -2,6 +2,7 @@
 	import AutogrowingTextarea from '$lib/components/AutogrowingTextarea.svelte'
 	import { gg } from '$lib/gg'
 	import { undent } from '$lib/undent'
+	import { stringify } from '$lib/util'
 
 	import * as linkify from 'linkifyjs'
 
@@ -12,14 +13,28 @@
 
 	const links = $derived(linkify.find(value))
 
-	gg('Hello from +page script tag!)')
-	gg()
+	let jsoned = $state({})
+
+	async function onclick() {
+		const searchParams = new URLSearchParams()
+
+		for (const link of links) {
+			searchParams.append('u', link.href)
+		}
+
+		const fetched = await fetch(`api/fetch-text?${searchParams}`)
+		jsoned = await fetched.json()
+	}
 </script>
 
 <AutogrowingTextarea bind:value />
 
-{#each links as link}
+<pre>{stringify(links)}</pre>
+
+{#each links as link, index}
 	<div><a href={link.href}>{link.href}</a></div>
 {/each}
 
-<pre>{JSON.stringify(links, null, 4)}</pre>
+<button {onclick}>Fetch Text</button>
+
+<pre>{stringify(jsoned)}</pre>
