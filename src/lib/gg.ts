@@ -7,7 +7,6 @@ import { browser } from '$app/environment'
 
 const ggConfig = {
 	enabled: true,
-	showPrefixTest: false,
 	showStatusAndTroubleShootingMessageOnLoad: true,
 	sourceRootMatcher: /.*?(\/(?<name>src|chunks)\/)/i,
 	openInEditorUrl: function (fileName: string) {
