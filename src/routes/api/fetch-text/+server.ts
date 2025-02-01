@@ -147,6 +147,13 @@ export const GET = async ({ url, fetch }) => {
 
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			let json: any = {}
+
+			if (type === 'form') {
+				const textSplit = text.split('FB_PUBLIC_LOAD_DATA_ = ')[1]
+				const formData = textSplit.substring(0, textSplit.lastIndexOf(';'))
+				json = JSON.parse(formData)
+			}
+
 			if (type === 'sheet') {
 				json = JSON.parse(text)
 				json = adjustGoogleSheetData(json)
