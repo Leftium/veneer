@@ -95,7 +95,11 @@ type GoogleSheetsApiResult = {
 					effectiveValue: {
 						numberValue?: number
 					}
-					userEnteredFormat?: unknown
+					userEnteredFormat?: {
+						numberFormat: {
+							type: string
+						}
+					}
 				}[]
 			}[]
 			rowMetadata: { hiddenByUser?: boolean }[]
@@ -126,7 +130,9 @@ function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 
 	const values = data.rowData.map((rowDatum) => {
 		return rowDatum.values.map((value) => {
-			const excelSerialDate = value.userEnteredFormat ? value?.effectiveValue?.numberValue : null
+			const excelSerialDate = value?.userEnteredFormat?.numberFormat?.type.includes('DATE')
+				? value?.effectiveValue?.numberValue
+				: null
 			return excelSerialDate
 				? [value.formattedValue, excelDateToJsDate(excelSerialDate)]
 				: value.formattedValue
