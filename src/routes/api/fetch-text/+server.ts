@@ -21,11 +21,11 @@ function makeFetchSheetUrl(id: string) {
 	return u.href
 }
 
-function infoFromGoogleUrl(url: string) {
+function infoFromGoogleUrl(url: string, oldId = '') {
 	const googleUrlRegex = {
 		sheet:
 			/^https:\/\/(docs.google.com|sheets.googleapis.com\/v4)\/spreadsheets\/(d\/(e\/)?)?(?<id>[^/]*)/,
-		form: /^https:\/\/(docs.google.com\/forms\/d\/e\/)(?<id>[^/]*)/,
+		form: /^https:\/\/((forms.gle\/)|(docs.google.com\/forms\/d\/e\/))(?<id>[^/]*)/,
 	}
 
 	let type = 'unknown'
@@ -41,6 +41,9 @@ function infoFromGoogleUrl(url: string) {
 		if (id.length === 56) {
 			urlCanonical = `https://docs.google.com/forms/d/e/${id}/viewform`
 		}
+
+		// Prefer short id:
+		id = oldId || id
 	}
 
 	matches = url.match(googleUrlRegex.sheet)
@@ -169,10 +172,10 @@ export const GET = async ({ url, fetch }) => {
 			// eslint-disable-next-line prefer-const
 			let { type, id, urlCanonical, urlFetch } = infoFromGoogleUrl(url)
 
-			if (type === 'unknown') {
+			if (!urlCanonical) {
 				const fetched = await fetch(urlFetch, { method: 'HEAD' })
 				urlFetched = fetched.url
-				;({ type, id, urlCanonical } = infoFromGoogleUrl(urlFetched))
+				;({ type, id, urlCanonical } = infoFromGoogleUrl(urlFetched, id))
 			}
 
 			const fetched = await fetch(urlFetch)
