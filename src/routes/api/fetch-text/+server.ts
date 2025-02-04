@@ -133,8 +133,10 @@ export const GET = async ({ url, fetch }) => {
 
 			if (type === 'form') {
 				const textSplit = text.split('FB_PUBLIC_LOAD_DATA_ = ')[1]
-				const formData = textSplit.substring(0, textSplit.lastIndexOf(';'))
-				json = JSON.parse(formData)
+				if (textSplit) {
+					const formData = textSplit.substring(0, textSplit.lastIndexOf(';'))
+					json = JSON.parse(formData)
+				}
 			}
 
 			if (type === 'sheet') {
