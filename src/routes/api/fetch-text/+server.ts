@@ -1,64 +1,7 @@
 import { json } from '@sveltejs/kit'
 
+import { infoFromGoogleUrl } from '$lib/common'
 import { GCP_API_KEY } from '$env/static/private'
-import { gg } from '$lib/gg'
-
-function makeFetchSheetUrl(id: string) {
-	const u = new URL(`https://sheets.googleapis.com/v4/spreadsheets/${id}`)
-
-	u.searchParams.set('ranges', 'A:ZZZ')
-	u.searchParams.set(
-		'fields',
-		[
-			'properties(title)',
-			'sheets.properties(title)',
-			'sheets.data(columnMetadata.hiddenByUser,rowMetadata.hiddenByUser)',
-			'sheets.data.rowData.values(formattedValue,effectiveValue.numberValue,userEnteredFormat.numberFormat)',
-		].join(','),
-	)
-	u.searchParams.set('key', GCP_API_KEY)
-
-	return u.href
-}
-
-function infoFromGoogleUrl(url: string, oldId = '') {
-	const googleUrlRegex = {
-		sheet:
-			/^https:\/\/(docs.google.com|sheets.googleapis.com\/v4)\/spreadsheets\/(d\/(e\/)?)?(?<id>[^/]*)/,
-		form: /^https:\/\/((forms.gle\/)|(docs.google.com\/forms\/d\/e\/))(?<id>[^/]*)/,
-	}
-
-	let type = 'unknown'
-	let id = ''
-	let urlCanonical = ''
-	let urlFetch = url
-
-	let matches = url.match(googleUrlRegex.form)
-	if (matches) {
-		type = 'form'
-		id = matches.groups?.id || ''
-
-		if (id.length === 56) {
-			urlCanonical = `https://docs.google.com/forms/d/e/${id}/viewform`
-		}
-
-		// Prefer short id:
-		id = oldId || id
-	}
-
-	matches = url.match(googleUrlRegex.sheet)
-	if (matches) {
-		type = 'sheet'
-		id = matches.groups?.id || ''
-		urlFetch = makeFetchSheetUrl(id)
-
-		if (id.length === 44) {
-			urlCanonical = `https://docs.google.com/spreadsheets/d/${id}`
-		}
-	}
-
-	return { type, id, urlCanonical, urlFetch }
-}
 
 // https://stackoverflow.com/a/16233621/117030
 function excelDateToJsDate(serial: number) {
@@ -172,13 +115,17 @@ export const GET = async ({ url, fetch }) => {
 			// eslint-disable-next-line prefer-const
 			let { type, id, urlCanonical, urlFetch } = infoFromGoogleUrl(url)
 
+			const urlFetchWithKey = urlFetch.replace('GCP_API_KEY', GCP_API_KEY)
+
 			if (!urlCanonical) {
-				const fetched = await fetch(urlFetch, { method: 'HEAD' })
+				const fetched = await fetch(urlFetchWithKey, {
+					method: 'HEAD',
+				})
 				urlFetched = fetched.url
 				;({ type, id, urlCanonical } = infoFromGoogleUrl(urlFetched, id))
 			}
 
-			const fetched = await fetch(urlFetch)
+			const fetched = await fetch(urlFetchWithKey)
 			const text = await fetched.text()
 
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
