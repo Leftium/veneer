@@ -14,6 +14,34 @@
 
 	const links = $derived(linkify.find(value).map((link) => infoFromGoogleUrl(link.href)))
 
+	type Links = typeof links
+	function generateVeneerUrl(links: Links) {
+		let idFirstForm = ''
+		let idFirstSheet = ''
+
+		for (const { type, id, urlFetch } of links) {
+			if (!idFirstForm && type === 'form') {
+				idFirstForm = id
+			}
+
+			if (!idFirstSheet && type === 'sheet') {
+				idFirstSheet = id
+			}
+
+			if (idFirstForm && idFirstSheet) {
+				return `/v/${idFirstForm}/${idFirstSheet}`
+			}
+		}
+
+		if (idFirstForm || idFirstSheet) {
+			return `/v/${idFirstForm}${idFirstSheet}`
+		}
+
+		return null
+	}
+
+	const urlVeneer = $derived(generateVeneerUrl(links))
+
 	let jsoned = $state({})
 
 	async function onclick() {
@@ -39,6 +67,10 @@
 		<dd><b>id:</b> {link.id}</dd>
 	{/each}
 </dl>
+
+{#if urlVeneer}
+	<div><a href={urlVeneer}>{urlVeneer}</a></div>
+{/if}
 
 <button {onclick}>Fetch Text</button>
 
