@@ -30,7 +30,7 @@ export function infoFromGoogleUrl(url: string, oldId = '') {
 
 	let matches = url.match(googleUrlRegex.form)
 	if (matches) {
-		type = 'form'
+		type = url.match('closedform') ? 'closedform' : 'form'
 		id = matches.groups?.id || ''
 
 		if (id.length === 56) {
@@ -49,6 +49,8 @@ export function infoFromGoogleUrl(url: string, oldId = '') {
 
 		if (id.length === 44) {
 			urlCanonical = `https://docs.google.com/spreadsheets/d/${id}`
+		} else {
+			type = 'publishedsheet'
 		}
 	}
 
