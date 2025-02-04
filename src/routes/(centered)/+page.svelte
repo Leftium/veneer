@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { infoFromGoogleUrl } from '$lib/common'
 	import AutogrowingTextarea from '$lib/components/AutogrowingTextarea.svelte'
-	import { gg } from '$lib/gg'
+
 	import { undent } from '$lib/undent'
 	import { stringify } from '$lib/util'
 
@@ -11,7 +12,7 @@
         확인 : https://docs.google.com/spreadsheets/d/1vfSQYmHLU7Y2nSanbCAOIIgWxBsC_j4__LCpEY0SSIM
     `)
 
-	const links = $derived(linkify.find(value))
+	const links = $derived(linkify.find(value).map((link) => infoFromGoogleUrl(link.href)))
 
 	let jsoned = $state({})
 
@@ -19,7 +20,7 @@
 		const searchParams = new URLSearchParams()
 
 		for (const link of links) {
-			searchParams.append('u', link.href)
+			searchParams.append('u', link.urlCanonical || link.urlFetch)
 		}
 
 		const fetched = await fetch(`api/fetch-text?${searchParams}`)
@@ -31,9 +32,13 @@
 
 <pre>{stringify(links)}</pre>
 
-{#each links as link, index}
-	<div><a href={link.href}>{link.href}</a></div>
-{/each}
+<dl>
+	{#each links as link}
+		<dt><a href={link.urlFetch}>{link.urlCanonical || link.urlFetch}</a></dt>
+		<dd><b>type:</b> {link.type}</dd>
+		<dd><b>id:</b> {link.id}</dd>
+	{/each}
+</dl>
 
 <button {onclick}>Fetch Text</button>
 
