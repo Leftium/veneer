@@ -104,7 +104,7 @@
 
 			flex-grow: 1;
 
-			white-space: pre;
+			white-space: pre-wrap;
 			font-family: monospace;
 
 			border: none;
