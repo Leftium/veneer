@@ -1,160 +1,54 @@
 import { json } from '@sveltejs/kit'
+import * as linkify from 'linkifyjs'
 
-import { infoFromGoogleUrl } from '$lib/common'
-import { GCP_API_KEY } from '$env/static/private'
-
-// https://stackoverflow.com/a/16233621/117030
-function excelDateToJsDate(serial: number) {
-	const utc_days = Math.floor(serial - 25569)
-	const utc_value = utc_days * 86400
-	const date_info = new Date(utc_value * 1000)
-
-	const fractional_day = serial - Math.floor(serial) + 0.0000001
-
-	let total_seconds = Math.floor(86400 * fractional_day)
-
-	const seconds = total_seconds % 60
-
-	total_seconds -= seconds
-
-	const hours = Math.floor(total_seconds / (60 * 60))
-	const minutes = Math.floor(total_seconds / 60) % 60
-
-	return new Date(
-		date_info.getFullYear(),
-		date_info.getMonth(),
-		date_info.getDate(),
-		hours,
-		minutes,
-		seconds,
-	)
-}
-
-type GoogleSheetsApiResult = {
-	properties: { title: string }
-	sheets: {
-		properties: { title: string }
-		data: {
-			rowData: {
-				values: {
-					formattedValue: string
-					effectiveValue: {
-						numberValue?: number
-					}
-					userEnteredFormat?: {
-						numberFormat: {
-							type: string
-						}
-					}
-				}[]
-			}[]
-			rowMetadata: { hiddenByUser?: boolean }[]
-			columnMetadata: { hiddenByUser?: boolean }[]
-		}[]
-	}[]
-}
-
-type GoogleSheetData = {
-	title: string
-	sheetTitle: string
-	values: (string | (string | Date)[])[][]
-	hiddenColumns: number[]
-	hiddenRows: number[]
-}
-
-function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
-	const data = json?.sheets?.[0]?.data[0]
-	if (!data) {
-		return json
-	}
-
-	const title = json.properties.title
-	const sheetTitle = json.sheets[0].properties.title
-
-	const hiddenColumns = data.columnMetadata.flatMap((cm, i) => (cm.hiddenByUser ? i : []))
-	const hiddenRows = data.rowMetadata.flatMap((rm, i) => (rm.hiddenByUser ? i : []))
-
-	const values = data.rowData.map((rowDatum) => {
-		return rowDatum.values.map((value) => {
-			const excelSerialDate = value?.userEnteredFormat?.numberFormat?.type.includes('DATE')
-				? value?.effectiveValue?.numberValue
-				: null
-			return excelSerialDate
-				? [value.formattedValue, excelDateToJsDate(excelSerialDate)]
-				: value.formattedValue
-		})
-	})
-
-	return { title, sheetTitle, values, hiddenColumns, hiddenRows }
-}
-
-function stripHidden(json: GoogleSheetData, unhideCols = false, unhideRows = false) {
-	const { hiddenColumns, hiddenRows } = json
-
-	const values = json.values
-		.filter((_, rowIndex) => unhideRows || !hiddenRows.includes(rowIndex))
-		.map((row) => row.filter((_, cellIndex) => unhideCols || !hiddenColumns.includes(cellIndex)))
-
-	return {
-		...json,
-		values,
-		hiddenColumns: unhideCols ? hiddenColumns : [],
-		hiddenRows: unhideRows ? hiddenRows : [],
-	}
-}
+import { DocumentId } from '$lib/common'
+import { gg } from '$lib/gg.js'
 
 export const GET = async ({ url, fetch }) => {
-	const unhideRows = url.searchParams.has('allrows')
-	const unhideCols = url.searchParams.has('allcols')
 	const urls = url.searchParams.getAll('u')
 
 	const data = await Promise.all(
 		urls.map(async (url) => {
-			let urlFetched = ''
-
 			// eslint-disable-next-line prefer-const
-			let { type, id, urlCanonical, urlFetch } = infoFromGoogleUrl(url)
+			let { id, idForm, idSheet } = new DocumentId(url)
 
-			const urlFetchWithKey = urlFetch.replace('GCP_API_KEY', GCP_API_KEY)
-
-			if (!urlCanonical) {
-				const fetched = await fetch(urlFetchWithKey, {
-					method: 'HEAD',
-				})
-				urlFetched = fetched.url
-				;({ type, id, urlCanonical } = infoFromGoogleUrl(urlFetched, id))
-			}
-
-			const fetched = await fetch(urlFetchWithKey)
+			const fetched = await fetch(url)
+			const fetchedUrl = fetched.url
 			const text = await fetched.text()
 
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			let json: any = {}
+			if (!idForm && !idSheet) {
+				const documentIdFetched = new DocumentId(fetchedUrl)
+				idForm = documentIdFetched.idForm
+				idSheet = documentIdFetched.idSheet
+			}
 
-			if (type === 'form') {
-				const textSplit = text.split('FB_PUBLIC_LOAD_DATA_ = ')[1]
-				if (textSplit) {
-					const formData = textSplit.substring(0, textSplit.lastIndexOf(';'))
-					json = JSON.parse(formData)
+			if (idForm && !idSheet) {
+				// Search for a link to the sheets in the form
+				const links = linkify.find(text)
+				for (const { href } of links) {
+					const documentIdLink = new DocumentId(href)
+					if (documentIdLink.idSheet) {
+						idSheet = documentIdLink.idSheet
+						break
+					} else if (documentIdLink.id && documentIdLink.url !== url) {
+						gg(`fetch: ${documentIdLink.url}`)
+						const fetched = await fetch(documentIdLink.url)
+						const fetchedUrl = fetched.url
+						const documentIdFetched = new DocumentId(fetchedUrl)
+						if (documentIdFetched.idSheet) {
+							idSheet = documentIdFetched.idSheet
+							break
+						}
+					}
 				}
 			}
 
-			if (type === 'sheet') {
-				json = JSON.parse(text)
-				json = adjustGoogleSheetData(json)
-				json = stripHidden(json, unhideCols, unhideRows)
-			}
-
 			return {
-				type,
-				id,
-				idLength: id.length,
 				url,
-				urlFetch,
-				urlFetched,
-				urlCanonical,
+				id,
+				idForm,
+				idSheet,
 				text,
-				json,
 			}
 		}),
 	)
