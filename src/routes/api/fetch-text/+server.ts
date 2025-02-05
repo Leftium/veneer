@@ -159,5 +159,5 @@ export const GET = async ({ url, fetch }) => {
 		}),
 	)
 
-	return json({ urls, data })
+	return json(data)
 }

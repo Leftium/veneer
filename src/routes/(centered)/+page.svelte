@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { infoFromGoogleUrl } from '$lib/common'
 	import AutogrowingTextarea from '$lib/components/AutogrowingTextarea.svelte'
+	import { gg } from '$lib/gg'
 
 	import { undent } from '$lib/undent'
 	import { stringify } from '$lib/util'
@@ -8,18 +9,22 @@
 	import * as linkify from 'linkifyjs'
 
 	let value = $state(undent`
+        ✍신청: https://shorturl.at/2q3PU
+        📋확인: https://shorturl.at/lTT5D
+
         신청 : https://forms.gle/7nGG9LPxJerC6SGN9
         확인 : https://docs.google.com/spreadsheets/d/1vfSQYmHLU7Y2nSanbCAOIIgWxBsC_j4__LCpEY0SSIM
     `)
 
-	const links = $derived(linkify.find(value).map((link) => infoFromGoogleUrl(link.href)))
+	// svelte-ignore state_referenced_locally
+	let links = $state(linkify.find(value).map((link) => infoFromGoogleUrl(link.href)))
 
 	type Links = typeof links
 	function generateVeneerUrl(links: Links) {
 		let idFirstForm = ''
 		let idFirstSheet = ''
 
-		for (const { type, id, urlFetch } of links) {
+		for (const { type, id } of links) {
 			if (!idFirstForm && type === 'form') {
 				idFirstForm = id
 			}
@@ -42,8 +47,6 @@
 
 	const urlVeneer = $derived(generateVeneerUrl(links))
 
-	let jsoned = $state({})
-
 	async function onclick() {
 		const searchParams = new URLSearchParams()
 
@@ -52,13 +55,16 @@
 		}
 
 		const fetched = await fetch(`api/fetch-text?${searchParams}`)
-		jsoned = await fetched.json()
+		links = await fetched.json()
+	}
+
+	function oninput() {
+		const newLinks = linkify.find(value).map((link) => infoFromGoogleUrl(link.href))
+		links = newLinks
 	}
 </script>
 
-<AutogrowingTextarea bind:value />
-
-<pre>{stringify(links)}</pre>
+<AutogrowingTextarea bind:value {oninput} />
 
 <dl>
 	{#each links as link}
@@ -74,4 +80,4 @@
 
 <button {onclick}>Fetch Text</button>
 
-<pre>{stringify(jsoned)}</pre>
+<pre>{stringify(links)}</pre>
