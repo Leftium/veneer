@@ -1,57 +1,33 @@
 import { json } from '@sveltejs/kit'
-import * as linkify from 'linkifyjs'
 
-import { DocumentId } from '$lib/common'
+import { DocumentId, type DocumentText } from '$lib/common'
 import { gg } from '$lib/gg.js'
+import { stringify } from '$lib/util.js'
 
 export const GET = async ({ url, fetch }) => {
-	const urls = url.searchParams.getAll('u')
+	const targetUrl = url.searchParams.get('u') || ''
 
-	const data = await Promise.all(
-		urls.map(async (url) => {
-			// eslint-disable-next-line prefer-const
-			let { id, idForm, idSheet } = new DocumentId(url)
+	const documentText: DocumentText = new DocumentId(targetUrl)
 
-			const fetched = await fetch(url)
-			const fetchedUrl = fetched.url
-			const text = await fetched.text()
+	try {
+		const fetched = await fetch(documentText.url)
+		documentText.status = fetched.status
 
-			if (!idForm && !idSheet) {
-				const documentIdFetched = new DocumentId(fetchedUrl)
-				idForm = documentIdFetched.idForm
-				idSheet = documentIdFetched.idSheet
-			}
+		if (fetched.ok) {
+			documentText.text = await fetched.text()
 
-			if (idForm && !idSheet) {
-				// Search for a link to the sheets in the form
-				const links = linkify.find(text)
-				for (const { href } of links) {
-					const documentIdLink = new DocumentId(href)
-					if (documentIdLink.idSheet) {
-						idSheet = documentIdLink.idSheet
-						break
-					} else if (documentIdLink.id && documentIdLink.url !== url) {
-						gg(`fetch: ${documentIdLink.url}`)
-						const fetched = await fetch(documentIdLink.url)
-						const fetchedUrl = fetched.url
-						const documentIdFetched = new DocumentId(fetchedUrl)
-						if (documentIdFetched.idSheet) {
-							idSheet = documentIdFetched.idSheet
-							break
-						}
-					}
-				}
-			}
+			const documentIdScan = new DocumentId(fetched.url)
+			documentText.idForm = documentIdScan.idForm
+			documentText.idSheet = documentIdScan.idSheet
+		} else {
+			documentText.status = fetched.status
+			documentText.text = fetched.statusText
+		}
+	} catch (error) {
+		gg({ error })
+		documentText.status = 555
+		documentText.text = stringify(error)
+	}
 
-			return {
-				url,
-				id,
-				idForm,
-				idSheet,
-				text,
-			}
-		}),
-	)
-
-	return json(data)
+	return json(documentText)
 }

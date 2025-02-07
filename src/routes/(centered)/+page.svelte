@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { DocumentId } from '$lib/common'
+	import { DocumentId, type DocumentScan } from '$lib/common'
 	import AutogrowingTextarea from '$lib/components/AutogrowingTextarea.svelte'
 	import { gg } from '$lib/gg'
 
@@ -7,6 +7,7 @@
 	import { stringify } from '$lib/util'
 
 	import * as linkify from 'linkifyjs'
+	import { SvelteMap } from 'svelte/reactivity'
 
 	let value = $state(undent`
         신청 링크 : https://bit.ly/3MNmqm3
@@ -19,63 +20,52 @@
         확인 : https://docs.google.com/spreadsheets/d/1vfSQYmHLU7Y2nSanbCAOIIgWxBsC_j4__LCpEY0SSIM
     `)
 
-	// svelte-ignore state_referenced_locally
-	let linkDocumentData = $state(linkify.find(value).map((link) => new DocumentId(link.href)))
+	let linksFromTextarea = $derived(linkify.find(value).map((link) => new DocumentId(link.href)))
+
+	let linkDocumentData: SvelteMap<string, DocumentScan> = $state(new SvelteMap())
+
+	let linksFromTextareaEnriched = $derived.by(() => {
+		return linksFromTextarea.map((link) => {
+			const documentScan = linkDocumentData.get(link.id)
+
+			return {
+				...link,
+				...{ ...documentScan },
+			}
+		})
+	})
 
 	type LinkDocumentData = typeof linkDocumentData
 	function generateVeneerUrl(links: LinkDocumentData) {
-		let idFirstForm = ''
-		let idFirstSheet = ''
-
-		for (const { id, idForm, idSheet } of links) {
-			if (!idFirstForm && idForm) {
-				idFirstForm = id
-			}
-
-			if (!idFirstSheet && idSheet) {
-				idFirstSheet = id
-			}
-
-			if (idFirstForm && idFirstSheet) {
-				if (idFirstForm === idFirstSheet) {
-					return `/v/${idFirstForm}`
-				}
-				return `/v/${idFirstForm}/${idFirstSheet}`
-			}
-		}
-
-		if (idFirstForm || idFirstSheet) {
-			return `/v/${idFirstForm}${idFirstSheet}`
-		}
-
 		return null
 	}
 
 	const urlVeneer = $derived(generateVeneerUrl(linkDocumentData))
 
 	async function onclick() {
-		const searchParams = new URLSearchParams()
+		for (const link of linksFromTextarea) {
+			let documentScan: DocumentScan = new DocumentId(link.url)
+			if (documentScan.id && !linkDocumentData.has(documentScan.id)) {
+				documentScan.scan = 'scanning'
+				linkDocumentData.set(documentScan.id, documentScan)
 
-		for (const link of linkDocumentData) {
-			searchParams.append('u', link.url)
+				const fetched = await fetch(`api/fetch-text?u=${link.url}`)
+				documentScan = await fetched.json()
+				documentScan.scan = 'quick scanned'
+				linkDocumentData.set(documentScan.id, documentScan)
+			}
 		}
-
-		const fetched = await fetch(`api/fetch-text?${searchParams}`)
-		linkDocumentData = await fetched.json()
-	}
-
-	function oninput() {
-		const newLinks = linkify.find(value).map((link) => new DocumentId(link.href))
-		linkDocumentData = newLinks
 	}
 </script>
 
-<AutogrowingTextarea bind:value {oninput} />
+<AutogrowingTextarea bind:value />
 
 <dl>
-	{#each linkDocumentData as link}
+	{#each linksFromTextareaEnriched as link}
 		<dt><a href={link.url}>{link.url}</a></dt>
 		<dd><b>id:</b> {link.id}</dd>
+		<dd><b>scan:</b> {link.scan}</dd>
+		<dd><b>status:</b> {link.status}</dd>
 		{#if link.idForm}<dd><b>idForm:</b> {link.idForm}</dd>{/if}
 		{#if link.idSheet}<dd><b>idSheet:</b> {link.idSheet}</dd>{/if}
 	{/each}
@@ -87,4 +77,6 @@
 
 <button {onclick}>Fetch Text</button>
 
-<pre>idToFetchedInfo = {stringify(linkDocumentData)}</pre>
+<pre>linksFromTextareaEnriched = {stringify(linksFromTextareaEnriched)}</pre>
+<pre>linkDocumentData = {stringify(Object.fromEntries(linkDocumentData))}</pre>
+<pre>linksFromTextarea = {stringify(linksFromTextarea)}</pre>

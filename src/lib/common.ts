@@ -12,11 +12,12 @@ const documentIdRegex = {
 }
 
 export class DocumentId {
-	url
-	urlOrig
 	id = ''
 	idForm?: string
 	idSheet?: string
+
+	url
+	urlOrig
 
 	constructor(url: string) {
 		this.urlOrig = url
@@ -45,4 +46,13 @@ export class DocumentId {
 			}
 		}
 	}
+}
+
+export type DocumentText = DocumentId & {
+	status?: number
+	text?: string
+}
+
+export type DocumentScan = DocumentText & {
+	scan?: string
 }
