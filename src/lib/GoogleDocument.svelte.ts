@@ -44,11 +44,17 @@ export class GoogleDocument {
 	error? = $state()
 
 	title = $derived.by(() => {
-		const title = this.text ? this.text.split(/<\/?title>/)[1] : ''
-		if (!title && this.text) {
-			const json = JSON.parse(this.text)
-			return json?.properties?.title
+		let title = ''
+		if (this.json) {
+			title = this.json?.title
+		} else {
+			title = this.text ? this.text.split(/<\/?title>/)[1] : ''
+			if (!title && this.text) {
+				const json = JSON.parse(this.text)
+				return json?.properties?.title
+			}
 		}
+
 		return title
 	})
 
@@ -118,7 +124,7 @@ export class GoogleDocument {
 		if (fetched.ok) {
 			this.idShort = jsoned.idShort
 			this.idLong = jsoned.idLong
-			this.text = jsoned.text
+			//this.text = jsoned.text
 			this.json = jsoned.json
 		} else {
 			this.error = {
