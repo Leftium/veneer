@@ -5,6 +5,7 @@ import { GoogleDocument } from '$lib/GoogleDocument.svelte'
 
 import { GCP_API_KEY } from '$env/static/private'
 import { adjustGoogleSheetData, stripHidden, type GoogleSheetData } from '$lib/google-sheets'
+import { parseGoogleForm } from '$lib/google-form'
 
 export const GET = async ({ url, fetch }) => {
 	const targetUrl = url.searchParams.get('u') || ''
@@ -30,12 +31,7 @@ export const GET = async ({ url, fetch }) => {
 						)
 						//googleDocument.text = ''
 					} else if (googleDocument.type === 'form') {
-						const textSplit = googleDocument.text.split('FB_PUBLIC_LOAD_DATA_ = ')[1]
-						if (textSplit) {
-							const formData = textSplit.substring(0, textSplit.lastIndexOf(';'))
-							googleDocument.json = JSON.parse(formData)
-							//googleDocument.text = ''
-						}
+						googleDocument.json = parseGoogleForm(googleDocument.text)
 					}
 				} catch (error) {
 					gg({ error })

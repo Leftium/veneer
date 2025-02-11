@@ -1,5 +1,3 @@
-import { gg } from './gg'
-
 const documentIdRegex = /^(?<prefix>[sfgbh])\.(?<id>[a-zA-Z0-9_-]+)$/
 
 const documentUrlRegex = {
