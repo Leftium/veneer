@@ -5,7 +5,7 @@ import { GoogleDocument } from '$lib/GoogleDocument.svelte'
 
 import { GCP_API_KEY } from '$env/static/private'
 import { adjustGoogleSheetData, stripHidden, type GoogleSheetData } from '$lib/google-sheets'
-import { parseGoogleForm } from '$lib/google-form'
+import { adjustGoogleFormData, parseGoogleForm } from '$lib/google-form'
 
 export const GET = async ({ url, fetch }) => {
 	const targetUrl = url.searchParams.get('u') || ''
@@ -31,7 +31,8 @@ export const GET = async ({ url, fetch }) => {
 						)
 						//googleDocument.text = ''
 					} else if (googleDocument.type === 'form') {
-						googleDocument.json = parseGoogleForm(googleDocument.text)
+						googleDocument.json = adjustGoogleFormData(parseGoogleForm(googleDocument.text))
+						//googleDocument.text = ''
 					}
 				} catch (error) {
 					gg({ error })

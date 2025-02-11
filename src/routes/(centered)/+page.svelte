@@ -10,7 +10,7 @@
 	import { SvelteMap } from 'svelte/reactivity'
 
 	let value = $state(undent`
-        https://docs.google.com/forms/d/e/1FAIpQLSeqSly5eKwlyxLGh4SQQmWobxfSrBxGAXoNL9XUrSw_J2Q9sQ/viewform
+        https://forms.gle/yPTfUNW4jRCAjKdp6
         https://docs.google.com/spreadsheets/d/1mJ_jtZuqL40-5-tjl21pw4yQKIH3IBBpqbxxq_HF2k0/edit?resourcekey=&gid=181876389#gid=181876389
     `)
 
@@ -27,12 +27,28 @@
 		})
 	})
 
-	type LinkDocumentData = typeof linkToGoogleDocument
-	function generateVeneerUrl(links: LinkDocumentData) {
+	function generateVeneerUrl() {
+		let idForm = ''
+		let idSheet = ''
+
+		for (const { doc } of linksFromTextareaEnriched) {
+			if (!idForm && doc.type === 'form') {
+				idForm = doc.idShort || doc.idLong || ''
+			}
+			if (!idSheet && doc.type === 'sheet') {
+				idSheet = doc.idShort || doc.idLong || ''
+			}
+			if (idSheet && idForm) {
+				return `/v/${idForm}/${idSheet}`
+			}
+		}
+		if (idSheet || idForm) {
+			return `/v/${idForm}${idSheet}`
+		}
 		return null
 	}
 
-	const urlVeneer = $derived(generateVeneerUrl(linkToGoogleDocument))
+	const urlVeneer = $derived(generateVeneerUrl())
 
 	async function onclick() {
 		for (const link of linksFromTextarea) {

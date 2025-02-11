@@ -105,7 +105,7 @@ export class GoogleDocument {
 		}
 	}
 
-	async fetch(unhideCols = false, unhideRows = false) {
+	async fetch(customFetch = fetch, unhideCols = false, unhideRows = false) {
 		const searchParams = new URLSearchParams({ u: this.url })
 		if (unhideCols) {
 			searchParams.set('allrows', 'true')
@@ -113,7 +113,7 @@ export class GoogleDocument {
 		if (unhideRows) {
 			searchParams.set('allcols', 'true')
 		}
-		const fetched = await fetch(`/api/fetch-document?${searchParams}`)
+		const fetched = await customFetch(`/api/fetch-document?${searchParams}`)
 		const jsoned = await fetched.json()
 		if (fetched.ok) {
 			this.idShort = jsoned.idShort

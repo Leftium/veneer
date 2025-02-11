@@ -62,7 +62,6 @@ type EmailOptions = 'NONE' | 'VERIFIED' | 'INPUT'
 
 interface Form {
 	filename: string
-	formUrl: string
 	formAction: string
 	headerImageUrl: string | null
 	title: string
@@ -77,8 +76,6 @@ interface Form {
 export function parseGoogleForm(html: string) {
 	let data = html.split('FB_PUBLIC_LOAD_DATA_ = ')[1]
 	data = data.substring(0, data.lastIndexOf(';'))
-
-	gg(data.length)
 
 	const jArray = JSON.parse(data)
 
@@ -95,7 +92,6 @@ export function parseGoogleForm(html: string) {
 
 	const form: Form = {
 		filename,
-		formUrl: '',
 		formAction: '',
 		headerImageUrl: null,
 		title,
@@ -214,12 +210,12 @@ export function parseGoogleForm(html: string) {
 export function adjustGoogleFormData(json: Form) {
 	// Adjust Google forms JSON:
 	const newJson = {
-		formUrl: json.formUrl,
+		filename: json.filename,
 		formAction: json.formAction,
 		headerImageUrl: json.headerImageUrl,
 		title: json.title,
 		collectEmails: json.collectEmails,
-		hasInput: false,
+		firstInput: -1,
 		hasRequired: false,
 		fields: json.questions,
 	}
@@ -242,9 +238,12 @@ export function adjustGoogleFormData(json: Form) {
 	const INPUT_TYPES = ['TEXT', 'PARAGRAPH_TEXT', 'MULTIPLE_CHOICE', 'DROPDOWN', 'CHECKBOXES']
 
 	let inputIndex = 1
-	newJson.fields.forEach((field) => {
+	newJson.fields.forEach((field, index) => {
 		if (INPUT_TYPES.includes(field.type)) {
-			newJson.hasInput = true
+			if (newJson.firstInput === -1) {
+				newJson.firstInput = index
+			}
+
 			field.inputIndex = inputIndex++
 
 			if (field.required) {
