@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { DocumentId, type DocumentScan } from '$lib/common'
 	import AutogrowingTextarea from '$lib/components/AutogrowingTextarea.svelte'
 	import { gg } from '$lib/gg'
+	import { GoogleDocument } from '$lib/GoogleDocument.svelte'
 
 	import { undent } from '$lib/undent'
 	import { stringify } from '$lib/util'
@@ -10,49 +10,36 @@
 	import { SvelteMap } from 'svelte/reactivity'
 
 	let value = $state(undent`
-        신청 링크 : https://bit.ly/3MNmqm3
-        확인 링크 : https://bit.ly/3XMqA3N
-
-        ✍신청: https://shorturl.at/2q3PU
-        📋확인: https://shorturl.at/lTT5D
-
-        신청 : https://forms.gle/7nGG9LPxJerC6SGN9
-        확인 : https://docs.google.com/spreadsheets/d/1vfSQYmHLU7Y2nSanbCAOIIgWxBsC_j4__LCpEY0SSIM
+        https://docs.google.com/forms/d/e/1FAIpQLSeqSly5eKwlyxLGh4SQQmWobxfSrBxGAXoNL9XUrSw_J2Q9sQ/viewform
+        https://docs.google.com/spreadsheets/d/1mJ_jtZuqL40-5-tjl21pw4yQKIH3IBBpqbxxq_HF2k0/edit?resourcekey=&gid=181876389#gid=181876389
     `)
 
-	let linksFromTextarea = $derived(linkify.find(value).map((link) => new DocumentId(link.href)))
+	let linksFromTextarea = $derived(linkify.find(value))
 
-	let linkDocumentData: SvelteMap<string, DocumentScan> = $state(new SvelteMap())
+	let linkToGoogleDocument: SvelteMap<string, GoogleDocument> = $state(new SvelteMap())
 
 	let linksFromTextareaEnriched = $derived.by(() => {
 		return linksFromTextarea.map((link) => {
-			const documentScan = linkDocumentData.get(link.id)
-
 			return {
-				...link,
-				...{ ...documentScan },
+				url: link.href,
+				doc: linkToGoogleDocument.get(link.href) || new GoogleDocument(link.href),
 			}
 		})
 	})
 
-	type LinkDocumentData = typeof linkDocumentData
+	type LinkDocumentData = typeof linkToGoogleDocument
 	function generateVeneerUrl(links: LinkDocumentData) {
 		return null
 	}
 
-	const urlVeneer = $derived(generateVeneerUrl(linkDocumentData))
+	const urlVeneer = $derived(generateVeneerUrl(linkToGoogleDocument))
 
 	async function onclick() {
 		for (const link of linksFromTextarea) {
-			let documentScan: DocumentScan = new DocumentId(link.url)
-			if (documentScan.id && !linkDocumentData.has(documentScan.id)) {
-				documentScan.scan = 'scanning'
-				linkDocumentData.set(documentScan.id, documentScan)
-
-				const fetched = await fetch(`api/fetch-text?u=${link.url}`)
-				documentScan = await fetched.json()
-				documentScan.scan = 'quick scanned'
-				linkDocumentData.set(documentScan.id, documentScan)
+			if (!linkToGoogleDocument.get(link.href)) {
+				let googleDocument = new GoogleDocument(link.href)
+				linkToGoogleDocument.set(link.href, googleDocument)
+				googleDocument.fetch()
 			}
 		}
 	}
@@ -61,13 +48,15 @@
 <AutogrowingTextarea bind:value />
 
 <dl>
-	{#each linksFromTextareaEnriched as link}
-		<dt><a href={link.url}>{link.url}</a></dt>
-		<dd><b>id:</b> {link.id}</dd>
-		<dd><b>scan:</b> {link.scan}</dd>
-		<dd><b>status:</b> {link.status}</dd>
-		{#if link.idForm}<dd><b>idForm:</b> {link.idForm}</dd>{/if}
-		{#if link.idSheet}<dd><b>idSheet:</b> {link.idSheet}</dd>{/if}
+	{#each linksFromTextareaEnriched as { url, doc }}
+		<dt><a href={url}>{url}</a></dt>
+		<dd><b>idShort:</b> {doc.idShort}</dd>
+		<dd><b>idLong:</b> {doc.idLong}</dd>
+		<dd><i>type:</i> {doc.type}</dd>
+		<dd><i>title:</i> {doc.title}</dd>
+		<dd><i>url:</i> {doc.url}</dd>
+		<dd><b>text.length:</b> {doc?.text?.length}</dd>
+		<dd><b>json.length:</b> {JSON.stringify(doc?.json)?.length}</dd>
 	{/each}
 </dl>
 
@@ -78,5 +67,5 @@
 <button {onclick}>Fetch Text</button>
 
 <pre>linksFromTextareaEnriched = {stringify(linksFromTextareaEnriched)}</pre>
-<pre>linkDocumentData = {stringify(Object.fromEntries(linkDocumentData))}</pre>
+<pre>linkDocumentData = {stringify(Object.fromEntries(linkToGoogleDocument))}</pre>
 <pre>linksFromTextarea = {stringify(linksFromTextarea)}</pre>
