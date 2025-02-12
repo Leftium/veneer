@@ -52,7 +52,7 @@ type GoogleSheetsApiResult = {
 export type GoogleSheetData = {
 	title: string
 	sheetTitle: string
-	values: (string | (string | Date)[])[][]
+	rows: (string | (string | Date)[])[][]
 	hiddenColumns: number[]
 	hiddenRows: number[]
 }
@@ -69,7 +69,7 @@ export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 	const hiddenColumns = data.columnMetadata.flatMap((cm, i) => (cm.hiddenByUser ? i : []))
 	const hiddenRows = data.rowMetadata.flatMap((rm, i) => (rm.hiddenByUser ? i : []))
 
-	const values = data.rowData.map((rowDatum) => {
+	const rows = data.rowData.map((rowDatum) => {
 		return rowDatum.values.map((value) => {
 			const excelSerialDate = value?.userEnteredFormat?.numberFormat?.type.includes('DATE')
 				? value?.effectiveValue?.numberValue
@@ -80,19 +80,19 @@ export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 		})
 	})
 
-	return { title, sheetTitle, values, hiddenColumns, hiddenRows }
+	return { title, sheetTitle, rows, hiddenColumns, hiddenRows }
 }
 
 export function stripHidden(json: GoogleSheetData, unhideCols = false, unhideRows = false) {
 	const { hiddenColumns, hiddenRows } = json
 
-	const values = json.values
+	const rows = json.rows
 		.filter((_, rowIndex) => unhideRows || !hiddenRows.includes(rowIndex))
 		.map((row) => row.filter((_, cellIndex) => unhideCols || !hiddenColumns.includes(cellIndex)))
 
 	return {
 		...json,
-		values,
+		rows,
 		hiddenColumns: unhideCols ? hiddenColumns : [],
 		hiddenRows: unhideRows ? hiddenRows : [],
 	}

@@ -1,3 +1,5 @@
+import type { GoogleSheetData } from './google-sheets'
+
 const documentIdRegex = /^(?<prefix>[sfgbh])\.(?<id>[a-zA-Z0-9_-]+)$/
 
 const documentUrlRegex = {
@@ -39,7 +41,7 @@ export class GoogleDocument {
 	idShort?: string = $state()
 	idLong?: string = $state()
 	text?: string = $state()
-	json?: unknown = $state()
+	json?: GoogleSheetData = $state()
 
 	error? = $state()
 

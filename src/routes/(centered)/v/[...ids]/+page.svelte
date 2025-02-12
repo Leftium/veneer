@@ -5,12 +5,18 @@
 	// import function to register Swiper custom elements
 	import type { SwiperContainer } from 'swiper/element'
 	import { register } from 'swiper/element/bundle'
+	import Sheet from './Sheet.svelte'
 
 	const swiperParams = {
+		spaceBetween: 4,
 		hashNavigation: true,
 	}
 
 	let { data } = $props()
+
+	const googleForm = data.indexForm !== undefined ? data.googleDocuments[data.indexForm] : undefined
+	const googleSheet =
+		data.indexSheet !== undefined ? data.googleDocuments[data.indexSheet] : undefined
 
 	let swiperContainer: SwiperContainer | undefined = $state()
 	let headerElement: HTMLElement | undefined = $state()
@@ -42,17 +48,16 @@
 
 <swiper-container init="false" bind:this={swiperContainer}>
 	<swiper-slide data-hash="form">
-		<pre>{stringify(data.googleDocuments?.[0])}</pre>
+		<pre>{stringify(googleForm)}</pre>
 	</swiper-slide>
 	<swiper-slide data-hash="sheet">
-		<pre>{stringify(data.googleDocuments?.[1])}</pre>
+		<Sheet doc={googleSheet}></Sheet>
 	</swiper-slide>
 </swiper-container>
 
-<style lang="scss">
-	@use 'sass:map';
-	@use '@yohns/picocss/scss/_settings' as *;
+<pre hidden>{stringify(data)}</pre>
 
+<style lang="scss">
 	@use 'open-props-scss' as *;
 
 	swiper-container {
@@ -70,7 +75,7 @@
 
 		padding: $size-2;
 
-		background: $stone-2;
+		background: var(--pico-background-color);
 
 		left: 0.5rem;
 		right: 0.5rem;

@@ -1,8 +1,8 @@
 import { GoogleDocument } from '$lib/GoogleDocument.svelte'
 
 export const load = async ({ params, fetch }) => {
-	let indexForm = null
-	let indexSheet = null
+	let indexForm
+	let indexSheet
 
 	const googleDocuments = []
 	for (const id of params.ids.split('/')) {
