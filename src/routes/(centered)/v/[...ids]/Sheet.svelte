@@ -16,6 +16,8 @@
 
 	let { doc, top = $bindable(0) }: Props = $props()
 
+	let tableWidth = $state(0)
+
 	let theadElement: HTMLElement | undefined = $state()
 	let theadHeight = $state(0)
 	let theadLineHeight = $derived(
@@ -28,6 +30,14 @@
 		// var(--pico-spacing) / 2   : and padding.
 		`calc(min(${theadLineHeight} * 3.25 + var(--pico-spacing) / 2 - ${theadHeight}px, 0px) + ${top}px)`,
 	)
+
+	let detailsOpened = $state(2)
+
+	function makeToggleDetails(index: number) {
+		return function () {
+			detailsOpened = detailsOpened === index ? -1 : index
+		}
+	}
 
 	const numericRegex = /^[0-9-.,/: ]*$/
 	const { columns, rows } = $derived.by(() => {
@@ -65,27 +75,34 @@
 			})
 			columns = columns.filter((cell) => cell.lengthMax !== 0)
 
-			rows = rows.map((row, indexRow) => {
+			const rowsRender = rows.map((row, indexRow) => {
 				return row.map((cell, indexColumn) => {
 					const column = columns[indexColumn]
 					const valueString = (Array.isArray(cell) ? cell[0] : cell) as string
 					const valueDate = Array.isArray(cell) && cell[1] ? new Date(cell[1]) : null
+
+					let renderedString = ''
 
 					// Relative date if within one year:
 					if (
 						valueDate &&
 						dayjs(valueDate).isBetween(dayjs().subtract(1, 'y'), dayjs().add(1, 'y'))
 					) {
-						return dayjs().to(valueDate)
+						renderedString = dayjs().to(valueDate)
+					} else {
+						renderedString =
+							indexRow && column.type === 'numeric'
+								? valueString.padStart(column.lengthMax, '0')
+								: valueString
 					}
-
-					return indexRow && column.type === 'numeric'
-						? valueString.padStart(column.lengthMax, '0').replace(/^0*/, '<gz>$&</gz>')
-						: valueString
+					return {
+						value: valueString,
+						rendered: renderedString,
+					}
 				})
 			})
 
-			return { columns, rows }
+			return { columns, rows: rowsRender }
 		}
 		return { columns: [], rows: [] }
 	})
@@ -93,23 +110,47 @@
 	const [rowHead, ...rowsBody] = $derived(rows)
 </script>
 
-<table>
+<table bind:clientWidth={tableWidth}>
 	<thead style:top={topStyle} bind:clientHeight={theadHeight} bind:this={theadElement}>
 		<tr>
 			{#each rowHead as cell}
-				<th>{cell}</th>
+				<th>{cell.rendered}</th>
 			{/each}
 		</tr>
 	</thead>
 	<tbody>
-		{#each rowsBody as row}
-			<tr>
+		{#each rowsBody as row, indexRow}
+			<tr onclick={makeToggleDetails(indexRow)}>
 				{#each row as cell, indexColumn}
-					<td class:numeric={columns[indexColumn].type === 'numeric'}>{@html cell}</td>
+					<td class:numeric={columns[indexColumn].type === 'numeric'}>
+						{@html cell.rendered.replace(/^0*/, '<gz>$&</gz>')}
+					</td>
 				{/each}
+			</tr>
+			<tr class="details" onclick={makeToggleDetails(indexRow)} hidden={detailsOpened !== indexRow}>
+				<td colspan={row.length}>
+					<div style:width={`calc(${tableWidth}px - .5rem)`}>
+						<dl>
+							{#each row as cell, indexColumn}
+								{#if indexColumn}
+									<dt>{columns[indexColumn].title}</dt>
+									<dd>{cell.value}</dd>
+								{/if}
+							{/each}
+						</dl>
+						<pre hidden>{stringify(row)}</pre>
+					</div>
+				</td>
 			</tr>
 		{/each}
 	</tbody>
+	<tfoot>
+		<tr>
+			<td colspan={columns.length}>
+				<div style:width={`calc(${tableWidth}px - .5rem)`}></div>
+			</td>
+		</tr>
+	</tfoot>
 </table>
 
 <pre hidden>
@@ -124,8 +165,12 @@
     {stringify(rows)}
 </pre>
 
-<style>
+<style lang="scss">
+	@use 'open-props-scss' as *;
+
 	table {
+		display: block;
+		width: 100%;
 		border-collapse: separate; /* Don't collapse */
 
 		.numeric {
@@ -151,6 +196,50 @@
 
 		tbody {
 			white-space: nowrap;
+
+			tr {
+				height: $size-8;
+			}
 		}
+
+		tfoot {
+			td {
+				height: 0;
+			}
+		}
+	}
+
+	dl {
+		display: grid;
+
+		dt {
+			margin-top: $size-2;
+			font-weight: bold;
+			opacity: 15%;
+		}
+
+		dd {
+			margin-left: 0;
+		}
+	}
+
+	@media (max-width: 100px) {
+		dl {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.details {
+		td {
+			padding-block: 0;
+			padding-inline: $size-1;
+		}
+	}
+
+	.details div {
+		padding-inline: $size-7;
+		box-shadow: shadow('inner-3');
+
+		overflow: hidden;
 	}
 </style>
