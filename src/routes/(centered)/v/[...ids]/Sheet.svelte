@@ -26,20 +26,19 @@
 	const numericRegex = /^[0-9-.,/: ]*$/
 	const { columns, rows } = $derived.by(() => {
 		if (doc?.json?.rows) {
-			let rows = [...doc?.json?.rows].map((row, indexRow) => {
-				return [indexRow ? `${indexRow}` : '', ...row]
-			})
+			let rows = [...doc?.json?.rows]
+				// Remove empty rows:
+				.filter((row) => row.join(''))
+				// Add index column:
+				.map((row, indexRow) => [indexRow ? `${indexRow}` : '', ...row])
 
-			const columns = rows[0].map((cell) => {
-				const title = (Array.isArray(cell) ? cell[0] : cell) as string
-				return {
-					title,
-					type: 'numeric',
-					lengthMin: Number.MAX_SAFE_INTEGER,
-					lengthMax: 0,
-				}
-			})
-
+			// Gather column info:
+			let columns = rows[0].map((cell) => ({
+				title: (Array.isArray(cell) ? cell[0] : cell) as string,
+				type: 'numeric',
+				lengthMin: Number.MAX_SAFE_INTEGER,
+				lengthMax: 0,
+			}))
 			for (let [indexRow, row] of rows.entries()) {
 				for (let [indexCol, cell] of row.entries()) {
 					const stringValue = (Array.isArray(cell) ? cell[0] : cell) as string
@@ -55,6 +54,12 @@
 				}
 			}
 
+			// Remove empty columns:
+			rows = rows.map((row) => {
+				return row.filter((cell, indexColumn) => columns[indexColumn].lengthMax !== 0)
+			})
+			columns = columns.filter((cell) => cell.lengthMax !== 0)
+
 			rows = rows.map((row, indexRow) => {
 				return row.map((cell, indexColumn) => {
 					const value = (Array.isArray(cell) ? cell[0] : cell) as string
@@ -65,6 +70,7 @@
 						: value
 				})
 			})
+
 			return { columns, rows }
 		}
 		return { columns: [], rows: [] }
@@ -94,6 +100,14 @@
 
 <pre hidden>
     {stringify(doc)}
+</pre>
+
+<pre hidden>
+    {stringify(columns)}
+</pre>
+
+<pre hidden>
+    {stringify(rows)}
 </pre>
 
 <style>
