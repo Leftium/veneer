@@ -1,16 +1,7 @@
 <script lang="ts">
 	import { stringify } from '$lib/util'
-	import { onMount } from 'svelte'
 
-	// import function to register Swiper custom elements
-	import type { SwiperContainer } from 'swiper/element'
-	import { register } from 'swiper/element/bundle'
 	import Sheet from './Sheet.svelte'
-
-	const swiperParams = {
-		spaceBetween: 4,
-		hashNavigation: true,
-	}
 
 	let { data } = $props()
 
@@ -18,69 +9,43 @@
 	const googleSheet =
 		data.indexSheet !== undefined ? data.googleDocuments[data.indexSheet] : undefined
 
-	let swiperContainer: SwiperContainer | undefined = $state()
 	let headerElement: HTMLElement | undefined = $state()
-
-	function makeSlideTo(slideIndex: number) {
-		return function () {
-			swiperContainer?.swiper.slideTo(slideIndex)
-			swiperContainer?.scrollIntoView()
-		}
-	}
-
-	onMount(function () {
-		// register Swiper custom elements
-		register()
-
-		if (swiperContainer) {
-			Object.assign(swiperContainer, swiperParams)
-			swiperContainer.initialize()
-		}
-	})
+	let headerHeight: number = $state(0)
 </script>
 
-<header bind:this={headerElement}>
-	<div role="group">
-		<button class="outline" onclick={makeSlideTo(0)}>✍ Form</button>
-		<button class="outline" onclick={makeSlideTo(1)}>📋 Responses</button>
-	</div>
-</header>
+<div class="wrap">
+	<header bind:this={headerElement} bind:clientHeight={headerHeight}>
+		<div role="group">
+			<button class="outline">✍ Form</button>
+			<button class="outline">📋 Responses</button>
+		</div>
+	</header>
 
-<swiper-container init="false" bind:this={swiperContainer}>
-	<swiper-slide data-hash="form">
-		<pre>{stringify(googleForm)}</pre>
-	</swiper-slide>
-	<swiper-slide data-hash="sheet">
-		<Sheet doc={googleSheet}></Sheet>
-	</swiper-slide>
-</swiper-container>
+	<Sheet doc={googleSheet} bind:top={headerHeight}></Sheet>
 
-<pre hidden>{stringify(data)}</pre>
+	<pre hidden>{stringify(data)}</pre>
+</div>
 
 <style lang="scss">
 	@use 'open-props-scss' as *;
 
-	swiper-container {
-		//background-color: lightgreen;
-		scroll-margin-top: 6rem;
-
-		swiper-slide {
-			display: block;
-		}
+	div.wrap {
+		display: block;
+		overflow-x: clip;
 	}
 
 	header {
 		position: sticky;
 		top: 0px;
-
-		padding: $size-2;
-
-		background: var(--pico-background-color);
+		z-index: 1000;
 
 		left: 0.5rem;
 		right: 0.5rem;
 
-		z-index: 1000;
+		padding: $size-2;
+
+		background: var(--pico-background-color);
+		_background: green;
 
 		& > div {
 			margin-bottom: 0;
