@@ -8,6 +8,7 @@
 	import { gg } from '$lib/gg'
 	import { GoogleDocument } from '$lib/GoogleDocument.svelte'
 	import { stringify } from '$lib/util'
+	import { slide } from 'svelte/transition'
 
 	interface Props {
 		doc?: GoogleDocument
@@ -119,7 +120,7 @@
 		</tr>
 	</thead>
 	<tbody>
-		{#each rowsBody as row, indexRow}
+		{#each rowsBody as row, indexRow (indexRow)}
 			<tr onclick={makeToggleDetails(indexRow)}>
 				{#each row as cell, indexColumn}
 					<td class:numeric={columns[indexColumn].type === 'numeric'}>
@@ -127,21 +128,22 @@
 					</td>
 				{/each}
 			</tr>
-			<tr class="details" onclick={makeToggleDetails(indexRow)} hidden={detailsOpened !== indexRow}>
-				<td colspan={row.length}>
-					<div style:width={`calc(${tableWidth}px - .5rem)`}>
-						<dl>
-							{#each row as cell, indexColumn}
-								{#if indexColumn}
-									<dt>{columns[indexColumn].title}</dt>
-									<dd>{cell.value}</dd>
-								{/if}
-							{/each}
-						</dl>
-						<pre hidden>{stringify(row)}</pre>
-					</div>
-				</td>
-			</tr>
+			{#if detailsOpened === indexRow}
+				<tr class="details" onclick={makeToggleDetails(indexRow)} transition:slide>
+					<td colspan={row.length}>
+						<div transition:slide style:width={`calc(${tableWidth}px - .5rem)`}>
+							<dl>
+								{#each row as cell, indexColumn}
+									{#if indexColumn}
+										<dt>{columns[indexColumn].title}</dt>
+										<dd>{cell.value}</dd>
+									{/if}
+								{/each}
+							</dl>
+						</div>
+					</td>
+				</tr>
+			{/if}
 		{/each}
 	</tbody>
 	<tfoot>
