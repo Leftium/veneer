@@ -1,4 +1,10 @@
 <script lang="ts">
+	import relativeTime from 'dayjs/plugin/relativeTime'
+	import dayjs from 'dayjs'
+	import isBetween from 'dayjs/plugin/isBetween'
+	dayjs.extend(relativeTime)
+	dayjs.extend(isBetween)
+
 	import { gg } from '$lib/gg'
 	import { GoogleDocument } from '$lib/GoogleDocument.svelte'
 	import { stringify } from '$lib/util'
@@ -41,13 +47,12 @@
 			}))
 			for (let [indexRow, row] of rows.entries()) {
 				for (let [indexCol, cell] of row.entries()) {
-					const stringValue = (Array.isArray(cell) ? cell[0] : cell) as string
+					const valueString = (Array.isArray(cell) ? cell[0] : cell) as string
 					const column = columns[indexCol]
 					if (indexRow) {
-						column.lengthMax = Math.max(column.lengthMax, stringValue.length)
-						column.lengthMin = Math.min(column.lengthMin, stringValue.length)
-						if (!numericRegex.test(stringValue)) {
-							gg(numericRegex.test(stringValue), stringValue)
+						column.lengthMax = Math.max(column.lengthMax, valueString.length)
+						column.lengthMin = Math.min(column.lengthMin, valueString.length)
+						if (!numericRegex.test(valueString)) {
 							column.type = 'string'
 						}
 					}
@@ -62,12 +67,21 @@
 
 			rows = rows.map((row, indexRow) => {
 				return row.map((cell, indexColumn) => {
-					const value = (Array.isArray(cell) ? cell[0] : cell) as string
 					const column = columns[indexColumn]
+					const valueString = (Array.isArray(cell) ? cell[0] : cell) as string
+					const valueDate = Array.isArray(cell) && cell[1] ? new Date(cell[1]) : null
+
+					// Relative date if within one year:
+					if (
+						valueDate &&
+						dayjs(valueDate).isBetween(dayjs().subtract(1, 'y'), dayjs().add(1, 'y'))
+					) {
+						return dayjs().to(valueDate)
+					}
 
 					return indexRow && column.type === 'numeric'
-						? value.padStart(column.lengthMax, '0').replace(/^0*/, '<gz>$&</gz>')
-						: value
+						? valueString.padStart(column.lengthMax, '0').replace(/^0*/, '<gz>$&</gz>')
+						: valueString
 				})
 			})
 
