@@ -91,7 +91,7 @@
 						const utcjs = dayjs.utc
 
 						// Relative date if within one year:
-						if (utcjs(valueTs).isBetween(utcjs().subtract(1, 'M'), utcjs().add(1, 'M'))) {
+						if (utcjs(valueTs).isBetween(utcjs().subtract(25, 'd'), utcjs().add(25, 'd'))) {
 							renderedString = dayjs().utc().to(valueTs)
 						} else {
 							renderedString = dayjs.tz(valueTs, doc.timeZone).format('YYYY-MM-DD')
