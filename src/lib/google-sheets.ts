@@ -50,7 +50,12 @@ export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 				? value?.effectiveValue?.numberValue
 				: null
 			return excelSerialDate
-				? [value.formattedValue, excelDateToJsDate(excelSerialDate), excelSerialDate]
+				? [
+						value.formattedValue,
+						excelDateToJsDate(excelSerialDate),
+						excelSerialDate,
+						+excelDateToJsDate(excelSerialDate),
+					]
 				: value.formattedValue || ''
 		})
 	})
