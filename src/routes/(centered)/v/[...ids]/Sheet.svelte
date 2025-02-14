@@ -89,8 +89,8 @@
 						valueDate &&
 						dayjs(valueDate).isBetween(dayjs().subtract(1, 'y'), dayjs().add(1, 'y'))
 					) {
-						gg(dayjs(), dayjs(valueDate))
 						renderedString = dayjs().to(valueDate)
+						gg({ dayjs: dayjs(), valueDate: dayjs(valueDate), renderedString })
 					} else {
 						renderedString =
 							indexRow && column.type === 'numeric'
