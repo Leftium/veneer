@@ -28,12 +28,14 @@
 		theadElement ? window.getComputedStyle(theadElement).lineHeight : 0,
 	)
 
-	let topStyle = $derived(
+	let styleTop = $derived(
 		// -${theadHeight}px         : Hide header,
 		// ${theadLineHeight} * 3.25 : except for (up to) 3 lines of text + alpha,
 		// var(--pico-spacing) / 2   : and padding.
 		`calc(min(${theadLineHeight} * 3.25 + var(--pico-spacing) / 2 - ${theadHeight}px, 0px) + ${top}px)`,
 	)
+
+	let styleWidth = $derived(wrapperWidth ? `calc(${wrapperWidth}px - .5rem)` : '')
 
 	let detailsOpened = $state(-1)
 
@@ -150,7 +152,7 @@
 
 <div class="wrap" bind:clientWidth={wrapperWidth}>
 	<table>
-		<thead style:top={topStyle} bind:clientHeight={theadHeight} bind:this={theadElement}>
+		<thead style:top={styleTop} bind:clientHeight={theadHeight} bind:this={theadElement}>
 			<tr>
 				{#each columns as column}
 					<th>{column.title}</th>
@@ -172,10 +174,7 @@
 				{#if detailsOpened === indexRow}
 					<tr class="details" onclick={makeToggleDetails(indexRow)} transition:slide>
 						<td colspan={row.length}>
-							<div
-								transition:slide
-								style:width={wrapperWidth ? `calc(${wrapperWidth}px - .5rem)` : ''}
-							>
+							<div transition:slide style:width={styleWidth}>
 								<dl>
 									{#each row as cell, indexColumn}
 										{#if indexColumn}
