@@ -123,8 +123,11 @@
 		{#each rowsBody as row, indexRow (indexRow)}
 			<tr onclick={makeToggleDetails(indexRow)}>
 				{#each row as cell, indexColumn}
-					<td class:numeric={columns[indexColumn].type === 'numeric'}>
-						{@html cell.rendered.replace(/^0*/, '<gz>$&</gz>')}
+					{@const column = columns[indexColumn]}
+					<td class:numeric={column.type === 'numeric'}>
+						{@html column.type === 'numeric'
+							? cell.rendered.replace(/^0*/, '<gz>$&</gz>')
+							: cell.rendered}
 					</td>
 				{/each}
 			</tr>
@@ -159,9 +162,7 @@
     {stringify(doc)}
 </pre>
 
-<pre hidden>
-    {stringify(columns)}
-</pre>
+<pre>columns = {stringify(columns)}</pre>
 
 <pre hidden>
     {stringify(rows)}
