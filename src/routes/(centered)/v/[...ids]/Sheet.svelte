@@ -48,23 +48,35 @@
 		let type = 'regular'
 		if (doc?.json?.rows) {
 			let rows = [...doc?.json?.rows]
-				// Remove empty rows:
-				.filter((row) => row.join(''))
-				// Add index column:
-				.map((row, indexRow) => [indexRow ? `${indexRow}` : '', ...row])
+
+			// Skip extraneous rows without timestamps.
+			// Adjust title row if extra columns are found.
+			while (!rows[1][0]) {
+				rows[0] = Array(Math.max(rows[0].length, rows[1].length))
+					.fill(1)
+					.map((_, index) => rows[1][index] || rows[0][index])
+				rows.splice(1, 1)
+			}
+
+			// Remove empty rows:
+			rows = rows.filter((row) => row.join(''))
+
+			// Add index column:
+			rows = rows.map((row, indexRow) => [indexRow ? `${indexRow}` : '', ...row])
 
 			// Gather column info:
 			let columns = rows[0].map((cell) => ({
-				title: (Array.isArray(cell) ? cell[0] : cell) as string,
+				title: cell as string,
 				type: 'numeric',
 				lengthMin: Number.MAX_SAFE_INTEGER,
 				lengthMax: 0,
 			}))
+
 			for (let [indexRow, row] of rows.entries()) {
 				for (let [indexCol, cell] of row.entries()) {
 					const valueString = (Array.isArray(cell) ? cell[0] : cell) as string
 					const column = columns[indexCol]
-					if (indexRow) {
+					if (indexRow && column) {
 						column.lengthMax = Math.max(column.lengthMax, valueString.length)
 						column.lengthMin = Math.min(column.lengthMin, valueString.length)
 						if (!numericRegex.test(valueString)) {
@@ -76,14 +88,14 @@
 
 			// Remove empty columns:
 			rows = rows.map((row) => {
-				return row.filter((cell, indexColumn) => columns[indexColumn].lengthMax !== 0)
+				return row.filter((cell, indexColumn) => columns[indexColumn]?.lengthMax !== 0)
 			})
-			columns = columns.filter((cell) => cell.lengthMax !== 0)
+			columns = columns.filter((cell) => cell?.lengthMax !== 0)
 
 			// Detect special type
 			if (
 				columns.filter(({ title }) => /(name)|(닉네임)/i.test(title)).length &&
-				columns.filter(({ title }) => /(role|(역할))/i.test(title)).length
+				columns.filter(({ title }) => /(role|(역할)|(리드)|팔로우)/i.test(title)).length
 			) {
 				type = 'dance-event'
 			}
@@ -107,8 +119,8 @@
 						}
 					} else {
 						renderedString =
-							indexRow && column.type === 'numeric'
-								? valueString.padStart(column.lengthMax, '0')
+							indexRow && column?.type === 'numeric'
+								? valueString.padStart(column?.lengthMax, '0')
 								: valueString
 					}
 					return {
@@ -139,8 +151,8 @@
 			<tr onclick={makeToggleDetails(indexRow)}>
 				{#each row as cell, indexColumn}
 					{@const column = columns[indexColumn]}
-					<td class:numeric={column.type === 'numeric'}>
-						{@html column.type === 'numeric'
+					<td class:numeric={column?.type === 'numeric'}>
+						{@html column?.type === 'numeric'
 							? cell.rendered.replace(/^0*/, '<gz>$&</gz>')
 							: cell.rendered}
 					</td>
@@ -153,7 +165,7 @@
 							<dl>
 								{#each row as cell, indexColumn}
 									{#if indexColumn}
-										<dt>{columns[indexColumn].title}</dt>
+										<dt>{columns[indexColumn]?.title}</dt>
 										<dd>{cell.value}</dd>
 									{/if}
 								{/each}
@@ -171,10 +183,10 @@
 	</tfoot>
 </table>
 
-<pre>type = {type}</pre>
+<pre>type    = {type}</pre>
 <pre>columns = {stringify(columns)}</pre>
-<pre hidden>rows = {stringify(rows)}</pre>
-<pre>doc = {stringify(doc)}</pre>
+<pre>rows    = {stringify(rows)}</pre>
+<pre>doc     = {stringify(doc)}</pre>
 
 <style lang="scss">
 	@use 'open-props-scss' as *;
