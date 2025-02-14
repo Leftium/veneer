@@ -35,7 +35,7 @@
 		`calc(min(${theadLineHeight} * 3.25 + var(--pico-spacing) / 2 - ${theadHeight}px, 0px) + ${top}px)`,
 	)
 
-	let detailsOpened = $state(2)
+	let detailsOpened = $state(-1)
 
 	function makeToggleDetails(index: number) {
 		return function () {
@@ -91,8 +91,10 @@
 						const utcjs = dayjs.utc
 
 						// Relative date if within one year:
-						if (utcjs(valueTs).isBetween(utcjs().subtract(1, 'y'), utcjs().add(1, 'y'))) {
+						if (utcjs(valueTs).isBetween(utcjs().subtract(1, 'M'), utcjs().add(1, 'M'))) {
 							renderedString = dayjs().utc().to(valueTs)
+						} else {
+							renderedString = dayjs.tz(valueTs, doc.timeZone).format('YYYY-MM-DD')
 						}
 					} else {
 						renderedString =
@@ -162,7 +164,7 @@
 	</tfoot>
 </table>
 
-<pre>doc = {stringify(doc)}</pre>
+<pre hidden>doc = {stringify(doc)}</pre>
 
 <pre hidden>columns = {stringify(columns)}</pre>
 

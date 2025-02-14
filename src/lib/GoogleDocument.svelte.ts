@@ -45,6 +45,8 @@ export class GoogleDocument {
 
 	error? = $state()
 
+	timeZone = $derived(this.json?.timeZone || 'UTC')
+
 	title = $derived.by(() => {
 		let title = ''
 		if (this.json) {
