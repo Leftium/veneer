@@ -1,13 +1,16 @@
 <script lang="ts">
-	import relativeTime from 'dayjs/plugin/relativeTime'
 	import dayjs from 'dayjs'
+	import relativeTime from 'dayjs/plugin/relativeTime'
 	import isBetween from 'dayjs/plugin/isBetween'
+	import utc from 'dayjs/plugin/utc'
+
 	dayjs.extend(relativeTime)
 	dayjs.extend(isBetween)
+	dayjs.extend(utc)
 
 	import { gg } from '$lib/gg'
 	import { GoogleDocument } from '$lib/GoogleDocument.svelte'
-	import { excelDateToJsDate, stringify } from '$lib/util'
+	import { stringify } from '$lib/util'
 	import { slide } from 'svelte/transition'
 
 	interface Props {
@@ -80,17 +83,18 @@
 				return row.map((cell, indexColumn) => {
 					const column = columns[indexColumn]
 					const valueString = (Array.isArray(cell) ? cell[0] : cell) as string
-					const valueDate = Array.isArray(cell) && cell[1] ? cell[1] : null
+					const valueTs = Array.isArray(cell) && cell[1] ? cell[1] : null
 
 					let renderedString = ''
 
-					// Relative date if within one year:
-					if (
-						valueDate &&
-						dayjs(valueDate).isBetween(dayjs().subtract(1, 'y'), dayjs().add(1, 'y'))
-					) {
-						renderedString = dayjs().to(valueDate)
-						gg({ dayjs: dayjs(), dayJSvalueDate: dayjs(valueDate), valueDate, renderedString })
+					if (valueTs) {
+						const utcjs = dayjs.utc
+						gg({ valueDate: valueTs, 'utcjs.(valueDate)': utcjs(valueTs) }, typeof valueTs)
+
+						// Relative date if within one year:
+						if (utcjs(valueTs).isBetween(utcjs().subtract(1, 'y'), utcjs().add(1, 'y'))) {
+							renderedString = dayjs().utc().to(valueTs)
+						}
 					} else {
 						renderedString =
 							indexRow && column.type === 'numeric'
