@@ -72,8 +72,7 @@
 				lengthMax: 0,
 			}))
 
-			// Remove title row
-			rows.shift() || []
+			rows.shift() // Remove title row
 
 			for (let row of rows) {
 				for (let [indexCol, cell] of row.entries()) {
@@ -199,10 +198,12 @@
 	</table>
 </div>
 
-<pre>type    = {type}</pre>
-<pre>columns = {stringify(columns)}</pre>
-<pre>rows    = {stringify(rows)}</pre>
-<pre>doc     = {stringify(doc)}</pre>
+<div hidden>
+	<pre>type    = {type}</pre>
+	<pre>columns = {stringify(columns)}</pre>
+	<pre>rows    = {stringify(rows)}</pre>
+	<pre>doc     = {stringify(doc)}</pre>
+</div>
 
 <style lang="scss">
 	@use 'open-props-scss' as *;
