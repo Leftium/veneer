@@ -20,7 +20,7 @@
 
 	let { doc, top = $bindable(0) }: Props = $props()
 
-	let tableWidth = $state(0)
+	let wrapperWidth = $state(0)
 
 	let theadElement: HTMLElement | undefined = $state()
 	let theadHeight = $state(0)
@@ -149,50 +149,55 @@
 	})
 </script>
 
-<table bind:clientWidth={tableWidth}>
-	<thead style:top={topStyle} bind:clientHeight={theadHeight} bind:this={theadElement}>
-		<tr>
-			{#each columns as column}
-				<th>{column.title}</th>
-			{/each}
-		</tr>
-	</thead>
-	<tbody>
-		{#each rows as row, indexRow (indexRow)}
-			<tr onclick={makeToggleDetails(indexRow)}>
-				{#each row as cell, indexColumn}
-					{@const column = columns[indexColumn]}
-					<td class:numeric={column?.type === 'numeric'}>
-						{@html column?.type === 'numeric'
-							? cell.rendered.replace(/^0*/, '<gz>$&</gz>')
-							: cell.rendered}
-					</td>
+<div class="wrap" bind:clientWidth={wrapperWidth}>
+	<table>
+		<thead style:top={topStyle} bind:clientHeight={theadHeight} bind:this={theadElement}>
+			<tr>
+				{#each columns as column}
+					<th>{column.title}</th>
 				{/each}
 			</tr>
-			{#if detailsOpened === indexRow}
-				<tr class="details" onclick={makeToggleDetails(indexRow)} transition:slide>
-					<td colspan={row.length}>
-						<div transition:slide style:width={tableWidth ? `calc(${tableWidth}px - .5rem)` : ''}>
-							<dl>
-								{#each row as cell, indexColumn}
-									{#if indexColumn}
-										<dt>{columns[indexColumn]?.title}</dt>
-										<dd>{cell.value}</dd>
-									{/if}
-								{/each}
-							</dl>
-						</div>
-					</td>
+		</thead>
+		<tbody>
+			{#each rows as row, indexRow (indexRow)}
+				<tr onclick={makeToggleDetails(indexRow)}>
+					{#each row as cell, indexColumn}
+						{@const column = columns[indexColumn]}
+						<td class:numeric={column?.type === 'numeric'}>
+							{@html column?.type === 'numeric'
+								? cell.rendered.replace(/^0*/, '<gz>$&</gz>')
+								: cell.rendered}
+						</td>
+					{/each}
 				</tr>
-			{/if}
-		{/each}
-	</tbody>
-	<tfoot>
-		<tr>
-			<td colspan={columns.length}></td>
-		</tr>
-	</tfoot>
-</table>
+				{#if detailsOpened === indexRow}
+					<tr class="details" onclick={makeToggleDetails(indexRow)} transition:slide>
+						<td colspan={row.length}>
+							<div
+								transition:slide
+								style:width={wrapperWidth ? `calc(${wrapperWidth}px - .5rem)` : ''}
+							>
+								<dl>
+									{#each row as cell, indexColumn}
+										{#if indexColumn}
+											<dt>{columns[indexColumn]?.title}</dt>
+											<dd>{cell.value}</dd>
+										{/if}
+									{/each}
+								</dl>
+							</div>
+						</td>
+					</tr>
+				{/if}
+			{/each}
+		</tbody>
+		<tfoot>
+			<tr>
+				<td colspan={columns.length}></td>
+			</tr>
+		</tfoot>
+	</table>
+</div>
 
 <pre>type    = {type}</pre>
 <pre>columns = {stringify(columns)}</pre>
