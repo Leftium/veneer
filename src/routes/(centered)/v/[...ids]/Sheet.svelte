@@ -72,11 +72,14 @@
 				lengthMax: 0,
 			}))
 
-			for (let [indexRow, row] of rows.entries()) {
+			// Remove title row
+			rows.shift() || []
+
+			for (let row of rows) {
 				for (let [indexCol, cell] of row.entries()) {
 					const valueString = (Array.isArray(cell) ? cell[0] : cell) as string
 					const column = columns[indexCol]
-					if (indexRow && column) {
+					if (column) {
 						column.lengthMax = Math.max(column.lengthMax, valueString.length)
 						column.lengthMin = Math.min(column.lengthMin, valueString.length)
 						if (!numericRegex.test(valueString)) {
@@ -100,7 +103,7 @@
 				type = 'dance-event'
 			}
 
-			const rowsRender = rows.map((row, indexRow) => {
+			const rowsRender = rows.map((row) => {
 				return row.map((cell, indexColumn) => {
 					const column = columns[indexColumn]
 					const valueString = (Array.isArray(cell) ? cell[0] : cell) as string
@@ -119,9 +122,15 @@
 						}
 					} else {
 						renderedString =
-							indexRow && column?.type === 'numeric'
+							column?.type === 'numeric'
 								? valueString.padStart(column?.lengthMax, '0')
 								: valueString
+					}
+					if (type === 'dance-event' && /(contact)|(연락)/i.test(column.title)) {
+						return {
+							value: valueString.replaceAll(/[0-9]/g, '*'),
+							rendered: renderedString.replaceAll(/[0-9]/g, '*'),
+						}
 					}
 					return {
 						value: valueString,
@@ -130,24 +139,26 @@
 				})
 			})
 
+			if (type === 'dance-event') {
+				rowsRender.reverse()
+			}
+
 			return { type, columns, rows: rowsRender }
 		}
 		return { type, columns: [], rows: [] }
 	})
-
-	const [rowHead, ...rowsBody] = $derived(rows)
 </script>
 
 <table bind:clientWidth={tableWidth}>
 	<thead style:top={topStyle} bind:clientHeight={theadHeight} bind:this={theadElement}>
 		<tr>
-			{#each rowHead as cell}
-				<th>{cell.rendered}</th>
+			{#each columns as column}
+				<th>{column.title}</th>
 			{/each}
 		</tr>
 	</thead>
 	<tbody>
-		{#each rowsBody as row, indexRow (indexRow)}
+		{#each rows as row, indexRow (indexRow)}
 			<tr onclick={makeToggleDetails(indexRow)}>
 				{#each row as cell, indexColumn}
 					{@const column = columns[indexColumn]}
