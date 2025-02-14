@@ -1,4 +1,4 @@
-import { excelDateToJsDate, excelDateToUnix } from './util'
+import { excelDateToUnix } from './util'
 
 type GoogleSheetsApiResult = {
 	properties: { title: string; timeZone: string }
@@ -52,10 +52,7 @@ export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 				? value?.effectiveValue?.numberValue
 				: null
 			return excelSerialDate
-				? [
-						value.formattedValue,
-						excelDateToUnix(excelSerialDate, timeZone),
-					] // Pass integer Unix epoch to avoid timezone shenanigans.
+				? [value.formattedValue, excelDateToUnix(excelSerialDate, timeZone)] // Pass integer Unix epoch to avoid timezone shenanigans.
 				: value.formattedValue || ''
 		})
 	})
