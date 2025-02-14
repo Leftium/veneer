@@ -157,9 +157,7 @@
 	</tbody>
 	<tfoot>
 		<tr>
-			<td colspan={columns.length}>
-				<div style:width={`calc(${tableWidth}px - .5rem)`}></div>
-			</td>
+			<td colspan={columns.length}></td>
 		</tr>
 	</tfoot>
 </table>
@@ -176,8 +174,6 @@
 	@use 'open-props-scss' as *;
 
 	table {
-		display: block;
-		width: 100%;
 		border-collapse: separate; /* Don't collapse */
 
 		.numeric {
@@ -206,12 +202,6 @@
 
 			tr {
 				height: $size-8;
-			}
-		}
-
-		tfoot {
-			td {
-				height: 0;
 			}
 		}
 	}
