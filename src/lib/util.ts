@@ -1,3 +1,10 @@
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
 export function stringify(json: unknown) {
 	return JSON.stringify(json, null, 4)
 }
@@ -27,4 +34,18 @@ export function excelDateToJsDate(serial: number) {
 		minutes,
 		seconds,
 	)
+}
+
+// Define constants for the conversion
+const SECONDS_IN_A_DAY = 86400
+const EXCEL_EPOCH_DIFFERENCE = 25569 // Days from 1900-01-01 to 1970-01-01
+
+export function excelDateToUnix(excelDate: number, timeZone = 'UTC') {
+	// Calculate the Unix timestamp
+	const unixTimestamp = (excelDate - EXCEL_EPOCH_DIFFERENCE) * SECONDS_IN_A_DAY * 1000
+
+	// Adjust for the specified time zone using dayjs
+	const unixTimeWithOffset = dayjs.utc(unixTimestamp).tz(timeZone, true).valueOf()
+
+	return unixTimeWithOffset
 }

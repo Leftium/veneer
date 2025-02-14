@@ -27,7 +27,7 @@ function makeGoogleSheetUrl(id: string) {
 	const searchParams = new URLSearchParams({
 		ranges: 'A:ZZZ',
 		fields: [
-			'properties(title)',
+			'properties(title,timeZone)',
 			'sheets.properties(title)',
 			'sheets.data(columnMetadata.hiddenByUser,rowMetadata.hiddenByUser)',
 			'sheets.data.rowData.values(formattedValue,effectiveValue.numberValue,userEnteredFormat.numberFormat)',

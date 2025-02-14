@@ -89,7 +89,6 @@
 
 					if (valueTs) {
 						const utcjs = dayjs.utc
-						gg({ valueDate: valueTs, 'utcjs.(valueDate)': utcjs(valueTs) }, typeof valueTs)
 
 						// Relative date if within one year:
 						if (utcjs(valueTs).isBetween(utcjs().subtract(1, 'y'), utcjs().add(1, 'y'))) {

@@ -1,7 +1,7 @@
-import { excelDateToJsDate } from './util'
+import { excelDateToJsDate, excelDateToUnix } from './util'
 
 type GoogleSheetsApiResult = {
-	properties: { title: string }
+	properties: { title: string; timeZone: string }
 	sheets: {
 		properties: { title: string }
 		data: {
@@ -26,6 +26,7 @@ type GoogleSheetsApiResult = {
 
 export type GoogleSheetData = {
 	title: string
+	timeZone: string
 	sheetTitle: string
 	rows: (string | (string | number)[])[][]
 	hiddenColumns: number[]
@@ -39,6 +40,7 @@ export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 	}
 
 	const title = json.properties.title
+	const timeZone = json.properties.timeZone
 	const sheetTitle = json.sheets[0].properties.title
 
 	const hiddenColumns = data.columnMetadata.flatMap((cm, i) => (cm.hiddenByUser ? i : []))
@@ -50,12 +52,15 @@ export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 				? value?.effectiveValue?.numberValue
 				: null
 			return excelSerialDate
-				? [value.formattedValue, +excelDateToJsDate(excelSerialDate)] // Pass integer Unix epoch to avoid timezone shenanigans.
+				? [
+						value.formattedValue,
+						excelDateToUnix(excelSerialDate, timeZone),
+					] // Pass integer Unix epoch to avoid timezone shenanigans.
 				: value.formattedValue || ''
 		})
 	})
 
-	return { title, sheetTitle, rows, hiddenColumns, hiddenRows }
+	return { title, timeZone, sheetTitle, rows, hiddenColumns, hiddenRows }
 }
 
 export function stripHidden(json: GoogleSheetData, unhideCols = false, unhideRows = false) {
