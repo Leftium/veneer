@@ -80,7 +80,7 @@
 				return row.map((cell, indexColumn) => {
 					const column = columns[indexColumn]
 					const valueString = (Array.isArray(cell) ? cell[0] : cell) as string
-					const valueDate = Array.isArray(cell) && cell[2] ? excelDateToJsDate(cell[2]) : null
+					const valueDate = Array.isArray(cell) && cell[1] ? cell[1] : null
 
 					let renderedString = ''
 
