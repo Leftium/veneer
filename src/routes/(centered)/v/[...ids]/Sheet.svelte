@@ -138,7 +138,7 @@
 			{#if detailsOpened === indexRow}
 				<tr class="details" onclick={makeToggleDetails(indexRow)} transition:slide>
 					<td colspan={row.length}>
-						<div transition:slide style:width={`calc(${tableWidth}px - .5rem)`}>
+						<div transition:slide style:width={tableWidth ? `calc(${tableWidth}px - .5rem)` : ''}>
 							<dl>
 								{#each row as cell, indexColumn}
 									{#if indexColumn}
