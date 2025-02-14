@@ -7,7 +7,7 @@
 
 	import { gg } from '$lib/gg'
 	import { GoogleDocument } from '$lib/GoogleDocument.svelte'
-	import { stringify } from '$lib/util'
+	import { excelDateToJsDate, stringify } from '$lib/util'
 	import { slide } from 'svelte/transition'
 
 	interface Props {
@@ -80,7 +80,7 @@
 				return row.map((cell, indexColumn) => {
 					const column = columns[indexColumn]
 					const valueString = (Array.isArray(cell) ? cell[0] : cell) as string
-					const valueDate = Array.isArray(cell) && cell[1] ? new Date(cell[1]) : null
+					const valueDate = Array.isArray(cell) && cell[2] ? excelDateToJsDate(cell[2]) : null
 
 					let renderedString = ''
 
@@ -159,9 +159,7 @@
 	</tfoot>
 </table>
 
-<pre hidden>
-    {stringify(doc)}
-</pre>
+<pre>doc = {stringify(doc)}</pre>
 
 <pre hidden>columns = {stringify(columns)}</pre>
 
