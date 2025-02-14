@@ -162,7 +162,7 @@
     {stringify(doc)}
 </pre>
 
-<pre>columns = {stringify(columns)}</pre>
+<pre hidden>columns = {stringify(columns)}</pre>
 
 <pre hidden>
     {stringify(rows)}
