@@ -44,7 +44,8 @@
 	}
 
 	const numericRegex = /^[0-9-.,/: ]*$/
-	const { columns, rows } = $derived.by(() => {
+	const { type, columns, rows } = $derived.by(() => {
+		let type = 'regular'
 		if (doc?.json?.rows) {
 			let rows = [...doc?.json?.rows]
 				// Remove empty rows:
@@ -79,6 +80,14 @@
 			})
 			columns = columns.filter((cell) => cell.lengthMax !== 0)
 
+			// Detect special type
+			if (
+				columns.filter(({ title }) => /(name)|(닉네임)/i.test(title)).length &&
+				columns.filter(({ title }) => /(role|(역할))/i.test(title)).length
+			) {
+				type = 'dance-event'
+			}
+
 			const rowsRender = rows.map((row, indexRow) => {
 				return row.map((cell, indexColumn) => {
 					const column = columns[indexColumn]
@@ -109,9 +118,9 @@
 				})
 			})
 
-			return { columns, rows: rowsRender }
+			return { type, columns, rows: rowsRender }
 		}
-		return { columns: [], rows: [] }
+		return { type, columns: [], rows: [] }
 	})
 
 	const [rowHead, ...rowsBody] = $derived(rows)
@@ -162,13 +171,10 @@
 	</tfoot>
 </table>
 
-<pre hidden>doc = {stringify(doc)}</pre>
-
-<pre hidden>columns = {stringify(columns)}</pre>
-
-<pre hidden>
-    {stringify(rows)}
-</pre>
+<pre>type = {type}</pre>
+<pre>columns = {stringify(columns)}</pre>
+<pre hidden>rows = {stringify(rows)}</pre>
+<pre>doc = {stringify(doc)}</pre>
 
 <style lang="scss">
 	@use 'open-props-scss' as *;
