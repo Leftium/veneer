@@ -89,6 +89,7 @@
 						valueDate &&
 						dayjs(valueDate).isBetween(dayjs().subtract(1, 'y'), dayjs().add(1, 'y'))
 					) {
+						gg(dayjs(), dayjs(valueDate))
 						renderedString = dayjs().to(valueDate)
 					} else {
 						renderedString =
