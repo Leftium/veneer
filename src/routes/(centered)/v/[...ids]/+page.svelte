@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { PUBLIC_NAVER_MAPS_CLIENT_ID } from '$env/static/public'
 	import { stringify } from '$lib/util'
 
 	import Sheet from './Sheet.svelte'
@@ -17,6 +18,10 @@
 	{#if googleSheet}
 		<title>{googleSheet.json?.title}</title>
 	{/if}
+
+	<script
+		src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId={PUBLIC_NAVER_MAPS_CLIENT_ID}&submodules=geocoder"
+	></script>
 </svelte:head>
 
 <div class="wrap">
