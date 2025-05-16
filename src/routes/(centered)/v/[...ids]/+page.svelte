@@ -29,7 +29,8 @@
 		{#if googleSheet}
 			<h1>{googleSheet.json?.title}</h1>
 		{/if}
-		<div role="group">
+
+		<div role="group" hidden>
 			<button class="outline">✍ Form</button>
 			<button class="outline">📋 Responses</button>
 		</div>
@@ -37,7 +38,7 @@
 
 	<Sheet doc={googleSheet} bind:top={headerHeight}></Sheet>
 
-	<pre>{stringify(data)}</pre>
+	<pre hidden>{stringify(data)}</pre>
 </div>
 
 <style lang="scss">

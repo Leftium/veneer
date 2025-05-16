@@ -207,7 +207,7 @@
 	</table>
 </div>
 
-<div>
+<div hidden>
 	<pre>type    = {type}</pre>
 	<pre>columns = {stringify(columns)}</pre>
 	<pre>rows    = {stringify(rows)}</pre>
