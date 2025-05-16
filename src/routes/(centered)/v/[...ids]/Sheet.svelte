@@ -12,6 +12,7 @@
 	import { GoogleDocument } from '$lib/GoogleDocument.svelte'
 	import { stringify } from '$lib/util'
 	import { slide } from 'svelte/transition'
+	import DetailsRealEstate from './DetailsRealEstate.svelte'
 
 	interface Props {
 		doc?: GoogleDocument
@@ -181,18 +182,7 @@
 						<td colspan={row.length}>
 							<div transition:slide style:width={styleWidth}>
 								{#if type === 'real-estate'}
-									<table>
-										{#each row as cell, indexColumn}
-											<tbody>
-												<tr>
-													<td>{indexColumn}</td>
-													<td>{columns[indexColumn]?.title}</td>
-													<td>{cell.value}</td>
-												</tr>
-											</tbody>
-											{#if indexColumn}{/if}
-										{/each}
-									</table>
+									<DetailsRealEstate {row} {columns}></DetailsRealEstate>
 								{:else}
 									<dl>
 										{#each row as cell, indexColumn}
