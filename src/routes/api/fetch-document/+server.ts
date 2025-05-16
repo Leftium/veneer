@@ -29,10 +29,10 @@ export const GET = async ({ url, fetch }) => {
 							unhideRows,
 							unhideCols,
 						)
-						//googleDocument.text = ''
+						googleDocument.text = ''
 					} else if (googleDocument.type === 'form') {
 						googleDocument.json = adjustGoogleFormData(parseGoogleForm(googleDocument.text))
-						//googleDocument.text = ''
+						googleDocument.text = ''
 					}
 				} catch (error) {
 					gg({ error })
