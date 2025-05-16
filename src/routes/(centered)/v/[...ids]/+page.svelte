@@ -32,7 +32,7 @@
 
 	<Sheet doc={googleSheet} bind:top={headerHeight}></Sheet>
 
-	<pre hidden>{stringify(data)}</pre>
+	<pre>{stringify(data)}</pre>
 </div>
 
 <style lang="scss">
