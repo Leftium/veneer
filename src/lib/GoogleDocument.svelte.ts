@@ -128,7 +128,7 @@ export class GoogleDocument {
 		if (fetched.ok) {
 			this.idShort = jsoned.idShort
 			this.idLong = jsoned.idLong
-			//this.text = jsoned.text
+			//this.text = jsoned.text // hydration mis-match
 			this.json = jsoned.json
 		} else {
 			this.error = {
