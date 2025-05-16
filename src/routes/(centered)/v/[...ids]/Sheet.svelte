@@ -96,12 +96,17 @@
 			})
 			columns = columns.filter((cell) => cell?.lengthMax !== 0)
 
-			// Detect special type
+			// Detect special types
 			if (
 				columns.filter(({ title }) => /(name)|(닉네임)/i.test(title)).length &&
 				columns.filter(({ title }) => /(role|(역할)|(리드)|팔로우)/i.test(title)).length
 			) {
 				type = 'dance-event'
+			} else if (
+				columns.filter(({ title }) => /주소/i.test(title)).length &&
+				columns.filter(({ title }) => /면적/i.test(title)).length
+			) {
+				type = 'real-estate'
 			}
 
 			const rowsRender = rows.map((row) => {
@@ -175,14 +180,29 @@
 					<tr class="details" onclick={makeToggleDetails(indexRow)} transition:slide>
 						<td colspan={row.length}>
 							<div transition:slide style:width={styleWidth}>
-								<dl>
-									{#each row as cell, indexColumn}
-										{#if indexColumn}
-											<dt>{columns[indexColumn]?.title}</dt>
-											<dd>{cell.value}</dd>
-										{/if}
-									{/each}
-								</dl>
+								{#if type === 'real-estate'}
+									<table>
+										{#each row as cell, indexColumn}
+											<tbody>
+												<tr>
+													<td>{indexColumn}</td>
+													<td>{columns[indexColumn]?.title}</td>
+													<td>{cell.value}</td>
+												</tr>
+											</tbody>
+											{#if indexColumn}{/if}
+										{/each}
+									</table>
+								{:else}
+									<dl>
+										{#each row as cell, indexColumn}
+											{#if indexColumn}
+												<dt>{columns[indexColumn]?.title}</dt>
+												<dd>{cell.value}</dd>
+											{/if}
+										{/each}
+									</dl>
+								{/if}
 							</div>
 						</td>
 					</tr>
