@@ -13,8 +13,17 @@
 	let headerHeight: number = $state(0)
 </script>
 
+<svelte:head>
+	{#if googleSheet}
+		<title>{googleSheet.json?.title}</title>
+	{/if}
+</svelte:head>
+
 <div class="wrap">
 	<header bind:this={headerElement} bind:clientHeight={headerHeight}>
+		{#if googleSheet}
+			<h1>{googleSheet.json?.title}</h1>
+		{/if}
 		<div role="group">
 			<button class="outline">✍ Form</button>
 			<button class="outline">📋 Responses</button>
