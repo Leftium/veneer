@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio'
-import { gg } from './gg'
+import { gg } from '@leftium/gg'
 
 export type QuestionType =
 	| 'TEXT'

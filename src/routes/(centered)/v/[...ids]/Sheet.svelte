@@ -8,7 +8,7 @@
 	dayjs.extend(isBetween)
 	dayjs.extend(utc)
 
-	import { gg } from '$lib/gg'
+	import { gg } from '@leftium/gg'
 	import { GoogleDocument } from '$lib/GoogleDocument.svelte'
 	import { stringify } from '$lib/util'
 	import { slide } from 'svelte/transition'

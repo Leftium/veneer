@@ -1,6 +1,6 @@
 <script lang="ts">
 	import AutogrowingTextarea from '$lib/components/AutogrowingTextarea.svelte'
-	import { gg } from '$lib/gg'
+	import { gg } from '@leftium/gg'
 	import { GoogleDocument } from '$lib/GoogleDocument.svelte'
 
 	import { undent } from '$lib/undent'

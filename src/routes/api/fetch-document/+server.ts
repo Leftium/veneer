@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit'
 
-import { gg } from '$lib/gg.js'
+import { gg } from '@leftium/gg'
 import { GoogleDocument } from '$lib/GoogleDocument.svelte'
 
 import { GCP_API_KEY } from '$env/static/private'

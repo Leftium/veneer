@@ -2,7 +2,7 @@
 	import { stringify } from '$lib/util'
 	import { onMount } from 'svelte'
 
-	import { gg } from '$lib/gg'
+	import { gg } from '@leftium/gg'
 
 	let { row, columns } = $props()
 
