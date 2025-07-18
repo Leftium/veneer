@@ -13,6 +13,7 @@
 	import { stringify } from '$lib/util'
 	import { slide } from 'svelte/transition'
 	import DetailsRealEstate from './DetailsRealEstate.svelte'
+	import type { GoogleSheetData } from '$lib/google-sheets'
 
 	interface Props {
 		doc?: GoogleDocument
@@ -49,8 +50,9 @@
 	const numericRegex = /^[0-9-.,/: ]*$/
 	const { type, columns, rows } = $derived.by(() => {
 		let type = 'regular'
-		if (doc?.json?.rows) {
-			let rows = [...doc?.json?.rows]
+		const sheetJson = doc?.json as GoogleSheetData
+		if (sheetJson.rows) {
+			let rows = [...sheetJson.rows]
 
 			// Skip extraneous rows without timestamps.
 			// Adjust title row if extra columns are found.
@@ -125,7 +127,7 @@
 						if (utcjs(valueTs).isBetween(utcjs().subtract(25, 'd'), utcjs().add(25, 'd'))) {
 							renderedString = dayjs().utc().to(valueTs)
 						} else {
-							renderedString = dayjs.tz(valueTs, doc.timeZone).format('YYYY-MM-DD')
+							renderedString = dayjs.tz(valueTs, doc?.timeZone).format('YYYY-MM-DD')
 						}
 					} else {
 						renderedString =

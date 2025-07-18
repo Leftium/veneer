@@ -1,5 +1,3 @@
-import type { GoogleSheetData } from './google-sheets'
-
 const documentIdRegex = /^(?<prefix>[sfgbh])\.(?<id>[a-zA-Z0-9_-]+)$/
 
 const documentUrlRegex = {
@@ -37,11 +35,16 @@ function makeGoogleSheetUrl(id: string) {
 	return `https://sheets.googleapis.com/v4/spreadsheets/${id}?${searchParams}`
 }
 
+type GoogleDocumentJson = {
+	timeZone?: string
+	title?: string
+}
+
 export class GoogleDocument {
 	idShort?: string = $state()
 	idLong?: string = $state()
 	text?: string = $state()
-	json?: GoogleSheetData = $state()
+	json?: GoogleDocumentJson = $state()
 
 	error? = $state()
 
@@ -50,7 +53,7 @@ export class GoogleDocument {
 	title = $derived.by(() => {
 		let title = ''
 		if (this.json) {
-			title = this.json?.title
+			title = this.json?.title || 'No Title'
 		} else {
 			title = this.text ? this.text.split(/<\/?title>/)[1] : ''
 			if (!title && this.text) {

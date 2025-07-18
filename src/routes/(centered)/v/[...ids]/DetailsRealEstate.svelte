@@ -9,10 +9,10 @@
 	let mapElement = $state<HTMLDivElement>()
 
 	let generalInfo: Record<string, string> = {}
-	let name = ''
-	let address = ''
-	let urlPhoto = ''
-	let urlFloorPlan = ''
+	let name = $state('')
+	let address = $state('')
+	let urlPhoto = $state('')
+	let urlFloorPlan = $state('')
 	let latitude = $state(0)
 	let longitude = $state(0)
 
@@ -33,9 +33,9 @@
 		}
 	}
 
-	function geocode(address) {
+	function geocode(query: string): Promise<naver.maps.Service.AddressItem[]> {
 		return new Promise((resolve, reject) => {
-			naver.maps.Service.geocode({ address }, function (status, response) {
+			naver.maps.Service.geocode({ query }, function (status, response) {
 				if (status !== naver.maps.Service.Status.OK) {
 					reject(new Error('Something went wrong!'))
 				} else {
