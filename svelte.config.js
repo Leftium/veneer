@@ -14,7 +14,7 @@ const config = {
 		adapter: adapter(),
 	},
 
-	extensions: ['.svelte', '.svx'],
+	extensions: ['.svelte'],
 
 	vitePlugin: {
 		inspector: {
