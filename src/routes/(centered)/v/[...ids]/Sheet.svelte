@@ -14,6 +14,7 @@
 	import { slide } from 'svelte/transition'
 	import DetailsRealEstate from './DetailsRealEstate.svelte'
 	import type { GoogleSheetData } from '$lib/google-sheets'
+	import { expoInOut } from 'svelte/easing'
 
 	interface Props {
 		doc?: GoogleDocument
@@ -180,9 +181,14 @@
 					{/each}
 				</tr>
 				{#if detailsOpened === indexRow}
-					<tr class="details" onclick={makeToggleDetails(indexRow)} transition:slide>
+					{@const transitionOptions = { duration: 500, easing: expoInOut }}
+					<tr
+						class="details"
+						onclick={makeToggleDetails(indexRow)}
+						transition:slide={transitionOptions}
+					>
 						<td colspan={row.length}>
-							<div transition:slide style:width={styleWidth}>
+							<div transition:slide={transitionOptions} style:width={styleWidth}>
 								{#if type === 'real-estate'}
 									<DetailsRealEstate {row} {columns}></DetailsRealEstate>
 								{:else}
