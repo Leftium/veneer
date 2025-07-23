@@ -35,7 +35,7 @@
 
 	function geocode(address: string): Promise<naver.maps.Service.AddressItem[]> {
 		return new Promise((resolve, reject) => {
-			const options = { address} as unknown as naver.maps.Service.GeocodeServiceOptions
+			const options = { address } as unknown as naver.maps.Service.GeocodeServiceOptions
 			naver.maps.Service.geocode(options, function (status, response) {
 				if (status !== naver.maps.Service.Status.OK) {
 					reject(new Error('Something went wrong!'))
