@@ -15,8 +15,8 @@ importers:
         specifier: ^9.31.0
         version: 9.31.0
       '@leftium/gg':
-        specifier: ^0.0.3
-        version: 0.0.3(svelte@5.36.13)
+        specifier: ^0.0.4
+        version: 0.0.4(svelte@5.36.13)
       '@picocss/pico':
         specifier: ^2.1.1
         version: 2.1.1
@@ -53,9 +53,6 @@ importers:
       globals:
         specifier: ^16.3.0
         version: 16.3.0
-      launch-editor:
-        specifier: ^2.10.0
-        version: 2.10.0
       linkifyjs:
         specifier: ^4.3.1
         version: 4.3.1
@@ -335,8 +332,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.29':
     resolution: {integrity: sha512-uw6guiW/gcAGPDhLmd77/6lW8QLeiV5RUTsAX46Db6oLhGaVj4lhnPwb184s1bkc8kdVg/+h988dro8GRDpmYQ==}
 
-  '@leftium/gg@0.0.3':
-    resolution: {integrity: sha512-pvat2Q98OGj4UuJRCWBfDmTXrCUHrhiXOWYoe8+hqbgrN5buNBA2yrcA5omc7H4d3qVaNUuCuMIu5c6QHt3l9g==}
+  '@leftium/gg@0.0.4':
+    resolution: {integrity: sha512-hqwNmOT1eK35Z7HIMm/iT6rZw14fhI+Bp+UgjrRFjtmpTfgiSropIKBVJILNeeFHx+clTSKU5JGd2eshQcyfAQ==}
     peerDependencies:
       svelte: ^5.0.0
 
@@ -1604,11 +1601,16 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.4
 
-  '@leftium/gg@0.0.3(svelte@5.36.13)':
+  '@leftium/gg@0.0.4(svelte@5.36.13)':
     dependencies:
+      debug: 4.4.1
       dotenv: 17.2.0
       error-stack-parser: 2.1.4
+      esm-env: 1.2.2
+      launch-editor: 2.10.0
       svelte: 5.36.13
+    transitivePeerDependencies:
+      - supports-color
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
