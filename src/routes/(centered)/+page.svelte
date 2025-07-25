@@ -8,6 +8,8 @@
 
 	import * as linkify from 'linkifyjs'
 	import { SvelteMap } from 'svelte/reactivity'
+	import { onMount } from 'svelte'
+	import { getGoogleDocumentId } from '$lib/google-document-util/url-id'
 
 	let value = $state(undent`
         https://docs.google.com/spreadsheets/d/1o5t26He2DzTweYeleXOGiDjlU4Jkx896f95VUHVgS8U/edit?gid=0#gid=0
@@ -60,7 +62,28 @@
 			}
 		}
 	}
+
+	let shortUrls = [
+		'https://url.kr/o3kyn2',
+		'b.3BInfae',
+		's.1_bZqtj2UoVjNLm1GRqbAI-QjNSoyOa2veWAfvyhFQQo',
+		'b.3BInfa',
+		'g.yPTfUNW4jRCAjKdp6',
+	]
+	let results = $state<any>([])
+
+	onMount(async function () {
+		results = await Promise.all(
+			shortUrls.map((url) => {
+				return getGoogleDocumentId(url)
+			}),
+		)
+	})
 </script>
+
+<pre>{JSON.stringify(results, null, 4)}</pre>
+
+<hr />
 
 <AutogrowingTextarea bind:value />
 
