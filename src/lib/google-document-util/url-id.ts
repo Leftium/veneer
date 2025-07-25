@@ -20,12 +20,36 @@ const GOOGLE_FORM_OR_SHEET_REGEX = {
 
 const DOCUMENT_ID_REGEX = /^(?<prefix>[sfgbh])\.(?<id>[a-zA-Z0-9_-]+)$/
 
-const URL_TEMPLATES: Record<string, string> = {
+export const URL_TEMPLATES: Record<string, string> = {
 	s: 'https://docs.google.com/spreadsheets/d/{ID}',
 	f: 'https://docs.google.com/forms/d/e/{ID}/viewform',
 	g: 'https://forms.gle/{ID}',
 	b: 'https://bit.ly/{ID}',
 	h: 'https://shorturl.at/{ID}',
+}
+
+function makeGoogleSheetUrl(id: string) {
+	const searchParams = new URLSearchParams({
+		ranges: 'A:ZZZ',
+		fields: [
+			'properties(title,timeZone)',
+			'sheets.properties(title)',
+			'sheets.data(columnMetadata.hiddenByUser,rowMetadata.hiddenByUser)',
+			'sheets.data.rowData.values(formattedValue,effectiveValue.numberValue,userEnteredFormat.numberFormat)',
+		].join(','),
+		key: 'GCP_API_KEY',
+	})
+	return `https://sheets.googleapis.com/v4/spreadsheets/${id}?${searchParams}`
+}
+
+export function urlFromDocumentId(documentId: string) {
+	const [prefix, id] = documentId.split('.')
+
+	if (prefix === 's' && id.length === 44) {
+		return makeGoogleSheetUrl(id)
+	}
+
+	return URL_TEMPLATES[prefix].replace('{ID}', id)
 }
 
 // Extract Google document id from URL or veneer id.
