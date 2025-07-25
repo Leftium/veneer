@@ -16,30 +16,39 @@ const { on, emit } = getEmitter<DocumentDataEvents>(import.meta)
 
 class DocumentState {
 	type: 'form' | 'sheet'
+	active: boolean
 	id = $state<string | null>(null)
-	status = $state('no.id')
+	status = $state('inactive')
 	error = $state<string>()
 	text = $state<string>()
 	json = $state<unknown>()
 
-	isBusy = $derived(!this.error && this.status.includes('pending'))
+	isBusy = $derived(!this.error && this.status.includes('stalled'))
 
-	constructor(type: 'form' | 'sheet') {
+	constructor(type: 'form' | 'sheet', active = true) {
 		this.type = type
+		this.active = active
 	}
 
+	timeoutId = $state(0)
 	async fetchDocument(needSheetId = false) {
 		if (!this.id) {
 			return
 		}
 
-		this.status = 'pending.google-document-id'
+		if (this.timeoutId) {
+			clearTimeout(this.timeoutId)
+		}
+		this.timeoutId = window.setTimeout(() => {
+			if (this.status !== 'ready') {
+				this.status = 'stalled.fetchDocument'
+			}
+		}, 1000)
+
 		const googleDocumentId = await getGoogleDocumentId(this.id)
 		if (googleDocumentId.isOk()) {
 			this.id = googleDocumentId.value
-			this.status = 'pending.document'
 			if (this?.id) {
-				this.status = 'pending.id'
 				const urlForm = urlFromDocumentId(this.id)
 				const fetched = await fetch(`/api/fetch-document?u=${urlForm}`)
 				if (fetched.ok) {
@@ -98,7 +107,7 @@ class DocumentState {
 export function makeNsDocumentData() {
 	const form = $state<DocumentState>(new DocumentState('form'))
 
-	const sheet = $state<DocumentState>(new DocumentState('sheet'))
+	const sheet = $state<DocumentState>(new DocumentState('sheet', false))
 
 	if (browser) {
 		on('documentdata_requestedSetIds', async function (params) {
