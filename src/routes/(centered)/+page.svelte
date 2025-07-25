@@ -42,11 +42,11 @@
 				idSheet = doc.idShort || doc.idLong || ''
 			}
 			if (idSheet && idForm) {
-				return `/v/${idForm}/${idSheet}`
+				return `/w/${idForm}/${idSheet}`
 			}
 		}
 		if (idSheet || idForm) {
-			return `/v/${idForm}${idSheet}`
+			return `/w/${idForm}${idSheet}`
 		}
 		return null
 	}
