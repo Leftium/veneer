@@ -1,6 +1,9 @@
 import { getGoogleDocumentId, urlFromDocumentId } from './google-document-util/url-id'
 import { getEmitter } from './nation-state/emitter'
 import { browser } from '$app/environment'
+import { gg } from '@leftium/gg'
+
+import * as linkify from 'linkifyjs'
 
 export type DocumentDataEvents = {
 	documentdata_requestedSetIds: {
@@ -9,7 +12,7 @@ export type DocumentDataEvents = {
 	}
 }
 
-const { on } = getEmitter<DocumentDataEvents>(import.meta)
+const { on, emit } = getEmitter<DocumentDataEvents>(import.meta)
 
 class DocumentState {
 	type: 'form' | 'sheet'
@@ -25,7 +28,7 @@ class DocumentState {
 		this.type = type
 	}
 
-	async fetchDocument() {
+	async fetchDocument(needSheetId = false) {
 		if (!this.id) {
 			return
 		}
@@ -44,6 +47,29 @@ class DocumentState {
 					if (jsoned.type === this.type) {
 						this.json = jsoned.json
 						this.status = 'ready'
+
+						if (needSheetId && this.type === 'form') {
+							gg('Trying to autodetect sheet id.')
+							// TODO: Try to set sheet.id based on form contents.
+
+							const formJson = this.json as { fields: Array<{ description: string }> }
+							const links = formJson.fields.map((field) => linkify.find(field.description)).flat()
+
+							// Move first link to last place: usually link to form itself.
+							const shifted = links.shift()
+							if (shifted !== undefined) {
+								links.push(shifted)
+							}
+
+							for (const link of links) {
+								gg(`Trying ${link.href}`)
+								const googleDocumentId = await getGoogleDocumentId(link.href)
+								if (googleDocumentId.isOk() && googleDocumentId.value[0] === 's') {
+									emit('documentdata_requestedSetIds', { idSheet: googleDocumentId.value })
+									break
+								}
+							}
+						}
 					} else {
 						this.error = `Expected Google ${this.type} (${urlForm})`
 					}
@@ -78,7 +104,7 @@ export function makeNsDocumentData() {
 		on('documentdata_requestedSetIds', async function (params) {
 			if (params.idForm && params.idForm !== form.id) {
 				form.id = params.idForm
-				form.fetchDocument()
+				form.fetchDocument(!params.idSheet)
 			}
 
 			if (params.idSheet && params.idSheet !== sheet.id) {
