@@ -4,8 +4,12 @@ import { gg } from '@leftium/gg'
 import { GoogleDocument } from '$lib/GoogleDocument.svelte'
 
 import { GCP_API_KEY } from '$env/static/private'
-import { adjustGoogleSheetData, stripHidden, type GoogleSheetData } from '$lib/google-sheets'
-import { adjustGoogleFormData, parseGoogleForm } from '$lib/google-form'
+import {
+	adjustGoogleSheetData,
+	stripHidden,
+	type GoogleSheetData,
+} from '$lib/google-document-util/google-sheets'
+import { adjustGoogleFormData, parseGoogleForm } from '$lib/google-document-util/google-form'
 
 export const GET = async ({ url, fetch }) => {
 	const targetUrl = url.searchParams.get('u') || ''

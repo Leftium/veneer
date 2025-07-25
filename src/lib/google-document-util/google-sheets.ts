@@ -1,4 +1,4 @@
-import { excelDateToUnix } from './util'
+import { excelDateToUnix } from '../util'
 
 type GoogleSheetsApiResult = {
 	properties: { title: string; timeZone: string }
