@@ -24,35 +24,51 @@
 </script>
 
 <main>
-	<header>
-		<div role="group">
-			<button class={['outline', activeIndex === 0 && 'active']} onclick={makeSlideTo(0)}>
-				ℹ️ Info
-				<span class={['status']}></span>
-			</button>
-			<button class={['outline', activeIndex === 1 && 'active']} onclick={makeSlideTo(1)}>
-				✍ Form
-				<span class={['status']}></span>
-			</button>
-			<button class={['outline', activeIndex === 2 && 'active']} onclick={makeSlideTo(2)}>
-				📋 Responses
-				<span class={['status']}></span>
-			</button>
-		</div>
-	</header>
+	{#if data.numTabs > 1}
+		<header>
+			<div role="group">
+				{#if data.visibleTabs.info}
+					<button class={['outline', activeIndex === 0 && 'active']} onclick={makeSlideTo(0)}>
+						ℹ️ Info
+						<span class={['status']}></span>
+					</button>
+				{/if}
+
+				{#if data.visibleTabs.form}
+					<button class={['outline', activeIndex === 1 && 'active']} onclick={makeSlideTo(1)}>
+						✍ Form
+						<span class={['status']}></span>
+					</button>
+				{/if}
+
+				{#if data.visibleTabs.responses}
+					<button class={['outline', activeIndex === 2 && 'active']} onclick={makeSlideTo(2)}>
+						📋 Responses
+						<span class={['status']}></span>
+					</button>
+				{/if}
+			</div>
+		</header>
+	{/if}
 
 	<swiper-container bind:this={swiperContainer} space-between={4} hash-navigation={true}>
-		<swiper-slide data-hash="info">
-			<pre>INFO</pre>
-		</swiper-slide>
+		{#if data.visibleTabs.info}
+			<swiper-slide data-hash="info">
+				<pre>INFO</pre>
+			</swiper-slide>
+		{/if}
 
-		<swiper-slide data-hash="form">
-			<pre>FORM</pre>
-		</swiper-slide>
+		{#if data.visibleTabs.form}
+			<swiper-slide data-hash="form">
+				<pre>FORM</pre>
+			</swiper-slide>
+		{/if}
 
-		<swiper-slide data-hash="responses">
-			<pre>REPONSES</pre>
-		</swiper-slide>
+		{#if data.visibleTabs.responses}
+			<swiper-slide data-hash="responses">
+				<pre>REPONSES</pre>
+			</swiper-slide>
+		{/if}
 	</swiper-container>
 
 	<div>

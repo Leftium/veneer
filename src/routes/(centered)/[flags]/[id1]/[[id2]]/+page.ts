@@ -11,5 +11,7 @@ export const load = async ({ params }) => {
 		responses: (flags & TAB_BIT_RESPONSES) > 0,
 	}
 
-	return { visibleTabs }
+	const numTabs = flags.toString(2).replace(/0/g, '').length
+
+	return { numTabs, visibleTabs }
 }
