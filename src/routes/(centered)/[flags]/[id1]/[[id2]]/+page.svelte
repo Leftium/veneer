@@ -1,21 +1,16 @@
 <script lang="ts">
 	// import function to register Swiper custom elements
-	import type { SwiperContainer } from 'swiper/element'
+	import type { SwiperContainer } from 'swiper/element/bundle'
 	import { register } from 'swiper/element/bundle'
-
-	import { onMount } from 'svelte'
 
 	import { stringify } from '$lib/util'
 
 	let { params, data } = $props()
 
-	const swiperParams = {
-		spaceBetween: 4,
-		hashNavigation: true,
-	}
-
 	let swiperContainer = $state<SwiperContainer>()
 	let activeIndex = $state(0)
+
+	register()
 
 	function makeSlideTo(slideIndex: number) {
 		return function () {
@@ -26,16 +21,6 @@
 			}
 		}
 	}
-
-	onMount(function () {
-		// register Swiper custom elements
-		register()
-
-		if (swiperContainer) {
-			Object.assign(swiperContainer, swiperParams)
-			swiperContainer.initialize()
-		}
-	})
 </script>
 
 <main>
@@ -56,7 +41,7 @@
 		</div>
 	</header>
 
-	<swiper-container init="false" bind:this={swiperContainer}>
+	<swiper-container bind:this={swiperContainer} space-between={4} hash-navigation={true}>
 		<swiper-slide data-hash="info">
 			<pre>INFO</pre>
 		</swiper-slide>
