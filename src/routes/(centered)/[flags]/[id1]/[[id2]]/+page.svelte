@@ -51,7 +51,7 @@
 
 				{#if data.visibleTabs.dev}
 					<button class={['outline', activeIndex === 3 && 'active']} onclick={makeSlideTo(3)}>
-						📋 Dev
+						🔧 Dev
 						<span class={['status']}></span>
 					</button>
 				{/if}
