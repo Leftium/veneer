@@ -148,21 +148,22 @@ export function parseGoogleForm(html: string) {
 		const isAnswerRequired = field[4]?.[0]?.[2] === 1
 
 		const question: Question = {
-			itemId,
-			title: questionText,
-			/// titleHtml: questionTextHtml,
-			description: questionDescription,
-			/// descriptionHtml: questionDescriptionHtml,
 			type: questionType as QuestionType,
+			title: questionText,
+			description: questionDescription,
 			options: answerOptionsList,
 			required: isAnswerRequired,
-			id: answerSubmissionId,
+
+			/// titleHtml: questionTextHtml,
+			/// descriptionHtml: questionDescriptionHtml,
 			imageId: imageId,
 			youtubeId: youtubeId,
 			mediaWidth: mediaWidth,
 			mediaHeight: mediaHeight,
 			//mediaMetaData: mediaMetadata
 			//field
+			itemId,
+			id: answerSubmissionId,
 		}
 
 		form.questions.push(question)
@@ -224,13 +225,13 @@ export function adjustGoogleFormData(json: Form) {
 	const insertIndex = ['IMAGE', 'VIDEO'].includes(newJson.fields[0]?.type) ? 1 : 0
 
 	newJson.fields.splice(insertIndex, 0, {
-		itemId: 0,
-		title: json.title,
-		/// titleHtml: json.titleHtml,
-		description: json.description,
-		/// descriptionHtml: json.descriptionHtml,
 		type: 'TITLE_AND_DESCRIPTION',
+		title: json.title,
+		description: json.description,
 		options: [],
+		itemId: 0,
+		/// titleHtml: json.titleHtml,
+		/// descriptionHtml: json.descriptionHtml,
 		required: false,
 		id: '',
 	})

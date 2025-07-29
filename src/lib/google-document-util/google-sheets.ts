@@ -26,8 +26,8 @@ type GoogleSheetsApiResult = {
 
 export type GoogleSheetData = {
 	title: string
-	timeZone: string
 	sheetTitle: string
+	timeZone: string
 	rows: (string | (string | number)[])[][]
 	hiddenColumns: number[]
 	hiddenRows: number[]
@@ -57,7 +57,7 @@ export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 		})
 	})
 
-	return { title, timeZone, sheetTitle, rows, hiddenColumns, hiddenRows }
+	return { title, sheetTitle, timeZone, rows, hiddenColumns, hiddenRows }
 }
 
 export function stripHidden(json: GoogleSheetData, unhideCols = false, unhideRows = false) {
