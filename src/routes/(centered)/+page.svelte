@@ -66,20 +66,7 @@
 </script>
 
 {@html md`
-	- /15/g.tBMa9PThhCkkF72X9/s.1Q2BHPjrGeFOsytRjzhMXuQ-z7Bw_4xwBlKNshVymI34
-	- /0/https://forms.gle/tBMa9PThhCkkF72X9
-	- /1/just-info
-	- /2/just-form
-	- /3/info-form
-	- /4/just-responses
-	- /7/info-form-reponses
-
-	- /v/g.tBMa9PThhCkkF72X9/s.1Q2BHPjrGeFOsytRjzhMXuQ-z7Bw_4xwBlKNshVymI34
-	- /v/g.tBMa9PThhCkkF72X9
-	- /v/g.yPTfUNW4jRCAjKdp6/s.1_bZqtj2UoVjNLm1GRqbAI-QjNSoyOa2veWAfvyhFQQo
-	- /v/g.yPTfUNW4jRCAjKdp6
-	- /v/f.1FAIpQLSeqSly5eKwlyxLGh4SQQmWobxfSrBxGAXoNL9XUrSw_J2Q9sQ
-	- /v/s.1_bZqtj2UoVjNLm1GRqbAI-QjNSoyOa2veWAfvyhFQQo
+	- /15/g.r6eRUz2U9uf5oVFn6/s.13E_wsbrKLEsuV-eDaTKl0a967EdpYgcZrXH0Gq_KK3g
 `}
 
 <hr />
