@@ -30,21 +30,21 @@
 				{#if data.visibleTabs.info}
 					<button class={['outline', activeIndex === 0 && 'active']} onclick={makeSlideTo(0)}>
 						ℹ️ Info
-						<span class={['status']}></span>
+						<span class={['status']}>{data.form.isErr() ? '⚠️' : ''}</span>
 					</button>
 				{/if}
 
 				{#if data.visibleTabs.form}
 					<button class={['outline', activeIndex === 1 && 'active']} onclick={makeSlideTo(1)}>
 						✍ Form
-						<span class={['status']}></span>
+						<span class={['status']}>{data.form.isErr() ? '⚠️' : ''}</span>
 					</button>
 				{/if}
 
 				{#if data.visibleTabs.responses}
 					<button class={['outline', activeIndex === 2 && 'active']} onclick={makeSlideTo(2)}>
 						📋 Responses
-						<span class={['status']}></span>
+						<span class={['status']}>{data.sheet.isErr() ? '⚠️' : ''}</span>
 					</button>
 				{/if}
 
