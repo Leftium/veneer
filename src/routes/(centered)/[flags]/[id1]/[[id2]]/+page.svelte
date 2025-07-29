@@ -68,12 +68,14 @@
 		{#if data.visibleTabs.form}
 			<swiper-slide data-hash="form">
 				<h1>FORM</h1>
+				<pre>{stringify(data.form.isOk() ? data.form.value : data.form.error)}</pre>
 			</swiper-slide>
 		{/if}
 
 		{#if data.visibleTabs.responses}
 			<swiper-slide data-hash="responses">
 				<h1>REPONSES</h1>
+				<pre>{stringify(data.sheet.isOk() ? data.sheet.value : data.sheet.error)}</pre>
 			</swiper-slide>
 		{/if}
 
@@ -114,8 +116,7 @@
 			overflow: hidden;
 
 			swiper-slide {
-				display: grid;
-				place-items: center;
+				display: block;
 				background-color: #00f6;
 
 				overflow: auto;
