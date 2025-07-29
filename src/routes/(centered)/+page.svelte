@@ -8,8 +8,6 @@
 
 	import * as linkify from 'linkifyjs'
 	import { SvelteMap } from 'svelte/reactivity'
-	import { onMount } from 'svelte'
-	import { getGoogleDocumentId } from '$lib/google-document-util/url-id'
 
 	import { linkifyRelative, makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
 	const md = makeTagFunctionMd({ html: true, linkify: true }, [[linkifyRelative]])
@@ -65,27 +63,11 @@
 			}
 		}
 	}
-
-	let shortUrls = [
-		'https://url.kr/o3kyn2',
-		'b.3BInfae',
-		's.1_bZqtj2UoVjNLm1GRqbAI-QjNSoyOa2veWAfvyhFQQo',
-		'b.3BInfa',
-		'g.yPTfUNW4jRCAjKdp6',
-	]
-	let results = $state<any>([])
-
-	onMount(async function () {
-		results = await Promise.all(
-			shortUrls.map((url) => {
-				return getGoogleDocumentId(url)
-			}),
-		)
-	})
 </script>
 
 {@html md`
-	- /0/ID1/ID2
+	- /15/g.tBMa9PThhCkkF72X9/s.1Q2BHPjrGeFOsytRjzhMXuQ-z7Bw_4xwBlKNshVymI34
+	- /0/https://forms.gle/tBMa9PThhCkkF72X9
 	- /1/just-info
 	- /2/just-form
 	- /3/info-form
@@ -100,9 +82,6 @@
 	- /v/s.1_bZqtj2UoVjNLm1GRqbAI-QjNSoyOa2veWAfvyhFQQo
 `}
 
-<hr />
-
-<pre>{JSON.stringify(results, null, 4)}</pre>
 <hr />
 
 <AutogrowingTextarea bind:value />

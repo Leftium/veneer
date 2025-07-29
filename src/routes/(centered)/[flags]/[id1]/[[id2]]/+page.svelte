@@ -47,6 +47,13 @@
 						<span class={['status']}></span>
 					</button>
 				{/if}
+
+				{#if data.visibleTabs.dev}
+					<button class={['outline', activeIndex === 3 && 'active']} onclick={makeSlideTo(3)}>
+						📋 Dev
+						<span class={['status']}></span>
+					</button>
+				{/if}
 			</div>
 		</header>
 	{/if}
@@ -54,27 +61,29 @@
 	<swiper-container bind:this={swiperContainer} space-between={4} hash-navigation={true}>
 		{#if data.visibleTabs.info}
 			<swiper-slide data-hash="info">
-				<pre>INFO</pre>
+				<h1>INFO</h1>
 			</swiper-slide>
 		{/if}
 
 		{#if data.visibleTabs.form}
 			<swiper-slide data-hash="form">
-				<pre>FORM</pre>
+				<h1>FORM</h1>
 			</swiper-slide>
 		{/if}
 
 		{#if data.visibleTabs.responses}
 			<swiper-slide data-hash="responses">
-				<pre>REPONSES</pre>
+				<h1>REPONSES</h1>
+			</swiper-slide>
+		{/if}
+
+		{#if data.visibleTabs.dev}
+			<swiper-slide data-hash="dev">
+				<pre>params: {stringify(params)}</pre>
+				<pre>data: {stringify(data)}</pre>
 			</swiper-slide>
 		{/if}
 	</swiper-container>
-
-	<div>
-		<pre>params: {stringify(params)}</pre>
-		<pre>data: {stringify(data)}</pre>
-	</div>
 </main>
 
 <style lang="scss">
@@ -82,7 +91,7 @@
 		display: grid;
 		height: 100vh;
 
-		grid-template-rows: auto 1fr auto;
+		grid-template-rows: auto 1fr;
 
 		.active {
 			background-color: #8882;
@@ -106,8 +115,16 @@
 
 			swiper-slide {
 				display: grid;
-				-place-items: center;
+				place-items: center;
 				background-color: #00f6;
+
+				overflow: auto;
+
+				pre {
+					width: 100%;
+					overflow: visible;
+					margin-bottom: 0;
+				}
 			}
 		}
 	}

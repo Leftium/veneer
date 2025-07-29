@@ -1,30 +1,13 @@
 import { gg } from '@leftium/gg'
 import { json } from '@sveltejs/kit'
+import { finalUrl } from './finalurl.js'
 
-export const GET = async ({ url, fetch }) => {
+export const GET = async ({ url }) => {
 	const urlShort = url.searchParams.get('u') || ''
 
-	if (!urlShort) {
-		return json({
-			urlShort,
-			status: 444,
-			statusText: 'Missing u param.',
-		})
-	}
-	const fetched = await fetch(urlShort, {
-		method: 'HEAD',
-		redirect: 'manual',
-	})
+	const results = await finalUrl(urlShort)
 
-	const urlFinal = fetched.headers.get('location')
+	gg(`api/final-url: ${urlShort} -> ${results.urlFinal}`)
 
-	gg(`api/final-url: ${urlShort} -> ${urlFinal}`)
-
-	return json({
-		urlShort,
-		// The redirect URL in the Location header
-		urlFinal,
-		status: fetched.status,
-		statusText: fetched.statusText,
-	})
+	return json(results)
 }

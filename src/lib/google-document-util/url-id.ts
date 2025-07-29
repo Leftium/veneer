@@ -1,6 +1,7 @@
 import { err, ok } from 'neverthrow'
+import { finalUrl } from '../../routes/api/final-url/finalurl'
 
-const DOCUMENT_URL_REGEX = {
+export const DOCUMENT_URL_REGEX = {
 	// Google sheets
 	s: /(?<beforeId>^https:\/\/(docs.google.com|sheets.googleapis.com\/v4)\/spreadsheets\/(d\/(e\/)?)?)(?<id>[^?/]+)/,
 	// Google forms
@@ -52,11 +53,22 @@ export function urlFromDocumentId(documentId: string) {
 	return URL_TEMPLATES[prefix].replace('{ID}', id)
 }
 
+function googleDocumentIdFromUrl(url: string) {
+	for (const [prefix, regex] of Object.entries(GOOGLE_FORM_OR_SHEET_REGEX)) {
+		const matches = url.match(regex)
+		if (matches) {
+			return `${prefix}.${matches.groups?.id || ''}`
+		}
+	}
+	return null
+}
+
 // Extract Google document id from URL or veneer id.
-// Follow shortened URL if necessary.
+// Follow (shortened) URL redirect if necessary.
 export async function getGoogleDocumentId(urlOrId: string) {
 	let url = urlOrId
 
+	// First try to get match a Veneer document id:
 	const matches = urlOrId.match(DOCUMENT_ID_REGEX)
 	if (matches) {
 		const prefix = matches.groups?.prefix || ''
@@ -68,29 +80,19 @@ export async function getGoogleDocumentId(urlOrId: string) {
 		url = URL_TEMPLATES[prefix].replaceAll('{ID}', id)
 	}
 
-	///gg(url)
+	// Then try to match a Google form/sheet URL:
+	let documentId = googleDocumentIdFromUrl(url)
 
-	for (const [prefix, regex] of Object.entries(GOOGLE_FORM_OR_SHEET_REGEX)) {
-		const matches = url.match(regex)
-		if (matches) {
-			return ok(`${prefix}.${matches.groups?.id || ''}`)
+	if (!documentId) {
+		// Finally try any (shortened) URL redirects:
+		const jsoned = await finalUrl(url)
+		if (jsoned.urlFinal) {
+			documentId = googleDocumentIdFromUrl(jsoned.urlFinal)
 		}
 	}
 
-	const fetched = await fetch(`/api/final-url/?u=${url}`)
-	const jsoned = await fetched.json()
-	if (jsoned.status >= 400) {
-		return err(`There was a problem fetching URL: ${url} (${jsoned.status}: ${jsoned.statusText})`)
+	if (documentId) {
+		return ok(documentId)
 	}
-
-	if (jsoned.urlFinal) {
-		for (const [prefix, regex] of Object.entries(GOOGLE_FORM_OR_SHEET_REGEX)) {
-			const matches = jsoned.urlFinal.match(regex)
-			if (matches) {
-				return ok(`${prefix}.${matches.groups?.id || ''}`)
-			}
-		}
-	}
-
-	return err({ message: `Something went wrong... (${url})`, ...jsoned })
+	return err({ message: `Unable to get Google document id for: (${url})` })
 }
