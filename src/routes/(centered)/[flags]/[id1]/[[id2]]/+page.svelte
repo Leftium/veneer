@@ -25,6 +25,7 @@
 
 <main>
 	{#if data.numTabs > 1}
+		<h1 class="title">{data.title}</h1>
 		<header>
 			<div role="group">
 				{#if data.visibleTabs.info}
@@ -61,20 +62,20 @@
 	<swiper-container bind:this={swiperContainer} space-between={4} hash-navigation={true}>
 		{#if data.visibleTabs.info}
 			<swiper-slide data-hash="info">
-				<h1>INFO</h1>
+				<h2>INFO</h2>
 			</swiper-slide>
 		{/if}
 
 		{#if data.visibleTabs.form}
 			<swiper-slide data-hash="form">
-				<h1>FORM</h1>
+				<h2>FORM</h2>
 				<pre>{stringify(data.form.isOk() ? data.form.value : data.form.error)}</pre>
 			</swiper-slide>
 		{/if}
 
 		{#if data.visibleTabs.responses}
 			<swiper-slide data-hash="responses">
-				<h1>REPONSES</h1>
+				<h2>REPONSES</h2>
 				<pre>{stringify(data.sheet.isOk() ? data.sheet.value : data.sheet.error)}</pre>
 			</swiper-slide>
 		{/if}
@@ -93,7 +94,11 @@
 		display: grid;
 		height: 100vh;
 
-		grid-template-rows: auto 1fr;
+		grid-template-rows: auto auto 1fr;
+
+		h1 {
+			margin: auto;
+		}
 
 		.active {
 			background-color: #8882;

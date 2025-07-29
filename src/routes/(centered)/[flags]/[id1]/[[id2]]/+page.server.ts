@@ -152,8 +152,11 @@ export const load = async ({ params }) => {
 		}
 	}
 
+	const title = form.isOk() ? form.value.title : sheet.isOk() ? sheet.value.title : null
+
 	return {
 		...commonResponse,
+		title,
 		form,
 		sheet,
 	}

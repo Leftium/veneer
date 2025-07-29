@@ -210,7 +210,7 @@ export function parseGoogleForm(html: string) {
 export function adjustGoogleFormData(json: Form) {
 	// Adjust Google forms JSON:
 	const newJson = {
-        title: json.title,
+		title: json.title,
 		filename: json.filename,
 		//formAction: json.formAction,
 		headerImageUrl: json.headerImageUrl,
