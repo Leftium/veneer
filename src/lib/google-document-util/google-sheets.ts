@@ -46,16 +46,18 @@ export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 	const hiddenColumns = data.columnMetadata.flatMap((cm, i) => (cm.hiddenByUser ? i : []))
 	const hiddenRows = data.rowMetadata.flatMap((rm, i) => (rm.hiddenByUser ? i : []))
 
-	const rows = data.rowData.map((rowDatum) => {
-		return rowDatum.values.map((value) => {
-			const excelSerialDate = value?.userEnteredFormat?.numberFormat?.type.includes('DATE')
-				? value?.effectiveValue?.numberValue
-				: null
-			return excelSerialDate
-				? [value.formattedValue, excelDateToUnix(excelSerialDate, timeZone)] // Pass integer Unix epoch to avoid timezone shenanigans.
-				: value.formattedValue || ''
+	const rows = data.rowData
+		.filter((row) => row.values)
+		.map((rowDatum) => {
+			return rowDatum.values.map((value) => {
+				const excelSerialDate = value?.userEnteredFormat?.numberFormat?.type.includes('DATE')
+					? value?.effectiveValue?.numberValue
+					: null
+				return excelSerialDate
+					? [value.formattedValue, excelDateToUnix(excelSerialDate, timeZone)] // Pass integer Unix epoch to avoid timezone shenanigans.
+					: value.formattedValue || ''
+			})
 		})
-	})
 
 	return { title, sheetTitle, timeZone, rows, hiddenColumns, hiddenRows }
 }
