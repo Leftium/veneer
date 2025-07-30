@@ -1,4 +1,4 @@
-import { Err, err, ok, Ok, type Result } from 'neverthrow'
+import { err, ok } from 'neverthrow'
 import * as linkify from 'linkifyjs'
 
 import {
@@ -14,24 +14,7 @@ import {
 	stripHidden,
 	type GoogleSheetData,
 } from '$lib/google-document-util/google-sheets.js'
-
-type GoogleDocumentError = {
-	message: string
-	documentId?: string
-	type?: 'form' | 'sheet'
-}
-
-type SheetSuccess = {
-	type: 'sheet'
-	documentId: string
-} & ReturnType<typeof stripHidden>
-
-type FormSuccess = {
-	type: 'form'
-	documentId: string
-} & ReturnType<typeof adjustGoogleFormData>
-
-type FetchWithDocumentIdResult = Result<SheetSuccess | FormSuccess, GoogleDocumentError>
+import type { FetchWithDocumentIdResult, GoogleDocumentError } from './types'
 
 async function fetchWithDocumentId(documentId?: string): Promise<FetchWithDocumentIdResult> {
 	if (!documentId) {

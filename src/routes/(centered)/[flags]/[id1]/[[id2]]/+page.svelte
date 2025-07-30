@@ -5,6 +5,8 @@
 
 	import { stringify } from '$lib/util'
 	import { onMount } from 'svelte'
+	import Sheet from './Sheet.svelte'
+	import type { GoogleSheet } from './types'
 
 	let { params, data } = $props()
 
@@ -88,14 +90,22 @@
 			{#if data.visibleTabs.form}
 				<swiper-slide data-hash="form">
 					<h2>FORM</h2>
-					<pre>{stringify(data.form.isOk() ? data.form.value : data.form.error)}</pre>
+					{#if data.form.isOk()}
+						<pre>{stringify(data.form.value)}</pre>
+					{:else}
+						<pre>{stringify(data.form.error)}</pre>
+					{/if}
 				</swiper-slide>
 			{/if}
 
 			{#if data.visibleTabs.responses}
 				<swiper-slide data-hash="responses">
-					<h2>REPONSES</h2>
-					<pre>{stringify(data.sheet.isOk() ? data.sheet.value : data.sheet.error)}</pre>
+					{#if data.sheet.isOk()}
+						<Sheet googleSheet={data.sheet.value as GoogleSheet}></Sheet>
+						<pre>{stringify(data.sheet.value)}</pre>
+					{:else}
+						<pre>{stringify(data.sheet.error)}</pre>
+					{/if}
 				</swiper-slide>
 			{/if}
 
