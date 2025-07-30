@@ -25,6 +25,20 @@
 		}
 	}
 
+	function callSwiperUpdateAutoHeight() {
+		const endTime = performance.now() + 1000
+
+		function tick(currentTime: number) {
+			if (currentTime < endTime) {
+				if (swiperContainer) {
+					swiperContainer.swiper.updateAutoHeight()
+				}
+				requestAnimationFrame(tick)
+			}
+		}
+		requestAnimationFrame(tick)
+	}
+
 	onMount(() => {
 		const swiperParams = {
 			spaceBetween: 4,
@@ -101,8 +115,11 @@
 			{#if data.visibleTabs.responses}
 				<swiper-slide data-hash="responses">
 					{#if data.sheet.isOk()}
-						<Sheet googleSheet={data.sheet.value as GoogleSheet}></Sheet>
-						<pre hidden>{stringify(data.sheet.value)}</pre>
+						<Sheet
+							googleSheet={data.sheet.value as GoogleSheet}
+							onToggle={callSwiperUpdateAutoHeight}
+						></Sheet>
+						<pre hidden>{stringify(data.sheet.value)}}</pre>
 					{:else}
 						<pre>{stringify(data.sheet.error)}</pre>
 					{/if}
@@ -145,9 +162,6 @@
 	}
 
 	main {
-		display: grid;
-		grid-template-rows: auto auto 1fr;
-
 		.active {
 			background-color: #8882;
 		}
@@ -166,7 +180,7 @@
 
 		swiper-container {
 			width: 100%;
-			overflow: hidden;
+			///overflow: hidden;
 
 			swiper-slide {
 				display: block;

@@ -12,17 +12,17 @@
 	import { stringify } from '$lib/util'
 	import { slide } from 'svelte/transition'
 
-
 	import { expoInOut } from 'svelte/easing'
 	import DetailsRealEstate from '../../../w/[...ids]/DetailsRealEstate.svelte'
 	import type { GoogleSheet } from './types'
 
 	interface Props {
 		googleSheet: GoogleSheet
+		onToggle?: () => void
 		top?: number
 	}
 
-	let { googleSheet, top = $bindable(0) }: Props = $props()
+	let { googleSheet, onToggle, top = $bindable(0) }: Props = $props()
 
 	let wrapperWidth = $state(0)
 
@@ -46,6 +46,9 @@
 	function makeToggleDetails(index: number) {
 		return function () {
 			detailsOpened = detailsOpened === index ? -1 : index
+			if (onToggle) {
+				onToggle()
+			}
 		}
 	}
 
@@ -226,6 +229,7 @@
 	@use 'open-props-scss' as *;
 
 	table {
+		margin: 0;
 		border-collapse: separate; /* Don't collapse */
 
 		.numeric {
@@ -289,6 +293,6 @@
 		padding-inline: $size-7;
 		box-shadow: shadow('inner-3');
 
-		overflow: hidden;
+		///overflow: hidden;
 	}
 </style>
