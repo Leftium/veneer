@@ -154,6 +154,9 @@ export const load = async ({ params }) => {
 							add(f.title, '# ')
 						}
 						add(f.description)
+					} else if (f.type === 'IMAGE') {
+						add(f.title, '# ')
+						add(`![](${f.imgUrl?.replace(/=w\d+$/i, '')})`)
 					}
 					return s
 				})
