@@ -18,4 +18,7 @@ export type GoogleFormDocument = {
 	documentId: string
 } & ReturnType<typeof adjustGoogleFormData>
 
-export type FetchWithDocumentIdResult = Result<GoogleSheet | GoogleFormDocument, GoogleDocumentError>
+export type FetchWithDocumentIdResult = Result<
+	GoogleSheet | GoogleFormDocument,
+	GoogleDocumentError
+>
