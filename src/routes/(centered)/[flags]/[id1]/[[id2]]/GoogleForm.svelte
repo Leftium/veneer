@@ -1,44 +1,49 @@
 <script lang="ts">
-	import GoogleFormField from './GoogleFormField.svelte'
-	import { onDestroy, onMount } from 'svelte'
+	import type { GoogleFormDocument } from './types'
 
-	let { data, form } = $props()
+	import GoogleFormField from './GoogleFormField.svelte'
+
+	interface Props {
+		googleForm: GoogleFormDocument
+		data?: any
+		oldForm?: any
+	}
+
+	let { googleForm, data, oldForm }: Props = $props()
 </script>
 
 <main class="container">
-	{#if form?.success || form?.status}
+	{#if oldForm?.success || oldForm?.status}
 		<article>
-			{#if form?.success}
+			{#if oldForm?.success}
 				<div class="success">Successfully signed up! 신청 성공!</div>
-			{:else if form?.status}
+			{:else if oldForm?.status}
 				<div class="error">Sorry! There was an error. 오류:</div>
-				{form.status}: {form.statusText}
+				{oldForm.status}: {oldForm.statusText}
 			{/if}
 		</article>
 	{/if}
 
 	<form method="POST">
-		<input type="hidden" name="formUrl" value={data.formJson?.formUrl} />
-		<input type="hidden" name="formAction" value={data.formJson?.formAction} />
+		<input type="hidden" name="formUrl" value={googleForm.formUrl} />
+		<input type="hidden" name="formAction" value={googleForm.formAction} />
 
-		{#each data.formJson?.fields || [] as field}
-			{#if data.formJson?.hasInput && data.formJson?.hasRequired && field.inputIndex === 1}
+		{#each googleForm.fields || [] as field}
+			{#if /*googleForm.hasInput &&*/ googleForm.hasRequired && field.inputIndex === 1}
 				<span class="required-mark">* Required 필수항목</span>
 			{/if}
 
 			<GoogleFormField {field} />
 		{/each}
 
-		{#if data.formJson?.hasInput}
+		{#if true || googleForm.hasInput}
 			<input type="submit" value="Sign up 신청" />
 		{/if}
 	</form>
 
-	<center><a href={data.formJson?.formUrl}>Go to original Google form</a></center>
-
 	<div hidden>
 		<hr />
-		<pre>{JSON.stringify(data.formJson, null, 4)}</pre>
+		<pre>{JSON.stringify(googleForm, null, 4)}</pre>
 	</div>
 </main>
 

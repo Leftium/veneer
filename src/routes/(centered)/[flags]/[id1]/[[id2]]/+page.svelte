@@ -6,12 +6,13 @@
 	import { stringify } from '$lib/util'
 	import { onMount } from 'svelte'
 	import Sheet from './Sheet.svelte'
-	import type { GoogleSheet } from './types'
+	import type { GoogleSheet, GoogleFormDocument } from './types'
 
 	// @ts-expect-error
 	import markdownitDeflist from 'markdown-it-deflist'
 	import { makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
 	import { urlFromDocumentId } from '$lib/google-document-util/url-id'
+	import GoogleForm from './GoogleForm.svelte'
 	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
 		[markdownitDeflist],
 	])
@@ -19,16 +20,19 @@
 	let { params, data } = $props()
 
 	let swiperContainer = $state<SwiperContainer>()
-	let activeIndex = $state(0)
+	let activeHash = $state('info')
 
 	register()
 
-	function makeSlideTo(slideIndex: number) {
+	function makeSlideToHash(hash: string) {
 		return function () {
 			if (swiperContainer) {
+				const slideIndex = swiperContainer.swiper.slides.findIndex(
+					(slide) => slide.dataset.hash === hash,
+				)
 				swiperContainer.swiper.slideTo(slideIndex)
 				///swiperContainer.scrollIntoView()
-				activeIndex = slideIndex
+				activeHash = hash
 			}
 		}
 	}
@@ -59,6 +63,9 @@
 		if (swiperContainer) {
 			Object.assign(swiperContainer, swiperParams)
 			swiperContainer.initialize()
+			document.querySelectorAll('swiper-slide[role="group"]').forEach((el) => {
+				el.removeAttribute('role')
+			})
 		}
 	})
 </script>
@@ -76,28 +83,40 @@
 			<nav>
 				<div role="group">
 					{#if data.visibleTabs.info}
-						<button class={['outline', activeIndex === 0 && 'active']} onclick={makeSlideTo(0)}>
+						<button
+							class={['outline', activeHash === 'info' && 'active']}
+							onclick={makeSlideToHash('info')}
+						>
 							ℹ️ Info
 							<span class={['status']}>{data.form.isErr() ? '⚠️' : ''}</span>
 						</button>
 					{/if}
 
 					{#if data.visibleTabs.form}
-						<button class={['outline', activeIndex === 1 && 'active']} onclick={makeSlideTo(1)}>
+						<button
+							class={['outline', activeHash === 'form' && 'active']}
+							onclick={makeSlideToHash('form')}
+						>
 							✍ Form
 							<span class={['status']}>{data.form.isErr() ? '⚠️' : ''}</span>
 						</button>
 					{/if}
 
 					{#if data.visibleTabs.responses}
-						<button class={['outline', activeIndex === 2 && 'active']} onclick={makeSlideTo(2)}>
+						<button
+							class={['outline', activeHash === 'responses' && 'active']}
+							onclick={makeSlideToHash('responses')}
+						>
 							📋 Responses
 							<span class={['status']}>{data.sheet.isErr() ? '⚠️' : ''}</span>
 						</button>
 					{/if}
 
 					{#if data.visibleTabs.dev}
-						<button class={['outline', activeIndex === 3 && 'active']} onclick={makeSlideTo(3)}>
+						<button
+							class={['outline', activeHash === 'dev' && 'active']}
+							onclick={makeSlideToHash('dev')}
+						>
 							🔧 Dev
 							<span class={['status']}></span>
 						</button>
@@ -118,12 +137,17 @@
 
 			{#if data.visibleTabs.form}
 				<swiper-slide data-hash="form">
-					<h2>FORM</h2>
 					{#if data.form.isOk()}
 						{@const link = urlFromDocumentId(data.form.value.documentId)}
-						<center><a href={link}>Original Google Form</a> </center>
 
-						<pre>{stringify(data.form.value)}</pre>
+						{#if !data.visibleTabs.info}
+							<div class="markdown">{@html md`${data.info}`}</div>
+						{/if}
+
+						<GoogleForm googleForm={data.form.value as GoogleFormDocument}></GoogleForm>
+
+						<center><a href={link}>Original Google Form</a> </center>
+						<pre hidden>{stringify(data.form.value)}</pre>
 					{:else}
 						<pre>{stringify(data.form.error)}</pre>
 					{/if}
@@ -211,7 +235,7 @@
 
 			swiper-slide {
 				display: block;
-				max-height: 100vh; // define scrollable block
+				///max-height: 100vh; // define scrollable block
 				margin-bottom: 0;
 				///background-color: #00f6;
 

@@ -13,9 +13,9 @@ export type GoogleSheet = {
 	documentId: string
 } & ReturnType<typeof stripHidden>
 
-export type GoogleForm = {
+export type GoogleFormDocument = {
 	type: 'form'
 	documentId: string
 } & ReturnType<typeof adjustGoogleFormData>
 
-export type FetchWithDocumentIdResult = Result<GoogleSheet | GoogleForm, GoogleDocumentError>
+export type FetchWithDocumentIdResult = Result<GoogleSheet | GoogleFormDocument, GoogleDocumentError>

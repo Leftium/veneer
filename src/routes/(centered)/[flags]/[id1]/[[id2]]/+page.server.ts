@@ -162,11 +162,21 @@ export const load = async ({ params }) => {
 				})
 				.join('\n')
 
+    // Remove info fields from form.
+	if (form.isOk() && form.value.type === 'form') {
+		form.value.fields = form.value.fields.filter((f) => f.inputIndex)
+	}
+
+	const inputs = form.isErr()
+		? null
+		: form.value.type === 'form' && form.value.fields.slice(form.value.firstInput + 1)
+
 	return {
 		...commonResponse,
 		title,
 		form,
 		sheet,
 		info,
+		inputs,
 	}
 }
