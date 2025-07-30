@@ -142,7 +142,7 @@ export const load = async ({ params }) => {
 		: form.value.type === 'form' &&
 			form.value.fields
 				.slice(0, form.value.firstInput)
-				.map((f) => {
+				.map((f, index) => {
 					let s = ''
 					function add(t: string | null, prefix = '') {
 						if (t) {
@@ -150,7 +150,9 @@ export const load = async ({ params }) => {
 						}
 					}
 					if (f.type === 'TITLE_AND_DESCRIPTION') {
-						add(f.title, '# ')
+						if (index > 0) {
+							add(f.title, '# ')
+						}
 						add(f.description)
 					}
 					return s
