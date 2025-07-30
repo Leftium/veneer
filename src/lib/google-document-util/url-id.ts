@@ -43,10 +43,10 @@ function makeGoogleSheetUrl(id: string) {
 	return `https://sheets.googleapis.com/v4/spreadsheets/${id}?${searchParams}`
 }
 
-export function urlFromDocumentId(documentId: string) {
+export function urlFromDocumentId(documentId: string, apiUrl = true) {
 	const [prefix, id] = documentId.split('.')
 
-	if (prefix === 's' && id.length === 44) {
+	if (apiUrl && prefix === 's' && id.length === 44) {
 		return makeGoogleSheetUrl(id)
 	}
 

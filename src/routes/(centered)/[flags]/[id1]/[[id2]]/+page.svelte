@@ -11,6 +11,7 @@
 	// @ts-expect-error
 	import markdownitDeflist from 'markdown-it-deflist'
 	import { makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
+	import { urlFromDocumentId } from '$lib/google-document-util/url-id'
 	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
 		[markdownitDeflist],
 	])
@@ -119,6 +120,9 @@
 				<swiper-slide data-hash="form">
 					<h2>FORM</h2>
 					{#if data.form.isOk()}
+						{@const link = urlFromDocumentId(data.form.value.documentId)}
+						<center><a href={link}>Original Google Form</a> </center>
+
 						<pre>{stringify(data.form.value)}</pre>
 					{:else}
 						<pre>{stringify(data.form.error)}</pre>
@@ -129,10 +133,14 @@
 			{#if data.visibleTabs.responses}
 				<swiper-slide data-hash="responses">
 					{#if data.sheet.isOk()}
+						{@const link = urlFromDocumentId(data.sheet.value.documentId, false)}
 						<Sheet
 							googleSheet={data.sheet.value as GoogleSheet}
 							onToggle={callSwiperUpdateAutoHeight}
 						></Sheet>
+
+						<center><a href={link}>Original Google Sheet</a> </center>
+
 						<pre hidden>{stringify(data.sheet.value)}}</pre>
 					{:else}
 						<pre>{stringify(data.sheet.error)}</pre>
