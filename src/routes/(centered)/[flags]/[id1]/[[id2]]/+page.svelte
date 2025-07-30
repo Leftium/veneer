@@ -8,6 +8,11 @@
 	import Sheet from './Sheet.svelte'
 	import type { GoogleSheet } from './types'
 
+	// @ts-expect-error
+	import markdownitDeflist from 'markdown-it-deflist'
+	import { makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
+	const md = makeTagFunctionMd({ html: true, linkify: true }, [[markdownitDeflist]])
+
 	let { params, data } = $props()
 
 	let swiperContainer = $state<SwiperContainer>()
@@ -98,6 +103,7 @@
 			{#if data.visibleTabs.info}
 				<swiper-slide data-hash="info">
 					{#if data.info}
+						{@html md`${data.info}`}
 						<pre>{data.info}</pre>
 					{/if}
 				</swiper-slide>
@@ -188,7 +194,7 @@
 				display: block;
 				max-height: 100vh; // define scrollable block
 				margin-bottom: 0;
-				background-color: #00f6;
+				///background-color: #00f6;
 
 				overflow: auto;
 

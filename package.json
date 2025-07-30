@@ -51,5 +51,8 @@
 		"onlyBuiltDependencies": [
 			"esbuild"
 		]
+	},
+	"dependencies": {
+		"markdown-it-deflist": "^3.0.0"
 	}
 }

@@ -144,13 +144,13 @@ export const load = async ({ params }) => {
 				.slice(0, form.value.firstInput)
 				.map((f) => {
 					let s = ''
-					function add(t: string | null) {
+					function add(t: string | null, prefix = '') {
 						if (t) {
-							s += t + '\n'
+							s += `${prefix}${t}\n`
 						}
 					}
 					if (f.type === 'TITLE_AND_DESCRIPTION') {
-						add(f.title)
+						add(f.title, '# ')
 						add(f.description)
 					}
 					return s
