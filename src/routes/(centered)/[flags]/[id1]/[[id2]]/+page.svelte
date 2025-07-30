@@ -102,7 +102,7 @@
 				<swiper-slide data-hash="responses">
 					{#if data.sheet.isOk()}
 						<Sheet googleSheet={data.sheet.value as GoogleSheet}></Sheet>
-						<pre>{stringify(data.sheet.value)}</pre>
+						<pre hidden>{stringify(data.sheet.value)}</pre>
 					{:else}
 						<pre>{stringify(data.sheet.error)}</pre>
 					{/if}
@@ -170,6 +170,7 @@
 
 			swiper-slide {
 				display: block;
+				max-height: 100vh; // define scrollable block
 				margin-bottom: 0;
 				background-color: #00f6;
 
