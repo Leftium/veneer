@@ -62,6 +62,10 @@
 	})
 </script>
 
+<svelte:head>
+	<title>{data.title}</title>
+</svelte:head>
+
 <article>
 	<header>
 		<h1 class="title">{data.title}</h1>
