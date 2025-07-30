@@ -137,10 +137,31 @@ export const load = async ({ params }) => {
 
 	const title = form.isOk() ? form.value.title : sheet.isOk() ? sheet.value.title : null
 
+	const info = form.isErr()
+		? null
+		: form.value.type === 'form' &&
+			form.value.fields
+				.slice(0, form.value.firstInput)
+				.map((f) => {
+					let s = ''
+					function add(t: string | null) {
+						if (t) {
+							s += t + '\n'
+						}
+					}
+					if (f.type === 'TITLE_AND_DESCRIPTION') {
+						add(f.title)
+						add(f.description)
+					}
+					return s
+				})
+				.join('\n')
+
 	return {
 		...commonResponse,
 		title,
 		form,
 		sheet,
+		info,
 	}
 }

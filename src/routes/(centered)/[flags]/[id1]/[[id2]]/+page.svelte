@@ -97,7 +97,9 @@
 		<swiper-container init="false" bind:this={swiperContainer}>
 			{#if data.visibleTabs.info}
 				<swiper-slide data-hash="info">
-					<h2>INFO</h2>
+					{#if data.info}
+						<pre>{data.info}</pre>
+					{/if}
 				</swiper-slide>
 			{/if}
 
