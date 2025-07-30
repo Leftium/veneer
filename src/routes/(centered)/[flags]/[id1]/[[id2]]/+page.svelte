@@ -11,7 +11,9 @@
 	// @ts-expect-error
 	import markdownitDeflist from 'markdown-it-deflist'
 	import { makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
-	const md = makeTagFunctionMd({ html: true, linkify: true }, [[markdownitDeflist]])
+	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
+		[markdownitDeflist],
+	])
 
 	let { params, data } = $props()
 
@@ -103,8 +105,8 @@
 			{#if data.visibleTabs.info}
 				<swiper-slide data-hash="info">
 					{#if data.info}
-						{@html md`${data.info}`}
-						<pre>{data.info}</pre>
+						<div class="markdown">{@html md`${data.info}`}</div>
+						<pre hidden>{data.info}</pre>
 					{/if}
 				</swiper-slide>
 			{/if}
@@ -187,7 +189,7 @@
 		}
 
 		swiper-container {
-			width: 100%;
+			//width: 100%;
 			///overflow: hidden;
 
 			swiper-slide {
@@ -204,6 +206,58 @@
 					margin-bottom: 0;
 				}
 			}
+		}
+	}
+
+	.markdown {
+		///border: 1px solid blue;
+
+		max-width: $size-15;
+		margin: $size-3 auto;
+
+		:global(h1) {
+			text-align: center;
+			margin-bottom: 0;
+		}
+		:global(dl) {
+			///border: 1px solid green;
+			display: grid;
+			grid-template-columns: max-content 1fr;
+			max-width: 100%; // prevents overflow
+			width: fit-content; // shrink-to-fit content
+
+			margin-inline: auto;
+
+			padding: $size-3;
+		}
+
+		:global(dt),
+		:global(dd) {
+			margin: 0;
+			padding: $size-2 0;
+		}
+
+		:global(dt) {
+			font-weight: $font-weight-7;
+			text-align: right;
+			align-self: start;
+			padding-right: $size-3;
+		}
+
+		// Suppress border on first dt; on dd after first dt
+		:global(dt:first-of-type),
+		:global(dt:first-of-type) + :global(dd) {
+			border-top: none;
+		}
+
+		:global(dd) {
+			grid-column: 2;
+		}
+
+		// Only the first dd after each dt gets a border
+		:global(dt),
+		:global(dt) + :global(dd) {
+			border-top: 1px solid #dcdcdc;
 		}
 	}
 </style>
