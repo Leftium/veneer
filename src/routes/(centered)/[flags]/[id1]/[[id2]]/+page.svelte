@@ -149,7 +149,12 @@
 		</swiper-container>
 	</main>
 	<footer>
-		<a href="/">Home</a>
+		{@html md`
+			- [Home](/)
+			- [Source code](https://github.com/Leftium/veneer)
+			- Made by [Leftium](https://leftium.com/)
+			- See [other projects](https://github.com/Leftium?tab=repositories&type=source)
+		`}
 	</footer>
 </article>
 
