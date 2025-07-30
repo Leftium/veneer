@@ -23,15 +23,19 @@
 	import store from 'store'
 	import { browser } from '$app/environment'
 
-	// Props:
-	export let field: Question
+	interface Props {
+		// Props:
+		field: Question
+	}
+
+	let { field }: Props = $props()
 
 	// Bindings:
-	let value = ''
-	let group: string[] = []
+	let value = $state('')
+	let group: string[] = $state([])
 
 	// String value to store in localStorage:
-	$: storeValue = field.type === 'CHECKBOXES' ? group?.join(', ') : value
+	let storeValue = $derived(field.type === 'CHECKBOXES' ? group?.join(', ') : value)
 
 	function parseMarkdown(
 		markdown?: string | null,
@@ -141,7 +145,7 @@
 				name="entry.{field.id}"
 				required={field.required}
 				bind:value
-				on:input={handleChange}
+				oninput={handleChange}
 			></textarea>
 		{:else if field.type === 'TEXT'}
 			<input
@@ -149,7 +153,7 @@
 				name="entry.{field.id}"
 				required={field.required}
 				bind:value
-				on:input={handleChange}
+				oninput={handleChange}
 			/>
 		{/if}
 	{:else if field.type === 'DROPDOWN'}
@@ -170,7 +174,7 @@
 			name="entry.{field.id}"
 			required={field.required}
 			bind:value
-			on:change={handleChange}
+			onchange={handleChange}
 		>
 			<option value="">Choose</option>
 			{#each field.options as option}
@@ -178,7 +182,7 @@
 			{/each}
 		</select>
 	{:else if ['MULTIPLE_CHOICE', 'CHECKBOXES'].includes(field.type)}
-		<!-- svelte-ignore a11y-label-has-associated-control -->
+		<!-- svelte-ignore a11y_label_has_associated_control -->
 		<label for="">
 			{#if field.required}
 				<span class="required-mark">*</span>
@@ -200,7 +204,7 @@
 						name="entry.{field.id}"
 						value={option}
 						bind:group
-						on:change={handleChange}
+						onchange={handleChange}
 					/>
 				{:else}
 					<input
@@ -209,7 +213,7 @@
 						name="entry.{field.id}"
 						value={option}
 						bind:group={value}
-						on:change={handleChange}
+						onchange={handleChange}
 					/>
 				{/if}{option}
 			</label>
