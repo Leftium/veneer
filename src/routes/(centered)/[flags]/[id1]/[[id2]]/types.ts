@@ -1,6 +1,6 @@
-import type { adjustGoogleFormData } from "$lib/google-document-util/google-form"
-import type { stripHidden } from "$lib/google-document-util/google-sheets"
-import type { Result } from "neverthrow"
+import type { adjustGoogleFormData } from '$lib/google-document-util/google-form'
+import type { stripHidden } from '$lib/google-document-util/google-sheets'
+import type { Result } from 'neverthrow'
 
 export type GoogleDocumentError = {
 	message: string
