@@ -7,3 +7,43 @@
 html {
 	scrollbar-gutter: stable;
 }
+
+
+:root {
+	--pico-font-size: 115%;
+}
+
+@media (min-width: 576px) {
+	:root {
+		--pico-font-size: 115%;
+		/* Original: 106.25% */
+	}
+}
+
+@media (min-width: 768px) {
+	:root {
+		--pico-font-size: 115%;
+		/* Original: 112.5% */
+	}
+}
+
+@media (min-width: 1024px) {
+	:root {
+		--pico-font-size: 115%;
+		/* Original: 118.75% */
+	}
+}
+
+@media (min-width: 1280px) {
+	:root {
+		--pico-font-size: 115%;
+		/* Original: 150% */
+	}
+}
+
+@media (min-width: 1536px) {
+	:root {
+		--pico-font-size: 115%;
+		/* Original: 131.25% */
+	}
+}
