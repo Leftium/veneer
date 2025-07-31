@@ -1,4 +1,5 @@
 import type { adjustGoogleFormData } from '$lib/google-document-util/google-form'
+import type { Result } from 'neverthrow'
 
 export type GoogleDocumentError = {
 	message: string
@@ -24,3 +25,6 @@ export type GoogleFormDocument = {
 	type: 'form'
 	documentId: string
 } & ReturnType<typeof adjustGoogleFormData>
+
+export type ResultGoogleForm = Result<GoogleFormDocument, GoogleDocumentError>
+export type ResultGoogleSheet = Result<GoogleSheet, GoogleDocumentError>

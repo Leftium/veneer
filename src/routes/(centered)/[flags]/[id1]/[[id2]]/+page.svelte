@@ -31,12 +31,12 @@
 					(slide) => slide.dataset.hash === hash,
 				)
 				swiperContainer.swiper.slideTo(slideIndex)
-				///swiperContainer.scrollIntoView()
 				activeHash = hash
 			}
 		}
 	}
 
+	// TODO: remove?
 	function callSwiperUpdateAutoHeight() {
 		const endTime = performance.now() + 1000
 
@@ -82,51 +82,22 @@
 		{#if data.numTabs > 1}
 			<nav>
 				<div role="group">
-					{#if data.visibleTabs.info}
-						<button
-							class={['outline', activeHash === 'info' && 'active']}
-							onclick={makeSlideToHash('info')}
-						>
-							ℹ️ Info
-							<span class={['status']}>{data.form.isErr() ? '⚠️' : ''}</span>
-						</button>
-					{/if}
-
-					{#if data.visibleTabs.form}
-						<button
-							class={['outline', activeHash === 'form' && 'active']}
-							onclick={makeSlideToHash('form')}
-						>
-							✍ Form
-							<span class={['status']}>{data.form.isErr() ? '⚠️' : ''}</span>
-						</button>
-					{/if}
-
-					{#if data.visibleTabs.responses}
-						<button
-							class={['outline', activeHash === 'responses' && 'active']}
-							onclick={makeSlideToHash('responses')}
-						>
-							📋 Responses
-							<span class={['status']}>{data.sheet.isErr() ? '⚠️' : ''}</span>
-						</button>
-					{/if}
-
-					{#if data.visibleTabs.dev}
-						<button
-							class={['outline', activeHash === 'dev' && 'active']}
-							onclick={makeSlideToHash('dev')}
-						>
-							🔧 Dev
-							<span class={['status']}></span>
-						</button>
-					{/if}
+					{#each Object.entries(data.navTabs) as [hash, { name, icon, error }]}
+						{#if icon}
+							<button
+								class={['outline', { active: activeHash === hash }]}
+								onclick={makeSlideToHash(hash)}
+							>
+								{icon}{name}{error ? '⚠️' : ''}
+							</button>
+						{/if}
+					{/each}
 				</div>
 			</nav>
 		{/if}
 
 		<swiper-container init="false" bind:this={swiperContainer}>
-			{#if data.visibleTabs.info}
+			{#if data.navTabs.info}
 				<swiper-slide data-hash="info">
 					{#if data.info}
 						<div class="markdown">{@html md`${data.info}`}</div>
@@ -135,12 +106,12 @@
 				</swiper-slide>
 			{/if}
 
-			{#if data.visibleTabs.form}
+			{#if data.navTabs.form}
 				<swiper-slide data-hash="form">
 					{#if data.form.isOk()}
 						{@const link = urlFromDocumentId(data.form.value.documentId)}
 
-						{#if !data.visibleTabs.info}
+						{#if !data.navTabs.info}
 							<div class="markdown">{@html md`${data.info}`}</div>
 						{/if}
 
@@ -154,7 +125,7 @@
 				</swiper-slide>
 			{/if}
 
-			{#if data.visibleTabs.responses}
+			{#if data.navTabs.responses}
 				<swiper-slide data-hash="responses">
 					{#if data.sheet.isOk()}
 						{@const link = urlFromDocumentId(data.sheet.value.documentId, false)}
@@ -172,7 +143,7 @@
 				</swiper-slide>
 			{/if}
 
-			{#if data.visibleTabs.dev}
+			{#if data.navTabs.dev}
 				<swiper-slide data-hash="dev">
 					<pre>params: {stringify(params)}</pre>
 					<pre>data: {stringify(data)}</pre>
@@ -215,14 +186,6 @@
 	main {
 		.active {
 			background-color: #8882;
-		}
-
-		.status {
-			display: inline-block;
-			width: 1em;
-			height: 1em;
-			background-size: 1em auto;
-			background-repeat: no-repeat;
 		}
 
 		div {
@@ -323,11 +286,6 @@
 				align-items: center;
 				justify-content: center;
 				padding-inline: $size-2;
-
-				.status {
-					margin-left: $size-1; // Ensure spacing from text
-					flex-shrink: 0;
-				}
 			}
 		}
 	}

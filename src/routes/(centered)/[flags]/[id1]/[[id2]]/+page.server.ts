@@ -1,15 +1,11 @@
 import { gg } from '@leftium/gg'
 
-import { ok, Result } from 'neverthrow'
+import { err, ok } from 'neverthrow'
 import * as linkify from 'linkifyjs'
 
 import { getGoogleDocumentId } from '$lib/google-document-util/url-id.js'
 import { stripHidden } from '$lib/google-document-util/google-sheets.js'
-import type {
-	GoogleDocumentError,
-	GoogleFormDocument,
-	GoogleSheet,
-} from '$lib/google-document-util/types'
+import type { ResultGoogleForm, ResultGoogleSheet } from '$lib/google-document-util/types'
 import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-with-id'
 
 export const load = async ({ params, url }) => {
@@ -20,29 +16,22 @@ export const load = async ({ params, url }) => {
 	const skipSheetIdScan = url.searchParams.has('skipsheetidscan')
 
 	// prettier-ignore
-	const TAB_BITS = {
-		info:      0b0001,
-		form:      0b0010,
-		responses: 0b0100,
-		dev:       0b1000,
-	}
+	const TABS: Record<string, [number, string, string]> ={
+        info:      [0b0001, 'ℹ️', 'Info'],
+        form:      [0b0010, '✍', 'Form'], 
+        responses: [0b0100, '📋', 'Responses'],
+        dev:       [0b1000, '🔧', 'Dev'], 
+    }
 
 	const flags = Number(params.flags)
 
-	type TabBitsKey = keyof typeof TAB_BITS
-	const visibleTabs = Object.entries(TAB_BITS).reduce(
-		(acc, [key, bit]) => {
-			acc[key as TabBitsKey] = (flags & bit) > 0
-			return acc
-		},
-		{} as Record<TabBitsKey, boolean>,
-	)
+	const numTabs = flags.toString(2).replace(/0/g, '').length
 
-	const commonResponse = {
-		visibleTabs,
-		numTabs: flags.toString(2).replace(/0/g, '').length,
-		skipSheetIdScan,
-	}
+	let title = ''
+	let info = ''
+
+	let form: ResultGoogleForm = err({ message: `Initial form` })
+	let sheet: ResultGoogleSheet = err({ message: `Initial sheet` })
 
 	const [document1, document2] = await Promise.all([
 		fetchWithDocumentId(params.id1),
@@ -51,50 +40,44 @@ export const load = async ({ params, url }) => {
 
 	if (document1.isErr()) {
 		if (!document1.error.type) {
-			return { ...commonResponse, form: document1, sheet: document2 }
+			form = document1 as ResultGoogleForm
+			sheet = document1 as ResultGoogleSheet
 		}
-		const form = document1.error.type === 'form' ? document1 : document2
-		const sheet = document1.error.type === 'sheet' ? document1 : document2
-		return { ...commonResponse, form, sheet }
-	}
-	const form = (document1.value.type === 'form' ? document1 : document2) as Result<
-		GoogleFormDocument,
-		GoogleDocumentError
-	>
-	let sheet = (document1.value.type === 'sheet' ? document1 : document2) as Result<
-		GoogleSheet,
-		GoogleDocumentError
-	>
+		form = (document1.error.type === 'form' ? document1 : document2) as ResultGoogleForm
+		sheet = (document1.error.type === 'sheet' ? document1 : document2) as ResultGoogleSheet
+	} else {
+		form = (document1.value.type === 'form' ? document1 : document2) as ResultGoogleForm
+		sheet = (document1.value.type === 'sheet' ? document1 : document2) as ResultGoogleSheet
 
-	// Detect and load sheet if necessary.
-	if (!skipSheetIdScan && form.isOk() && sheet.isErr() && !sheet.error.documentId) {
-		const links = form.value.fields.map((field) => linkify.find(field.description || '')).flat()
+		// Detect and load sheet if necessary.
+		if (!skipSheetIdScan && form.isOk() && sheet.isErr() && !sheet.error.documentId) {
+			const links = form.value.fields.map((field) => linkify.find(field.description || '')).flat()
 
-		// Reorder array to minimize expected number of url fetches:
-		// Move first link to last place: usually link to form itself.
-		const shifted = links.shift()
-		if (shifted !== undefined) {
-			links.push(shifted)
-		}
+			// Reorder array to minimize expected number of url fetches:
+			// Move first link to last place: usually link to form itself.
+			const shifted = links.shift()
+			if (shifted) {
+				links.push(shifted)
+			}
 
-		for (const link of links) {
-			gg(`Checking for sheet id: ${link.href}`)
-			const googleDocumentId = await getGoogleDocumentId(link.href)
-			if (googleDocumentId.isOk() && googleDocumentId.value[0] === 's') {
-				const document = await fetchWithDocumentId(googleDocumentId.value)
-				if (document.isOk() && document.value.type === 'sheet') {
-					sheet = document as Result<GoogleSheet, GoogleDocumentError>
-					break
+			for (const link of links) {
+				gg(`Checking for sheet id: ${link.href}`)
+				const googleDocumentId = await getGoogleDocumentId(link.href)
+				if (googleDocumentId.isOk() && googleDocumentId.value[0] === 's') {
+					const document = await fetchWithDocumentId(googleDocumentId.value)
+					if (document.isOk() && document.value.type === 'sheet') {
+						sheet = document as ResultGoogleSheet
+						break
+					}
 				}
 			}
 		}
-	}
 
-	const title = form.isOk() ? form.value.title : sheet.isOk() ? sheet.value.title : null
+		title = form.isOk() ? form.value.title : sheet.isOk() ? sheet.value.title : ''
 
-	const info = form.isErr()
-		? null
-		: form.value.fields
+		if (form.isOk()) {
+			// Set info to markdown of initial non-question fields.
+			info = form.value.fields
 				.slice(0, form.value.firstInput)
 				.map((f, index) => {
 					let s = ''
@@ -116,17 +99,36 @@ export const load = async ({ params, url }) => {
 				})
 				.join('\n')
 
-	// Remove info fields from form.
-	if (form.isOk()) {
-		form.value.fields = form.value.fields.filter((f) => f.inputIndex)
+			// Remove info fields from form.
+			form.value.fields = form.value.fields.filter((f) => f.inputIndex)
+		}
+
+		if (sheet.isOk()) {
+			sheet = ok(stripHidden(sheet.value, allCols, allRows))
+		}
 	}
 
-	if (sheet.isOk()) {
-		sheet = ok(stripHidden(sheet.value, allCols, allRows))
-	}
+	type TabsKey = keyof typeof TABS
+	const navTabs = Object.entries(TABS).reduce(
+		(acc, [hash, [bit, icon, name]]) => {
+			const error =
+				((hash === 'info' || hash === 'form') && form.isErr()) ||
+				(hash === 'responses' && sheet.isErr())
+
+			acc[hash] = {
+				name,
+				icon: (flags & bit) > 0 ? icon : '',
+				error,
+			}
+			return acc
+		},
+		{} as Record<TabsKey, { name: string; icon: string; error: boolean }>,
+	)
 
 	return {
-		...commonResponse,
+		navTabs,
+		numTabs,
+		skipSheetIdScan,
 		title,
 		info,
 		form,
