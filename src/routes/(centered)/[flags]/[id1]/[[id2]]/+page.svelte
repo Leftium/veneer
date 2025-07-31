@@ -239,7 +239,7 @@
 				margin-bottom: 0;
 				///background-color: #00f6;
 
-				overflow: auto;
+				///overflow: auto;
 
 				pre {
 					width: 100%;
@@ -330,5 +330,17 @@
 				}
 			}
 		}
+	}
+
+	// This prevents a scrolling context from forming,
+	// so the <body> can be the scrolling context for sticky elements inside <swiper-slide>.
+	swiper-container::part(container) {
+		overflow: visible !important;
+	}
+
+	// Hide the now visible overflow with a mask:
+	swiper-container {
+		mask-image: linear-gradient(to right, transparent 0%, black 0%, black 100%, transparent 100%);
+		mask-mode: alpha;
 	}
 </style>
