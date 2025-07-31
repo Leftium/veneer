@@ -1,70 +1,16 @@
-import { err, ok, Result } from 'neverthrow'
+import { gg } from '@leftium/gg'
+
+import { ok, Result } from 'neverthrow'
 import * as linkify from 'linkifyjs'
 
-import {
-	DOCUMENT_URL_REGEX,
-	getGoogleDocumentId,
-	urlFromDocumentId,
-} from '$lib/google-document-util/url-id.js'
-import { gg } from '@leftium/gg'
-import { adjustGoogleFormData, parseGoogleForm } from '$lib/google-document-util/google-form.js'
-import { GCP_API_KEY } from '$env/static/private'
-import { adjustGoogleSheetData, stripHidden } from '$lib/google-document-util/google-sheets.js'
+import { getGoogleDocumentId } from '$lib/google-document-util/url-id.js'
+import { stripHidden } from '$lib/google-document-util/google-sheets.js'
 import type {
 	GoogleDocumentError,
 	GoogleFormDocument,
 	GoogleSheet,
 } from '$lib/google-document-util/types'
-
-async function fetchWithDocumentId(
-	documentId?: string,
-): Promise<Result<GoogleSheet | GoogleFormDocument, GoogleDocumentError>> {
-	if (!documentId) {
-		return err({ message: `DocumentId not set: <${documentId}>` })
-	}
-
-	const googleDocumentId = await getGoogleDocumentId(documentId)
-	if (googleDocumentId.isErr()) {
-		return err({ documentId, message: googleDocumentId.error.message })
-	}
-
-	const url = urlFromDocumentId(googleDocumentId.value)
-	const type = DOCUMENT_URL_REGEX.s.test(url)
-		? 'sheet'
-		: DOCUMENT_URL_REGEX.f.test(url)
-			? 'form'
-			: undefined
-
-	if (!type) {
-		const message = `${googleDocumentId.value} not a Google form/sheet url: ${url}`
-		return err({ documentId, type, message })
-	}
-
-	const fetched = await fetch(url.replace('GCP_API_KEY', GCP_API_KEY))
-	if (!fetched.ok) {
-		const message = `[${fetched.status}: ${fetched.statusText}] while fetching ${googleDocumentId.value} (${url}).`
-		return err({ documentId, type, message })
-	}
-
-	const text = await fetched.text()
-
-	if (type === 'sheet') {
-		const dataSheet = adjustGoogleSheetData(JSON.parse(text))
-		return dataSheet.isOk()
-			? ok({
-					type: 'sheet',
-					documentId: googleDocumentId.value,
-					...dataSheet.value,
-				})
-			: err(dataSheet.error)
-	}
-
-	return ok({
-		type: 'form',
-		documentId: googleDocumentId.value,
-		...adjustGoogleFormData(parseGoogleForm(text)),
-	})
-}
+import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-with-id'
 
 export const load = async ({ params }) => {
 	// prettier-ignore
