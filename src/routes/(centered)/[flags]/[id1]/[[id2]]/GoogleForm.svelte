@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { GoogleFormDocument } from './types'
+	import type { GoogleFormDocument } from '$lib/google-document-util/types'
 
 	import GoogleFormField from './GoogleFormField.svelte'
 

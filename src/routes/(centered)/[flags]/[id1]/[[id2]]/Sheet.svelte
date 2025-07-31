@@ -13,8 +13,8 @@
 	import { slide } from 'svelte/transition'
 
 	import { expoInOut } from 'svelte/easing'
-	import DetailsRealEstate from '../../../w/[...ids]/DetailsRealEstate.svelte'
-	import type { GoogleSheet } from './types'
+	import DetailsRealEstate from './DetailsRealEstate.svelte'
+	import type { GoogleSheet } from '$lib/google-document-util/types'
 
 	interface Props {
 		googleSheet: GoogleSheet

@@ -1,5 +1,4 @@
 import * as cheerio from 'cheerio'
-import { gg } from '@leftium/gg'
 
 export type QuestionType =
 	| 'TEXT'
@@ -60,7 +59,7 @@ enum EmailCollectionRuleEnum {
 
 type EmailOptions = 'NONE' | 'VERIFIED' | 'INPUT'
 
-interface Form {
+type Form = {
 	filename: string
 	formAction: string
 	headerImageUrl: string | null

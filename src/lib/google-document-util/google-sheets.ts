@@ -1,4 +1,7 @@
-import { excelDateToUnix } from '../util'
+import { err, ok } from 'neverthrow'
+
+import { excelDateToUnix } from '$lib/util'
+import type { GoogleSheetData } from './types'
 
 type GoogleSheetsApiResult = {
 	properties: { title: string; timeZone: string }
@@ -24,19 +27,10 @@ type GoogleSheetsApiResult = {
 	}[]
 }
 
-export type GoogleSheetData = {
-	title: string
-	sheetTitle: string
-	timeZone: string
-	rows: (string | (string | number)[])[][]
-	hiddenColumns: number[]
-	hiddenRows: number[]
-}
-
 export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 	const data = json?.sheets?.[0]?.data[0]
 	if (!data) {
-		return json
+		return err({ message: `JSON Google Sheet data has unexpected shape.`, json })
 	}
 
 	const title = json.properties.title
@@ -59,7 +53,7 @@ export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 			})
 		})
 
-	return { title, sheetTitle, timeZone, rows, hiddenColumns, hiddenRows }
+	return ok({ title, sheetTitle, timeZone, rows, hiddenColumns, hiddenRows })
 }
 
 export function stripHidden(json: GoogleSheetData, unhideCols = false, unhideRows = false) {

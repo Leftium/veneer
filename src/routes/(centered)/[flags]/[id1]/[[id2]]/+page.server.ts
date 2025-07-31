@@ -1,4 +1,4 @@
-import { err, ok } from 'neverthrow'
+import { err, ok, Result } from 'neverthrow'
 import * as linkify from 'linkifyjs'
 
 import {
@@ -9,21 +9,23 @@ import {
 import { gg } from '@leftium/gg'
 import { adjustGoogleFormData, parseGoogleForm } from '$lib/google-document-util/google-form.js'
 import { GCP_API_KEY } from '$env/static/private'
-import {
-	adjustGoogleSheetData,
-	stripHidden,
-	type GoogleSheetData,
-} from '$lib/google-document-util/google-sheets.js'
-import type { FetchWithDocumentIdResult, GoogleDocumentError } from './types'
+import { adjustGoogleSheetData, stripHidden } from '$lib/google-document-util/google-sheets.js'
+import type {
+	GoogleDocumentError,
+	GoogleFormDocument,
+	GoogleSheet,
+} from '$lib/google-document-util/types'
 
-async function fetchWithDocumentId(documentId?: string): Promise<FetchWithDocumentIdResult> {
+async function fetchWithDocumentId(
+	documentId?: string,
+): Promise<Result<GoogleSheet | GoogleFormDocument, GoogleDocumentError>> {
 	if (!documentId) {
-		return err({ message: `DocumentId not set: <${documentId}>` } as GoogleDocumentError)
+		return err({ message: `DocumentId not set: <${documentId}>` })
 	}
 
 	const googleDocumentId = await getGoogleDocumentId(documentId)
 	if (googleDocumentId.isErr()) {
-		return err({ documentId, message: googleDocumentId.error.message } as GoogleDocumentError)
+		return err({ documentId, message: googleDocumentId.error.message })
 	}
 
 	const url = urlFromDocumentId(googleDocumentId.value)
@@ -46,17 +48,22 @@ async function fetchWithDocumentId(documentId?: string): Promise<FetchWithDocume
 
 	const text = await fetched.text()
 
-	return type === 'sheet'
-		? ok({
-				type: 'sheet',
-				documentId: googleDocumentId.value,
-				...stripHidden(adjustGoogleSheetData(JSON.parse(text)) as GoogleSheetData),
-			})
-		: ok({
-				type: 'form',
-				documentId: googleDocumentId.value,
-				...adjustGoogleFormData(parseGoogleForm(text)),
-			})
+	if (type === 'sheet') {
+		const dataSheet = adjustGoogleSheetData(JSON.parse(text))
+		return dataSheet.isOk()
+			? ok({
+					type: 'sheet',
+					documentId: googleDocumentId.value,
+					...dataSheet.value,
+				})
+			: err(dataSheet.error)
+	}
+
+	return ok({
+		type: 'form',
+		documentId: googleDocumentId.value,
+		...adjustGoogleFormData(parseGoogleForm(text)),
+	})
 }
 
 export const load = async ({ params }) => {
@@ -103,17 +110,17 @@ export const load = async ({ params }) => {
 		const sheet = document1.error.type === 'sheet' ? document1 : document2
 		return { ...commonResponse, form, sheet }
 	}
-	const form = document1.value.type === 'form' ? document1 : document2
-	let sheet = document1.value.type === 'sheet' ? document1 : document2
+	const form = (document1.value.type === 'form' ? document1 : document2) as Result<
+		GoogleFormDocument,
+		GoogleDocumentError
+	>
+	let sheet = (document1.value.type === 'sheet' ? document1 : document2) as Result<
+		GoogleSheet,
+		GoogleDocumentError
+	>
 
 	// TODO: detect and load sheet if necessary.
-	if (
-		!skipSheetIdScan &&
-		form.isOk() &&
-		form.value.type === 'form' &&
-		sheet.isErr() &&
-		!sheet.error.documentId
-	) {
+	if (!skipSheetIdScan && form.isOk() && sheet.isErr() && !sheet.error.documentId) {
 		const links = form.value.fields.map((field) => linkify.find(field.description || '')).flat()
 
 		// Reorder array to minimize expected number of url fetches:
@@ -127,8 +134,9 @@ export const load = async ({ params }) => {
 			gg(`Trying: ${link.href}`)
 			const googleDocumentId = await getGoogleDocumentId(link.href)
 			if (googleDocumentId.isOk() && googleDocumentId.value[0] === 's') {
-				sheet = await fetchWithDocumentId(googleDocumentId.value)
-				if (sheet.isOk()) {
+				const document = await fetchWithDocumentId(googleDocumentId.value)
+				if (document.isOk() && document.value.type === 'sheet') {
+					sheet = document as Result<GoogleSheet, GoogleDocumentError>
 					break
 				}
 			}
@@ -139,8 +147,7 @@ export const load = async ({ params }) => {
 
 	const info = form.isErr()
 		? null
-		: form.value.type === 'form' &&
-			form.value.fields
+		: form.value.fields
 				.slice(0, form.value.firstInput)
 				.map((f, index) => {
 					let s = ''
@@ -163,20 +170,19 @@ export const load = async ({ params }) => {
 				.join('\n')
 
 	// Remove info fields from form.
-	if (form.isOk() && form.value.type === 'form') {
+	if (form.isOk()) {
 		form.value.fields = form.value.fields.filter((f) => f.inputIndex)
 	}
 
-	const inputs = form.isErr()
-		? null
-		: form.value.type === 'form' && form.value.fields.slice(form.value.firstInput + 1)
+	if (sheet.isOk()) {
+		sheet = ok(stripHidden(sheet.value) as GoogleSheet)
+	}
 
 	return {
 		...commonResponse,
 		title,
+		info,
 		form,
 		sheet,
-		info,
-		inputs,
 	}
 }

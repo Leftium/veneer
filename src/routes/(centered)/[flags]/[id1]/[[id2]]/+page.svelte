@@ -6,7 +6,7 @@
 	import { stringify } from '$lib/util'
 	import { onMount } from 'svelte'
 	import Sheet from './Sheet.svelte'
-	import type { GoogleSheet, GoogleFormDocument } from './types'
+	import type { GoogleSheet, GoogleFormDocument } from '$lib/google-document-util/types'
 
 	// @ts-expect-error
 	import markdownitDeflist from 'markdown-it-deflist'
