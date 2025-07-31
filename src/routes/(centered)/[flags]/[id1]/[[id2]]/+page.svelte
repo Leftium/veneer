@@ -183,16 +183,48 @@
 		}
 	}
 
+	nav {
+		overflow: hidden;
+		max-width: 100%;
+		white-space: nowrap;
+
+		div[role='group'] {
+			display: flex;
+			gap: 0; // Remove spacing between buttons
+			flex-wrap: nowrap;
+			margin: 0;
+
+			button {
+				flex: 1 1 auto;
+				min-width: 0;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				text-align: center; // Center the button text
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding-inline: $size-2;
+			}
+		}
+	}
+
 	main {
 		.active {
 			background-color: #8882;
 		}
 
-		div {
-			margin: 0;
+		// This prevents a scrolling context from forming,
+		// so the <body> can be the scrolling context for sticky elements inside <swiper-slide>.
+		swiper-container::part(container) {
+			overflow: visible !important;
 		}
 
 		swiper-container {
+			// Hide the now visible overflow with a mask:
+			mask-image: linear-gradient(to right, transparent 0%, black 0%, black 100%, transparent 100%);
+			mask-mode: alpha;
+
 			//width: 100%;
 			///overflow: hidden;
 
@@ -214,91 +246,51 @@
 	}
 
 	.markdown {
-		///border: 1px solid blue;
-
 		max-width: $size-15;
 		margin: $size-3 auto;
 
-		:global(h1) {
-			text-align: center;
-			margin-bottom: 0;
-		}
-		:global(dl) {
-			///border: 1px solid green;
-			display: grid;
-			grid-template-columns: max-content 1fr;
-			max-width: 100%; // prevents overflow
-			width: fit-content; // shrink-to-fit content
+		:global {
+			h1 {
+				text-align: center;
+				margin-bottom: 0;
+			}
 
-			margin-inline: auto;
+			// Render definition lists as simple table:
+			dl {
+				display: grid;
+				grid-template-columns: max-content 1fr;
+				max-width: 100%;
+				width: fit-content;
+				margin-inline: auto;
+				padding: $size-3;
 
-			padding: $size-3;
-		}
+				dt,
+				dd {
+					margin: 0;
+					padding: $size-2 0;
+				}
 
-		:global(dt),
-		:global(dd) {
-			margin: 0;
-			padding: $size-2 0;
-		}
+				dt {
+					font-weight: $font-weight-7;
+					text-align: right;
+					align-self: start;
+					padding-right: $size-3;
+				}
 
-		:global(dt) {
-			font-weight: $font-weight-7;
-			text-align: right;
-			align-self: start;
-			padding-right: $size-3;
-		}
+				dt:first-of-type,
+				dt:first-of-type + dd {
+					border-top: none;
+				}
 
-		// Suppress border on first dt; on dd after first dt
-		:global(dt:first-of-type),
-		:global(dt:first-of-type) + :global(dd) {
-			border-top: none;
-		}
+				dd {
+					grid-column: 2;
+				}
 
-		:global(dd) {
-			grid-column: 2;
-		}
-
-		// Only the first dd after each dt gets a border
-		:global(dt),
-		:global(dt) + :global(dd) {
-			border-top: 1px solid #dcdcdc;
-		}
-	}
-
-	nav {
-		overflow: hidden;
-		max-width: 100%;
-		white-space: nowrap;
-
-		div[role='group'] {
-			display: flex;
-			gap: 0; // Remove spacing between buttons
-			flex-wrap: nowrap;
-
-			button {
-				flex: 1 1 auto;
-				min-width: 0;
-				white-space: nowrap;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				text-align: center; // Center the button text
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				padding-inline: $size-2;
+				dt,
+				dt + dd {
+					border-top: 1px solid #dcdcdc;
+				}
 			}
 		}
-	}
-
-	// This prevents a scrolling context from forming,
-	// so the <body> can be the scrolling context for sticky elements inside <swiper-slide>.
-	swiper-container::part(container) {
-		overflow: visible !important;
-	}
-
-	// Hide the now visible overflow with a mask:
-	swiper-container {
-		mask-image: linear-gradient(to right, transparent 0%, black 0%, black 100%, transparent 100%);
-		mask-mode: alpha;
 	}
 </style>
