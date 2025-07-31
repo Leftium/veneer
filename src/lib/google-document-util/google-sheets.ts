@@ -1,7 +1,7 @@
 import { err, ok } from 'neverthrow'
 
 import { excelDateToUnix } from '$lib/util'
-import type { GoogleSheetData } from './types'
+import type { GoogleSheet } from './types'
 
 type GoogleSheetsApiResult = {
 	properties: { title: string; timeZone: string }
@@ -56,17 +56,17 @@ export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 	return ok({ title, sheetTitle, timeZone, rows, hiddenColumns, hiddenRows })
 }
 
-export function stripHidden(json: GoogleSheetData, unhideCols = false, unhideRows = false) {
+export function stripHidden(json: GoogleSheet, skipCols = false, skipRows = false) {
 	const { hiddenColumns, hiddenRows } = json
 
 	const rows = json.rows
-		.filter((_, rowIndex) => unhideRows || !hiddenRows.includes(rowIndex))
-		.map((row) => row.filter((_, cellIndex) => unhideCols || !hiddenColumns.includes(cellIndex)))
+		.filter((_, rowIndex) => skipRows || !hiddenRows.includes(rowIndex))
+		.map((row) => row.filter((_, cellIndex) => skipCols || !hiddenColumns.includes(cellIndex)))
 
 	return {
 		...json,
 		rows,
-		hiddenColumns: unhideCols ? hiddenColumns : [],
-		hiddenRows: unhideRows ? hiddenRows : [],
+		hiddenColumns: skipCols ? hiddenColumns : [],
+		hiddenRows: skipRows ? hiddenRows : [],
 	}
 }

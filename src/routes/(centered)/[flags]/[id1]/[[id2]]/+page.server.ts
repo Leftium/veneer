@@ -12,7 +12,13 @@ import type {
 } from '$lib/google-document-util/types'
 import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-with-id'
 
-export const load = async ({ params }) => {
+export const load = async ({ params, url }) => {
+	// URL params that control inclusion of sheet data hidden by user:
+	const allCols = url.searchParams.has('allcols')
+	const allRows = url.searchParams.has('allrows')
+
+	const skipSheetIdScan = url.searchParams.has('skipsheetidscan')
+
 	// prettier-ignore
 	const TAB_BITS = {
 		info:      0b0001,
@@ -20,9 +26,6 @@ export const load = async ({ params }) => {
 		responses: 0b0100,
 		dev:       0b1000,
 	}
-	const ALL_TABS_MASK = Object.values(TAB_BITS).reduce((acc, bit) => acc | bit, 0)
-
-	const FLAG_SKIP_SCAN_SHEET_ID_SCAN = 0b1_0000
 
 	const flags = Number(params.flags)
 
@@ -35,11 +38,9 @@ export const load = async ({ params }) => {
 		{} as Record<TabBitsKey, boolean>,
 	)
 
-	const skipSheetIdScan = (flags & FLAG_SKIP_SCAN_SHEET_ID_SCAN) > 0
-
 	const commonResponse = {
 		visibleTabs,
-		numTabs: (flags & ALL_TABS_MASK).toString(2).replace(/0/g, '').length,
+		numTabs: flags.toString(2).replace(/0/g, '').length,
 		skipSheetIdScan,
 	}
 
@@ -65,7 +66,7 @@ export const load = async ({ params }) => {
 		GoogleDocumentError
 	>
 
-	// TODO: detect and load sheet if necessary.
+	// Detect and load sheet if necessary.
 	if (!skipSheetIdScan && form.isOk() && sheet.isErr() && !sheet.error.documentId) {
 		const links = form.value.fields.map((field) => linkify.find(field.description || '')).flat()
 
@@ -77,7 +78,7 @@ export const load = async ({ params }) => {
 		}
 
 		for (const link of links) {
-			gg(`Trying: ${link.href}`)
+			gg(`Checking for sheet id: ${link.href}`)
 			const googleDocumentId = await getGoogleDocumentId(link.href)
 			if (googleDocumentId.isOk() && googleDocumentId.value[0] === 's') {
 				const document = await fetchWithDocumentId(googleDocumentId.value)
@@ -121,7 +122,7 @@ export const load = async ({ params }) => {
 	}
 
 	if (sheet.isOk()) {
-		sheet = ok(stripHidden(sheet.value) as GoogleSheet)
+		sheet = ok(stripHidden(sheet.value, allCols, allRows))
 	}
 
 	return {

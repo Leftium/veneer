@@ -6,7 +6,7 @@ export type GoogleDocumentError = {
 	type?: 'form' | 'sheet'
 }
 
-export type GoogleSheetData = {
+type GoogleSheetData = {
 	title: string
 	sheetTitle: string
 	timeZone: string
