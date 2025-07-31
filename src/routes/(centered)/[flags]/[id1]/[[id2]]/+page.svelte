@@ -301,4 +301,34 @@
 			border-top: 1px solid #dcdcdc;
 		}
 	}
+
+	nav {
+		overflow: hidden;
+		max-width: 100%;
+		white-space: nowrap;
+
+		div[role='group'] {
+			display: flex;
+			gap: 0; // Remove spacing between buttons
+			flex-wrap: nowrap;
+
+			button {
+				flex: 1 1 auto;
+				min-width: 0;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				text-align: center; // Center the button text
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding-inline: $size-2;
+
+				.status {
+					margin-left: $size-1; // Ensure spacing from text
+					flex-shrink: 0;
+				}
+			}
+		}
+	}
 </style>
