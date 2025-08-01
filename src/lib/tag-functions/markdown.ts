@@ -18,33 +18,48 @@ export function makeTagFunctionMd(
 	}
 }
 
-export function linkifyRelative(md: MarkdownIt) {
+const REL_LINK_RE = /(?<=^|\s)(\/[^\s"'<>]+)(?=\s|$)/g
+
+export function linkifyRelative(md) {
 	md.core.ruler.after('inline', 'relative_linkify', (state) => {
 		for (const token of state.tokens) {
 			if (token.type !== 'inline' || !token.children) continue
 
 			const newTokens = []
-
 			for (const child of token.children) {
 				if (child.type === 'text') {
-					const parts = child.content.split(/(?=\s|^)(\/[^\s"'<>]+)(?=\s|$)/g)
+					let lastIndex = 0
+					let match
 
-					for (const part of parts) {
-						if (/^\/[^\s"'<>]+$/.test(part)) {
-							const openToken = new state.Token('link_open', 'a', 1)
-							openToken.attrs = [['href', part]]
+					while ((match = REL_LINK_RE.exec(child.content))) {
+						const [path] = match
+						const start = match.index
+						const end = start + path.length
 
-							const textToken = new state.Token('text', '', 0)
-							textToken.content = part
-
-							const closeToken = new state.Token('link_close', 'a', -1)
-
-							newTokens.push(openToken, textToken, closeToken)
-						} else {
-							const textToken = new state.Token('text', '', 0)
-							textToken.content = part
-							newTokens.push(textToken)
+						// Text before the match
+						if (start > lastIndex) {
+							const txt = child.content.slice(lastIndex, start)
+							const t = new state.Token('text', '', 0)
+							t.content = txt
+							newTokens.push(t)
 						}
+
+						// The link token
+						const open = new state.Token('link_open', 'a', 1)
+						open.attrs = [['href', path]]
+						const txt = new state.Token('text', '', 0)
+						txt.content = path
+						const close = new state.Token('link_close', 'a', -1)
+
+						newTokens.push(open, txt, close)
+						lastIndex = end
+					}
+
+					// Remaining text after last match
+					if (lastIndex < child.content.length) {
+						const t = new state.Token('text', '', 0)
+						t.content = child.content.slice(lastIndex)
+						newTokens.push(t)
 					}
 				} else {
 					newTokens.push(child)
