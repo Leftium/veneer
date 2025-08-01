@@ -12,13 +12,14 @@
 	import { stringify } from '$lib/util'
 
 	import type { GoogleSheet } from '$lib/google-document-util/types'
+	import { expoInOut } from 'svelte/easing'
+	import { slide } from 'svelte/transition'
 
 	interface Props {
 		googleSheet: GoogleSheet
-		onToggle?: () => void
 	}
 
-	let { googleSheet, onToggle }: Props = $props()
+	let { googleSheet }: Props = $props()
 
 	let detailsOpened = $state(-1)
 
@@ -28,9 +29,6 @@
 	function makeToggleDetails(index: number) {
 		return function () {
 			detailsOpened = detailsOpened === index ? -1 : index
-			if (onToggle) {
-				onToggle()
-			}
 		}
 	}
 
@@ -155,10 +153,26 @@
 		<gh>{column.title}</gh>
 	{/each}
 
-	{#each rows as row}
-		{#each columns as _, i}
-			<gd>{row[i]?.rendered || ''}</gd>
+	{#each rows as row, r}
+		{#each columns as _, c}
+			{@const column = columns[c]}
+			<gd onclick={makeToggleDetails(r)} role="none">
+				{@html column?.type === 'numeric'
+					? row[c]?.rendered.replace(/^0*/, '<gz>$&</gz>')
+					: row[c]?.rendered}</gd
+			>
 		{/each}
+		{#if r === detailsOpened}
+			{@const transitionOptions = { duration: 500, easing: expoInOut }}
+			<grid-details transition:slide={transitionOptions} onclick={makeToggleDetails(r)} role="none">
+				<dl>
+					{#each row.slice(1) as cell, indexColumn}
+						<dt>{columns[indexColumn + 1]?.title}</dt>
+						<dd>{cell.value}</dd>
+					{/each}
+				</dl>
+			</grid-details>
+		{/if}
 	{/each}
 </grid-table>
 
@@ -180,11 +194,20 @@
 	gd {
 		padding: $size-2 $size-2;
 		border-top: 1px solid lightgray;
+
+		.numeric {
+			font-family: Lato, sans-serif;
+		}
+
+		:global(gz) {
+			opacity: 0;
+			user-select: none;
+		}
 	}
 
 	gh {
 		position: sticky;
-		z-index: 0;
+		z-index: 100;
 		// At most 2 lines of header will become sticky:
 		top: calc(min(0px, 2 * 1.5em + var(--pico-spacing) / 2 - var(--header-height)));
 		background-color: var(--pico-card-sectioning-background-color);
@@ -207,5 +230,33 @@
 		text-overflow: ellipsis;
 
 		//border: 1px solid red;
+	}
+
+	grid-details {
+		z-index: 10;
+		grid-column: 1 / -1;
+
+		padding-inline: $size-7;
+		box-shadow: shadow('inner-3');
+	}
+
+	dl {
+		display: grid;
+
+		dt {
+			margin-top: $size-2;
+			font-weight: bold;
+			opacity: 15%;
+		}
+
+		dd {
+			margin-left: 0;
+		}
+	}
+
+	@media (max-width: 100px) {
+		dl {
+			grid-template-columns: 1fr;
+		}
 	}
 </style>
