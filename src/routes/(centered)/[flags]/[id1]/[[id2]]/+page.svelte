@@ -221,9 +221,11 @@
 		}
 
 		swiper-container {
+			overflow: clip;
+
 			// Hide the now visible overflow with a mask:
-			mask-image: linear-gradient(to right, transparent 0%, black 0%, black 100%, transparent 100%);
-			mask-mode: alpha;
+			//mask-image: linear-gradient(to right, transparent 0%, black 0%, black 100%, transparent 100%);
+			//mask-mode: alpha;
 
 			//width: 100%;
 			///overflow: hidden;
