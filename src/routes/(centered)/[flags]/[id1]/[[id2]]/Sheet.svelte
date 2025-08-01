@@ -10,38 +10,20 @@
 
 	import { gg } from '@leftium/gg'
 	import { stringify } from '$lib/util'
-	import { slide } from 'svelte/transition'
 
-	import { expoInOut } from 'svelte/easing'
-	import DetailsRealEstate from './DetailsRealEstate.svelte'
 	import type { GoogleSheet } from '$lib/google-document-util/types'
 
 	interface Props {
 		googleSheet: GoogleSheet
 		onToggle?: () => void
-		top?: number
 	}
 
-	let { googleSheet, onToggle, top = $bindable(0) }: Props = $props()
-
-	let wrapperWidth = $state(0)
-
-	let theadElement: HTMLElement | undefined = $state()
-	let theadHeight = $state(0)
-	let theadLineHeight = $derived(
-		theadElement ? window.getComputedStyle(theadElement).lineHeight : 0,
-	)
-
-	let styleTop = $derived(
-		// -${theadHeight}px         : Hide header,
-		// ${theadLineHeight} * 3.25 : except for (up to) 3 lines of text + alpha,
-		// var(--pico-spacing) / 2   : and padding.
-		`calc(min(${theadLineHeight} * 3.25 + var(--pico-spacing) / 2 - ${theadHeight}px, 0px) + ${top}px)`,
-	)
-
-	let styleWidth = $derived(wrapperWidth ? `calc(${wrapperWidth}px - .5rem)` : '')
+	let { googleSheet, onToggle }: Props = $props()
 
 	let detailsOpened = $state(-1)
+
+	let gridTableElement = $state<HTMLElement>()
+	let headerHeight = $derived((gridTableElement?.children[0] as HTMLElement).offsetHeight)
 
 	function makeToggleDetails(index: number) {
 		return function () {
@@ -163,63 +145,24 @@
 	})
 </script>
 
-<div class="wrap" bind:clientWidth={wrapperWidth}>
-	<table>
-		<thead style:top={styleTop} bind:clientHeight={theadHeight} bind:this={theadElement}>
-			<tr>
-				{#each columns as column}
-					<th>{column.title}</th>
-				{/each}
-			</tr>
-		</thead>
-		<tbody>
-			{#each rows as row, indexRow (indexRow)}
-				<tr onclick={makeToggleDetails(indexRow)}>
-					{#each row as cell, indexColumn}
-						{@const column = columns[indexColumn]}
-						<td class:numeric={column?.type === 'numeric'}>
-							{@html column?.type === 'numeric'
-								? cell.rendered.replace(/^0*/, '<gz>$&</gz>')
-								: cell.rendered}
-						</td>
-					{/each}
-				</tr>
-				{#if detailsOpened === indexRow}
-					{@const transitionOptions = { duration: 500, easing: expoInOut }}
-					<tr
-						class="details"
-						onclick={makeToggleDetails(indexRow)}
-						transition:slide={transitionOptions}
-					>
-						<td colspan={row.length}>
-							<div transition:slide={transitionOptions} style:width={styleWidth}>
-								{#if type === 'real-estate'}
-									<DetailsRealEstate {row} {columns}></DetailsRealEstate>
-								{:else}
-									<dl>
-										{#each row as cell, indexColumn}
-											{#if indexColumn}
-												<dt>{columns[indexColumn]?.title}</dt>
-												<dd>{cell.value}</dd>
-											{/if}
-										{/each}
-									</dl>
-								{/if}
-							</div>
-						</td>
-					</tr>
-				{/if}
-			{/each}
-		</tbody>
-		<tfoot>
-			<tr>
-				<td colspan={columns.length}></td>
-			</tr>
-		</tfoot>
-	</table>
-</div>
+<grid-table
+	bind:this={gridTableElement}
+	style:--col-count={columns.length}
+	style:--header-height="{headerHeight}px"
+	style:grid-template-columns={`auto repeat(${columns.length - 1}, minmax(120px, 1fr))`}
+>
+	{#each columns as column}
+		<gh>{column.title}</gh>
+	{/each}
 
-<div hidden>
+	{#each rows as row}
+		{#each columns as _, i}
+			<gd>{row[i]?.rendered || ''}</gd>
+		{/each}
+	{/each}
+</grid-table>
+
+<div>
 	<pre>type    = {type}</pre>
 	<pre>columns = {stringify(columns)}</pre>
 	<pre>rows    = {stringify(rows)}</pre>
@@ -228,71 +171,41 @@
 <style lang="scss">
 	@use 'open-props-scss' as *;
 
-	table {
-		margin: 0;
-		border-collapse: separate; /* Don't collapse */
-
-		.numeric {
-			font-family: Lato, sans-serif;
-		}
-
-		:global(gz) {
-			opacity: 0;
-			user-select: none;
-		}
-
-		thead {
-			position: sticky;
-			z-index: 1;
-
-			vertical-align: bottom;
-
-			th:not(:first-child) {
-				min-width: 5rem;
-				_background-color: lightsteelblue;
-			}
-		}
-
-		tbody {
-			white-space: nowrap;
-
-			tr {
-				height: $size-8;
-			}
-		}
-	}
-
-	dl {
+	grid-table {
 		display: grid;
-
-		dt {
-			margin-top: $size-2;
-			font-weight: bold;
-			opacity: 15%;
-		}
-
-		dd {
-			margin-left: 0;
-		}
+		// grid-template-columns: as inline style
 	}
 
-	@media (max-width: 100px) {
-		dl {
-			grid-template-columns: 1fr;
-		}
+	gh,
+	gd {
+		padding: $size-2 $size-2;
+		border-top: 1px solid lightgray;
 	}
 
-	.details {
-		td {
-			padding-block: 0;
-			padding-inline: $size-1;
-		}
+	gh {
+		position: sticky;
+		z-index: 0;
+		// At most 2 lines of header will become sticky:
+		top: calc(min(0px, 2 * 1.5em + var(--pico-spacing) / 2 - var(--header-height)));
+		background-color: var(--pico-card-sectioning-background-color);
+
+		// Align items to bottom
+		display: flex;
+		align-items: flex-end;
+
+		padding-bottom: $size-1;
+
+		font-weight: $font-weight-7;
+
+		border-bottom: 2px solid lightgray;
 	}
 
-	.details div {
-		padding-inline: $size-7;
-		box-shadow: shadow('inner-3');
+	gd {
+		display: block;
+		white-space: nowrap;
+		overflow: clip;
+		text-overflow: ellipsis;
 
-		///overflow: hidden;
+		//border: 1px solid red;
 	}
 </style>
