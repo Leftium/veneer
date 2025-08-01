@@ -17,9 +17,10 @@
 
 	interface Props {
 		googleSheet: GoogleSheet
+		onToggle?: () => void
 	}
 
-	let { googleSheet }: Props = $props()
+	let { googleSheet, onToggle }: Props = $props()
 
 	let detailsOpened = $state(-1)
 
@@ -29,6 +30,9 @@
 	function makeToggleDetails(index: number) {
 		return function () {
 			detailsOpened = detailsOpened === index ? -1 : index
+			if (onToggle) {
+				onToggle()
+			}
 		}
 	}
 

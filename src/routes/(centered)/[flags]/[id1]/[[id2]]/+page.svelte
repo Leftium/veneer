@@ -36,6 +36,20 @@
 		}
 	}
 
+	function callSwiperUpdateAutoHeight() {
+		const endTime = performance.now() + 1000
+
+		function tick(currentTime: number) {
+			if (currentTime < endTime) {
+				if (swiperContainer) {
+					swiperContainer.swiper.updateAutoHeight()
+				}
+				requestAnimationFrame(tick)
+			}
+		}
+		requestAnimationFrame(tick)
+	}
+
 	onMount(() => {
 		const swiperParams = {
 			spaceBetween: 4,
@@ -114,7 +128,10 @@
 				<swiper-slide data-hash="responses">
 					{#if data.sheet.isOk()}
 						{@const link = urlFromDocumentId(data.sheet.value.documentId, false)}
-						<Sheet googleSheet={data.sheet.value as GoogleSheet}></Sheet>
+						<Sheet
+							googleSheet={data.sheet.value as GoogleSheet}
+							onToggle={callSwiperUpdateAutoHeight}
+						></Sheet>
 
 						<center><a href={link}>Original Google Sheet</a> </center>
 
