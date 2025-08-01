@@ -73,7 +73,7 @@
 								class={['outline', { active: activeHash === hash }]}
 								onclick={makeSlideToHash(hash)}
 							>
-								{icon}{name}{error ? '⚠️' : ''}
+								{icon} {name}{error ? ' ⚠️' : ''}
 							</button>
 						{/if}
 					{/each}
