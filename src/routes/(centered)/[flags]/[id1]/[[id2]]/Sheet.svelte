@@ -41,7 +41,7 @@
 
 			// Skip extraneous rows without timestamps.
 			// Adjust title row if extra columns are found.
-			while (!rows[1][0]) {
+			while (false && !rows[1][0]) {
 				rows[0] = Array(Math.max(rows[0].length, rows[1].length))
 					.fill(1)
 					.map((_, index) => rows[1][index] || rows[0][index])
