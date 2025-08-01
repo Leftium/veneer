@@ -87,7 +87,8 @@
 								class={['outline', { active: activeHash === hash }]}
 								onclick={makeSlideToHash(hash)}
 							>
-								{icon} {name}{error ? ' ⚠️' : ''}
+								{icon}
+								{name}{error ? ' ⚠️' : ''}
 							</button>
 						{/if}
 					{/each}
@@ -175,6 +176,10 @@
 		footer,
 		header {
 			margin: 0;
+		}
+
+		header {
+			border-bottom: none;
 		}
 
 		footer {
