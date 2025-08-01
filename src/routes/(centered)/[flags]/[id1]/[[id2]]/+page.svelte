@@ -75,27 +75,28 @@
 
 <article>
 	<header>
+		<fi-spacer></fi-spacer>
+
 		<h1 class="title">{data.title}</h1>
+
+		{#if data.numTabs > 1}
+			<nav-buttons>
+				{#each Object.entries(data.navTabs) as [hash, { name, icon, error }]}
+					{#if icon}
+						<div
+							class={['outline', { active: activeHash === hash }]}
+							onclick={makeSlideToHash(hash)}
+							role="none"
+						>
+							{icon}
+							{name}{error ? ' ⚠️' : ''}
+						</div>
+					{/if}
+				{/each}
+			</nav-buttons>
+		{/if}
 	</header>
 	<main>
-		{#if data.numTabs > 1}
-			<nav>
-				<div role="group">
-					{#each Object.entries(data.navTabs) as [hash, { name, icon, error }]}
-						{#if icon}
-							<button
-								class={['outline', { active: activeHash === hash }]}
-								onclick={makeSlideToHash(hash)}
-							>
-								{icon}
-								{name}{error ? ' ⚠️' : ''}
-							</button>
-						{/if}
-					{/each}
-				</div>
-			</nav>
-		{/if}
-
 		<swiper-container init="false" bind:this={swiperContainer}>
 			{#if data.navTabs.info.icon}
 				<swiper-slide data-hash="info">
@@ -187,29 +188,25 @@
 		}
 	}
 
-	nav {
+	nav-buttons {
+		display: flex;
+		justify-content: center;
+
 		overflow: hidden;
 		max-width: 100%;
 		white-space: nowrap;
 
-		div[role='group'] {
+		div {
+			flex: 0 1 auto;
+			min-width: 0;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			text-align: center; // Center the button text
 			display: flex;
-			gap: 0; // Remove spacing between buttons
-			flex-wrap: nowrap;
-			margin: 0;
-
-			button {
-				flex: 1 1 auto;
-				min-width: 0;
-				white-space: nowrap;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				text-align: center; // Center the button text
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				padding-inline: $size-2;
-			}
+			align-items: center;
+			justify-content: center;
+			padding: $size-2 $size-3;
 		}
 	}
 
@@ -297,6 +294,29 @@
 					border-top: 1px solid #dcdcdc;
 				}
 			}
+		}
+	}
+
+	header {
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
+		//row-gap: $size-4;
+
+		padding: 0;
+		padding-bottom: $size-2;
+
+		background-image: url(/dance_night.gif);
+		background-size: cover;
+		background-position: center;
+		background-color: #0b4474;
+
+		fi-spacer {
+			height: 100px;
+		}
+
+		& * {
+			color: white;
 		}
 	}
 </style>
