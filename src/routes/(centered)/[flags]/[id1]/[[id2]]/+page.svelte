@@ -82,7 +82,7 @@
 		{/if}
 
 		<swiper-container init="false" bind:this={swiperContainer}>
-			{#if data.navTabs.info}
+			{#if data.navTabs.info.icon}
 				<swiper-slide data-hash="info">
 					{#if data.info}
 						<div class="markdown">{@html md`${data.info}`}</div>
@@ -91,7 +91,7 @@
 				</swiper-slide>
 			{/if}
 
-			{#if data.navTabs.form}
+			{#if data.navTabs.form.icon}
 				<swiper-slide data-hash="form">
 					{#if data.form.isOk()}
 						{@const link = urlFromDocumentId(data.form.value.documentId)}
@@ -110,7 +110,7 @@
 				</swiper-slide>
 			{/if}
 
-			{#if data.navTabs.responses}
+			{#if data.navTabs.responses.icon}
 				<swiper-slide data-hash="responses">
 					{#if data.sheet.isOk()}
 						{@const link = urlFromDocumentId(data.sheet.value.documentId, false)}
@@ -125,7 +125,7 @@
 				</swiper-slide>
 			{/if}
 
-			{#if data.navTabs.dev}
+			{#if data.navTabs.dev.icon}
 				<swiper-slide data-hash="dev">
 					<pre>params: {stringify(params)}</pre>
 					<pre>data: {stringify(data)}</pre>
