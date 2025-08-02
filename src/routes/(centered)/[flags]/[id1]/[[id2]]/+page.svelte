@@ -80,17 +80,16 @@
 		<h1 class="title">{data.title}</h1>
 
 		{#if data.numTabs > 1}
-			<nav-buttons>
+			<nav-buttons role="group">
 				{#each Object.entries(data.navTabs) as [hash, { name, icon, error }]}
 					{#if icon}
-						<div
-							class={['outline', { active: activeHash === hash }]}
+						<button
+							class={['glass', { active: activeHash === hash }]}
 							onclick={makeSlideToHash(hash)}
-							role="none"
 						>
 							{icon}
 							{name}{error ? ' ⚠️' : ''}
-						</div>
+						</button>
 					{/if}
 				{/each}
 			</nav-buttons>
@@ -162,6 +161,35 @@
 	</footer>
 </article>
 
+<div hidden>
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width="0"
+		height="0"
+		style="position:absolute; overflow:hidden"
+	>
+		<defs>
+			<filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%">
+				<feTurbulence
+					type="fractalNoise"
+					baseFrequency="0.008 0.008"
+					numOctaves="2"
+					seed="92"
+					result="noise"
+				/>
+				<feGaussianBlur in="noise" stdDeviation="2" result="blurred" />
+				<feDisplacementMap
+					in="SourceGraphic"
+					in2="blurred"
+					scale="77"
+					xChannelSelector="R"
+					yChannelSelector="G"
+				/>
+			</filter>
+		</defs>
+	</svg>
+</div>
+
 <style lang="scss">
 	@use 'open-props-scss' as *;
 
@@ -170,7 +198,7 @@
 		margin-block: 0;
 
 		h1 {
-			margin-bottom: 0;
+			margin-bottom: $size-2;
 			text-align: center;
 		}
 
@@ -192,11 +220,18 @@
 		display: flex;
 		justify-content: center;
 
+		margin-bottom: $size-2;
+
 		overflow: hidden;
 		max-width: 100%;
 		white-space: nowrap;
 
-		div {
+		&:focus-visible,
+		&:has(button:focus) {
+			box-shadow: none;
+		}
+
+		button {
 			flex: 0 1 auto;
 			min-width: 0;
 			white-space: nowrap;
@@ -206,8 +241,50 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			padding: $size-2 $size-3;
+			padding: $size-1 $size-4;
+
+			background-color: rgba(255, 255, 255, 0%);
+
+			&.active {
+				background-color: rgba(255, 255, 255, 10%);
+			}
+
+			&:hover {
+				background-color: rgba(255, 255, 255, 15%);
+			}
 		}
+	}
+
+	.glass {
+		position: relative;
+
+		isolation: isolate;
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		box-shadow: 0px 6px 24px rgba(0, 0, 0, 0.2);
+		backdrop-filter: blur(1px);
+		-webkit-backdrop-filter: blur(1px);
+		border: 1px solid rgba(255, 255, 255, 0.3);
+	}
+
+	.glass::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: 20;
+
+		box-shadow: inset 0 0 20px -5px rgba(255, 255, 255, 0.6);
+		background: rgba(255, 255, 255, 0.05);
+	}
+
+	.glass::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: 10;
+
+		backdrop-filter: blur(8px);
+		filter: url(#glass-distortion);
+		isolation: isolate;
 	}
 
 	main {
@@ -255,7 +332,6 @@
 		:global {
 			h1 {
 				text-align: center;
-				margin-bottom: 0;
 			}
 
 			// Render definition lists as simple table:
@@ -304,7 +380,6 @@
 		//row-gap: $size-4;
 
 		padding: 0;
-		padding-bottom: $size-2;
 
 		background-image: url(/dance_night.gif);
 		background-size: cover;
