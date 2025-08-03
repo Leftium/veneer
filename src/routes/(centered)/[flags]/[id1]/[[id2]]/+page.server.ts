@@ -54,10 +54,10 @@ export const load = async ({ params, url }) => {
 			const links = form.value.fields.map((field) => linkify.find(field.description || '')).flat()
 
 			// Reorder array to minimize expected number of url fetches:
-			// Move first link to last place: usually link to form itself.
+			// Move first link (usually links to form itself) to 2nd slot.
 			const shifted = links.shift()
 			if (shifted) {
-				links.push(shifted)
+				links.splice(1, 0, shifted)
 			}
 
 			for (const link of links) {
