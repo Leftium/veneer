@@ -40,18 +40,18 @@ export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 	const hiddenColumns = data.columnMetadata.flatMap((cm, i) => (cm.hiddenByUser ? i : []))
 	const hiddenRows = data.rowMetadata.flatMap((rm, i) => (rm.hiddenByUser ? i : []))
 
-	const rows = data.rowData
-		.filter((row) => row.values)
-		.map((rowDatum) => {
-			return rowDatum.values.map((value) => {
-				const excelSerialDate = value?.userEnteredFormat?.numberFormat?.type.includes('DATE')
-					? value?.effectiveValue?.numberValue
-					: null
-				return excelSerialDate
-					? [value.formattedValue, excelDateToUnix(excelSerialDate, timeZone)] // Pass integer Unix epoch to avoid timezone shenanigans.
-					: value.formattedValue || ''
-			})
-		})
+	const rows = data.rowData.map((rowDatum) =>
+		!rowDatum.values
+			? null
+			: rowDatum.values.map((value) => {
+					const excelSerialDate = value?.userEnteredFormat?.numberFormat?.type.includes('DATE')
+						? value?.effectiveValue?.numberValue
+						: null
+					return excelSerialDate
+						? [value.formattedValue, excelDateToUnix(excelSerialDate, timeZone)] // Pass integer Unix epoch to avoid timezone shenanigans.
+						: value.formattedValue || ''
+				}),
+	)
 
 	return ok({ title, sheetTitle, timeZone, rows, hiddenColumns, hiddenRows })
 }
@@ -60,7 +60,7 @@ export function stripHidden(json: GoogleSheet, skipCols = false, skipRows = fals
 	const { hiddenColumns, hiddenRows } = json
 
 	const rows = json.rows
-		.filter((_, rowIndex) => skipRows || !hiddenRows.includes(rowIndex))
+		.filter((row, rowIndex) => row !== null && (skipRows || !hiddenRows.includes(rowIndex)))
 		.map((row) => row.filter((_, cellIndex) => skipCols || !hiddenColumns.includes(cellIndex)))
 
 	return {
