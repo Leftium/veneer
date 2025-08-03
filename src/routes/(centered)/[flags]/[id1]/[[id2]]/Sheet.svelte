@@ -36,7 +36,15 @@
 		}
 	}
 
-	const numericRegex = /^[0-9-.,/: ]*$/
+	const REGEX_DANCE_ROLE = /role|역할|리드|리더/i
+	const REGEX_DANCE_NAME = /name|닉네임/i
+	const REGEX_DANCE_WISH = /말씀|한마디/i
+	const REGEX_DANCE_PAID = /입금여|입금확/i
+	const REGEX_DANCE_LEADER = /lead|리더|리드/i
+	const REGEX_DANCE_FOLLOW = /follow|팔뤄|팔로우/i
+
+	const REGEX_NUMERIC = /^[0-9-.,/: ]*$/
+
 	const { type, columns, rows } = $derived.by(() => {
 		let type = 'regular'
 		const sheetJson = googleSheet
@@ -75,7 +83,7 @@
 					if (column) {
 						column.lengthMax = Math.max(column.lengthMax, valueString.length)
 						column.lengthMin = Math.min(column.lengthMin, valueString.length)
-						if (!numericRegex.test(valueString)) {
+						if (!REGEX_NUMERIC.test(valueString)) {
 							column.type = 'string'
 						}
 					}
@@ -90,8 +98,8 @@
 
 			// Detect special types
 			if (
-				columns.filter(({ title }) => /(name)|(닉네임)/i.test(title)).length &&
-				columns.filter(({ title }) => /(role|(역할)|(리드)|팔로우)/i.test(title)).length
+				columns.filter(({ title }) => REGEX_DANCE_NAME.test(title)).length &&
+				columns.filter(({ title }) => REGEX_DANCE_ROLE.test(title)).length
 			) {
 				type = 'dance-event'
 			} else if (
@@ -124,7 +132,7 @@
 								? valueString.padStart(column?.lengthMax, '0')
 								: valueString
 					}
-					if (type === 'dance-event' && /(contact)|(연락)/i.test(column.title)) {
+					if (type === 'dance-event' && /(contact)|(연락)/i.test(column?.title)) {
 						return {
 							value: valueString.replaceAll(/[0-9]/g, '*'),
 							rendered: renderedString.replaceAll(/[0-9]/g, '*'),
@@ -146,28 +154,36 @@
 		return { type, columns: [], rows: [] }
 	})
 
-	const numDancers = $derived.by(() => {
+	const danceEventInfo = $derived.by(() => {
 		if (type !== 'dance-event') {
-			return { total: 0, follows: 0, leads: 0 }
+			return {
+				total: 0,
+				follows: 0,
+				leaders: 0,
+				ci: {
+					role: -1,
+					name: -1,
+					paid: -1,
+					wish: -1,
+				},
+			}
 		}
 
-		const columnRole = columns.findIndex((cell) => {
-			return /(role|(역할)|(리드)|팔로우)/i.test(cell.title)
-		})
+		const ci = {
+			role: columns.findIndex((c) => REGEX_DANCE_ROLE.test(c.title)),
+			name: columns.findIndex((c) => REGEX_DANCE_NAME.test(c.title)),
+			paid: columns.findIndex((c) => REGEX_DANCE_PAID.test(c.title)),
+			wish: columns.findIndex((c) => REGEX_DANCE_WISH.test(c.title)),
+		}
 
-		const follows = rows.filter((row) => {
-			const result = /(팔뤄)|(follow)/i.test(row[columnRole].value)
-			return result
-		}).length
-
-		const leads = rows.filter((row) => {
-			return /(리더)|(lead)/i.test(row[columnRole].value)
-		}).length
+		const follows = rows.filter((row) => REGEX_DANCE_FOLLOW.test(row[ci.role]?.value)).length
+		const leaders = rows.filter((row) => REGEX_DANCE_LEADER.test(row[ci.role]?.value)).length
 
 		return {
-			total: follows + leads,
+			total: rows.length,
 			follows,
-			leads,
+			leaders,
+			ci,
 		}
 	})
 </script>
@@ -202,21 +218,28 @@
 
 {#snippet danceEventHeaders()}
 	<gh>
-		<span>{numDancers.total}명 신청</span>
-		<span>💃{numDancers.follows} 🕺{numDancers.leads}</span>
+		<span>{danceEventInfo.total}명 신청</span>
+		<span>💃{danceEventInfo.follows} 🕺{danceEventInfo.leaders}</span>
 	</gh>
 {/snippet}
 
 {#snippet danceEventRow(row, r)}
+	{@const ci = danceEventInfo.ci}
 	<gd onclick={makeToggleDetails(r)} role="none">
 		<fi-index>
 			<div>{@html row[0].rendered.replace(/^0*/, '<gz>$&</gz>')}.</div>
-			<div>{row[7]?.rendered ? '💰' : ''}</div>
+			<div>{row[ci.paid]?.rendered ? '💰' : ''}</div>
 		</fi-index>
-		<fi-role>{`${/lead/i.test(row[3].rendered) ? '🕺' : '💃'}`}</fi-role>
+		<fi-role
+			>{REGEX_DANCE_LEADER.test(row[ci.role]?.rendered)
+				? '🕺'
+				: REGEX_DANCE_FOLLOW.test(row[ci.role]?.rendered)
+					? '💃'
+					: '❓'}</fi-role
+		>
 		<fi-info>
-			<h4>{row[2].rendered}</h4>
-			<div>{row[6]?.rendered}</div>
+			<h4>{row[ci.name]?.rendered}</h4>
+			<div>{row[ci.wish]?.rendered}</div>
 		</fi-info>
 	</gd>
 
