@@ -212,7 +212,7 @@
 		}
 
 		footer {
-			height: $size-13;
+			min-height: $size-13;
 		}
 	}
 
