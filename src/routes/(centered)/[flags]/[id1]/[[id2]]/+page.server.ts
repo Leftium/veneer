@@ -25,6 +25,8 @@ export const load = async ({ params, url }) => {
 
 	const flags = Number(params.flags)
 
+	const warnings = []
+
 	const numTabs = flags.toString(2).replace(/0/g, '').length
 
 	let title = ''
@@ -60,8 +62,9 @@ export const load = async ({ params, url }) => {
 				links.splice(1, 0, shifted)
 			}
 
+			let numLinksChecked = 0
 			for (const link of links) {
-				gg(`Checking for sheet id: ${link.href}`)
+				gg(`Smart sheet ID scan #${++numLinksChecked}: ${link.href}`)
 				const googleDocumentId = await getGoogleDocumentId(link.href)
 				if (googleDocumentId.isOk() && googleDocumentId.value[0] === 's') {
 					const document = await fetchWithDocumentId(googleDocumentId.value)
@@ -71,6 +74,11 @@ export const load = async ({ params, url }) => {
 					}
 				}
 			}
+			if (numLinksChecked > 2) {
+				warnings.push({
+					message: `Smart sheet ID required many network requests. (Fetched ${numLinksChecked} links.)`,
+				})
+			}
 		}
 
 		title = form.isOk() ? form.value.title : sheet.isOk() ? sheet.value.title : ''
@@ -78,7 +86,7 @@ export const load = async ({ params, url }) => {
 		if (form.isOk()) {
 			// Set info to markdown of initial non-question fields.
 			info = form.value.fields
-				.slice(0, form.value.firstInput)
+				.slice(0, form.value.firstInput === -1 ? undefined : form.value.firstInput)
 				.map((f, index) => {
 					let s = ''
 					function add(t: string | null, prefix = '') {
@@ -113,7 +121,8 @@ export const load = async ({ params, url }) => {
 		(acc, [hash, [bit, icon, name]]) => {
 			const error =
 				((hash === 'info' || hash === 'form') && form.isErr()) ||
-				(hash === 'responses' && sheet.isErr())
+				(hash === 'responses' && sheet.isErr()) ||
+				(hash === 'dev' && !!warnings.length)
 
 			acc[hash] = {
 				name,
@@ -126,6 +135,7 @@ export const load = async ({ params, url }) => {
 	)
 
 	return {
+		warnings,
 		navTabs,
 		numTabs,
 		skipSheetIdScan,
