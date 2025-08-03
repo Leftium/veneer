@@ -152,7 +152,11 @@
 		</swiper-container>
 	</main>
 	<footer>
+		{#each data.footers as footer}
+			{@html md`${footer}`}
+		{/each}
 		{@html md`
+			# Powered by Veneer
 			- [Home](/)
 			- [Source code](https://github.com/Leftium/veneer)
 			- Made by [Leftium](https://leftium.com/)
@@ -392,6 +396,20 @@
 
 		& * {
 			color: white;
+		}
+	}
+
+	footer {
+		:global {
+			:where(article, address, blockquote, dl, figure, form, ol, p, pre, table, ul)
+				~ :is(h1, h2, h3, h4, h5, h6) {
+				margin-top: $size-4;
+			}
+
+			h1 {
+				margin-bottom: $size-2;
+				font-size: $font-size-1;
+			}
 		}
 	}
 </style>

@@ -31,6 +31,7 @@ export const load = async ({ params, url }) => {
 
 	let title = ''
 	let info = ''
+	let footers: string[] = []
 
 	let form: ResultGoogleForm = err({ message: `Initial form` })
 	let sheet: ResultGoogleSheet = err({ message: `Initial sheet` })
@@ -85,7 +86,7 @@ export const load = async ({ params, url }) => {
 
 		if (form.isOk()) {
 			// Set info to markdown of initial non-question fields.
-			info = form.value.fields
+			const infoAndFooters = form.value.fields
 				.slice(0, form.value.firstInput === -1 ? undefined : form.value.firstInput)
 				.map((f, index) => {
 					let s = ''
@@ -106,6 +107,17 @@ export const load = async ({ params, url }) => {
 					return s
 				})
 				.join('\n')
+				.split(/^={3,}\s*(?<header>.*?)\s*={3,}$/m)
+
+			footers = infoAndFooters
+			info = footers.shift() || 'EMPTY'
+
+			footers = footers.map((footer, index) => {
+				if (index % 2 == 0 && footer) {
+					return `# ${footer}`
+				}
+				return footer
+			})
 
 			// Remove info fields from form.
 			form.value.fields = form.value.fields.filter((f) => f.inputIndex)
@@ -136,11 +148,12 @@ export const load = async ({ params, url }) => {
 
 	return {
 		warnings,
+		info,
+		footers,
 		navTabs,
 		numTabs,
 		skipSheetIdScan,
 		title,
-		info,
 		form,
 		sheet,
 	}
