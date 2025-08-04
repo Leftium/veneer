@@ -226,7 +226,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 					{#if data.form.isOk()}
 						{#if !data.navTabs.info.icon}
 							<content class="markdown">
-								{@html md`${data.info}`}
+								{@html md`${internalizeLinks(data.info)}`}
 								<hr />
 							</content>
 						{/if}
