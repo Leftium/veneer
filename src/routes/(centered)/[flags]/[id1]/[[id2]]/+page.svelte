@@ -30,12 +30,14 @@
 	let swiperContainer = $state<SwiperContainer>()
 	let activeHash = $state('info')
 
-	const sourceUrlForm = data.form.isOk() ? urlFromDocumentId(data.form.value.documentId, false) : ''
-	const sourceUrlSheet = data.sheet.isOk()
-		? urlFromDocumentId(data.sheet.value.documentId, false)
-		: ''
+	let sourceUrlForm = $derived(
+		data.form.isOk() ? urlFromDocumentId(data.form.value.documentId, false) : '',
+	)
+	let sourceUrlSheet = $derived(
+		data.sheet.isOk() ? urlFromDocumentId(data.sheet.value.documentId, false) : '',
+	)
 
-	const footerSources =
+	let footerSources = $derived(
 		!sourceUrlForm && !sourceUrlSheet
 			? ''
 			: `
@@ -44,9 +46,10 @@
 
 ${!sourceUrlForm ? '' : `Google Form\n~ ${sourceUrlForm}`}
 ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
-`
+`,
+	)
 
-	const standardFooter = undent`
+	let standardFooter = $derived(undent`
 		# Powered by Veneer
 
 		<div>
@@ -62,7 +65,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 		See other projects
 		~ https://github.com/Leftium?tab=repositories&type=source
-	`
+	`)
 
 	register()
 
@@ -155,10 +158,10 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 					// TODO: Remove hardcoded rules:
 					if (/home/i.test(line)) {
-						internalLink = `/7/${id}` 
+						internalLink = `/7/${id}`
 					}
 					if (/오시는 길|수칙/i.test(line)) {
-						internalLink = `/1/${id}` 
+						internalLink = `/1/${id}`
 					}
 
 					if (/신청/.test(line)) {
