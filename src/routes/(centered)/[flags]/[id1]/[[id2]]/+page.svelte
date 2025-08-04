@@ -356,7 +356,6 @@
 	}
 
 	.markdown {
-
 		:global {
 			h1 {
 				text-align: center;
@@ -424,12 +423,11 @@
 	}
 
 	footer {
-		.wrap {
-			max-width: $size-content-2;
-			margin: $size-3 auto;
-		}
-
 		:global {
+			--pico-muted-color: color-mix(in srgb, var(--pico-color) 30%, transparent);
+
+			color: var(--pico-muted-color);
+
 			:where(article, address, blockquote, dl, figure, form, ol, p, pre, table, ul)
 				~ :is(h1, h2, h3, h4, h5, h6) {
 				margin-top: $size-4;
@@ -438,6 +436,24 @@
 			h1 {
 				margin-bottom: $size-2;
 				font-size: $font-size-1;
+			}
+
+			ul {
+				margin: $size-2;
+				padding: 0;
+
+				li {
+					list-style: none; /* Removes the bullets */
+
+					a {
+						text-decoration: none; /* Removes underline */
+						color: var(--pico-muted-color);
+
+						&:hover {
+							text-decoration: underline; /* Adds underline on hover */
+						}
+					}
+				}
 			}
 		}
 	}
