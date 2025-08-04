@@ -13,6 +13,9 @@
 	import { makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
 	import { urlFromDocumentId } from '$lib/google-document-util/url-id'
 	import GoogleForm from './GoogleForm.svelte'
+	import { undent } from '$lib/tag-functions/undent'
+	import { linkListifyDefinitionList } from '$lib/markdown/dl-to-link-list'
+	import { page } from '$app/state'
 	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
 		[markdownitDeflist],
 	])
@@ -21,6 +24,22 @@
 
 	let swiperContainer = $state<SwiperContainer>()
 	let activeHash = $state('info')
+
+	const standardFooter = undent`
+		# Powered by Veneer
+
+		Home
+		~ ${page.url.origin}
+
+		Source code
+		~ https://github.com/Leftium/veneer
+
+		Made by Leftium
+		~ https://leftium.com
+
+		See other projects
+		~ https://github.com/Leftium?tab=repositories&type=source
+	`
 
 	register()
 
@@ -153,15 +172,10 @@
 	</main>
 	<footer>
 		{#each data.footers as footer}
-			{@html md`${footer}`}
+			{@html md`${linkListifyDefinitionList(footer)}`}
 		{/each}
-		{@html md`
-			# Powered by Veneer
-			- [Home](/)
-			- [Source code](https://github.com/Leftium/veneer)
-			- Made by [Leftium](https://leftium.com/)
-			- See [other projects](https://github.com/Leftium?tab=repositories&type=source)
-		`}
+
+		{@html md`${linkListifyDefinitionList(standardFooter)}`}
 	</footer>
 </article>
 
