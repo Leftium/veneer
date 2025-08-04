@@ -89,6 +89,7 @@ export const load = async ({ params, url }) => {
 			const infoAndFooters = form.value.fields
 				.slice(0, form.value.firstInput === -1 ? undefined : form.value.firstInput)
 				.map((f, index) => {
+					let skippedFirstTitle = false
 					let s = ''
 					function add(t: string | null, prefix = '') {
 						if (t) {
@@ -96,7 +97,9 @@ export const load = async ({ params, url }) => {
 						}
 					}
 					if (f.type === 'TITLE_AND_DESCRIPTION') {
-						if (index > 0) {
+						if (!skippedFirstTitle) {
+							skippedFirstTitle = true
+						} else {
 							add(f.title, '# ')
 						}
 						add(f.description)
