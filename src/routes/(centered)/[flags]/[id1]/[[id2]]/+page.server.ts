@@ -52,43 +52,11 @@ export const load = async ({ params, url }) => {
 		form = (document1.value.type === 'form' ? document1 : document2) as ResultGoogleForm
 		sheet = (document1.value.type === 'sheet' ? document1 : document2) as ResultGoogleSheet
 
-		// Detect and load sheet if necessary.
-		if (!skipSheetIdScan && form.isOk() && sheet.isErr() && !sheet.error.documentId) {
-			const links = form.value.fields.map((field) => linkify.find(field.description || '')).flat()
-
-			// Reorder array to minimize expected number of url fetches:
-			// Move first link (usually links to form itself) to 2nd slot.
-			const shifted = links.shift()
-			if (shifted) {
-				links.splice(1, 0, shifted)
-			}
-
-			let numLinksChecked = 0
-			for (const link of links) {
-				gg(`Smart sheet ID scan #${++numLinksChecked}: ${link.href}`)
-				const googleDocumentId = await getGoogleDocumentId(link.href)
-				if (googleDocumentId.isOk() && googleDocumentId.value[0] === 's') {
-					const document = await fetchWithDocumentId(googleDocumentId.value)
-					if (document.isOk() && document.value.type === 'sheet') {
-						sheet = document as ResultGoogleSheet
-						break
-					}
-				}
-			}
-			if (numLinksChecked > 2) {
-				warnings.push({
-					message: `Smart sheet ID required many network requests. (Fetched ${numLinksChecked} links.)`,
-				})
-			}
-		}
-
-		title = form.isOk() ? form.value.title : sheet.isOk() ? sheet.value.title : ''
-
 		if (form.isOk()) {
 			// Set info to markdown of initial non-question fields.
 			const infoAndFooters = form.value.fields
 				.slice(0, form.value.firstInput === -1 ? undefined : form.value.firstInput)
-				.map((f, index) => {
+				.map((f) => {
 					let skippedFirstTitle = false
 					let s = ''
 					function add(t: string | null, prefix = '') {
@@ -127,6 +95,44 @@ export const load = async ({ params, url }) => {
 			// Remove info fields from form.
 			form.value.fields = form.value.fields.filter((f) => f.inputIndex)
 		}
+
+		// Detect and load sheet if necessary.
+		if (
+			!skipSheetIdScan &&
+			form.isOk() &&
+			form.value.firstInput !== -1 &&
+			sheet.isErr() &&
+			!sheet.error.documentId
+		) {
+			const links = linkify.find(info).filter((link) => !/googleusercontent.com/.test(link.href))
+
+			// Reorder array to minimize expected number of url fetches:
+			// Move first link (usually links to form itself) to 2nd slot.
+			const shifted = links.shift()
+			if (shifted) {
+				links.splice(1, 0, shifted)
+			}
+
+			let numLinksChecked = 0
+			for (const link of links) {
+				gg(`Smart sheet ID scan #${++numLinksChecked}: ${link.href}`)
+				const googleDocumentId = await getGoogleDocumentId(link.href)
+				if (googleDocumentId.isOk() && googleDocumentId.value[0] === 's') {
+					const document = await fetchWithDocumentId(googleDocumentId.value)
+					if (document.isOk() && document.value.type === 'sheet') {
+						sheet = document as ResultGoogleSheet
+						break
+					}
+				}
+			}
+			if (numLinksChecked > 2) {
+				warnings.push({
+					message: `Smart sheet ID required many network requests. (Fetched ${numLinksChecked} links.)`,
+				})
+			}
+		}
+
+		title = form.isOk() ? form.value.title : sheet.isOk() ? sheet.value.title : ''
 
 		if (sheet.isOk()) {
 			sheet = ok(stripHidden(sheet.value, allCols, allRows))
