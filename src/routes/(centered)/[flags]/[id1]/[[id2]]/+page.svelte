@@ -152,6 +152,15 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 					const id = `${prefix}.${documentId}`
 
 					let internalLink = `/${basepath}/${id}`
+
+					// TODO: Remove hardcoded rules:
+					if (/home/i.test(line)) {
+						internalLink = `/7/${id}` 
+					}
+					if (/오시는 길|수칙/i.test(line)) {
+						internalLink = `/1/${id}` 
+					}
+
 					if (/신청/.test(line)) {
 						internalLink += '#form'
 						if (data.form.isOk() && data.form.value.documentId === id) {
