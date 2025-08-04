@@ -298,8 +298,6 @@
 		// grid-template-columns: as inline style
 
 		border-bottom: 2px solid var(--pico-muted-border-color);
-
-		margin-bottom: $size-4;
 	}
 
 	gh,
