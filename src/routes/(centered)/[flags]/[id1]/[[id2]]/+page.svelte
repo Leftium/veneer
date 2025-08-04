@@ -8,16 +8,21 @@
 	import Sheet from './Sheet.svelte'
 	import type { GoogleSheet, GoogleFormDocument } from '$lib/google-document-util/types'
 
+	import * as linkify from 'linkifyjs'
+
 	// @ts-expect-error
 	import markdownitDeflist from 'markdown-it-deflist'
-	import { makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
-	import { urlFromDocumentId } from '$lib/google-document-util/url-id'
+	import { linkifyRelative, makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
+	import { DOCUMENT_URL_REGEX, urlFromDocumentId } from '$lib/google-document-util/url-id'
 	import GoogleForm from './GoogleForm.svelte'
 	import { undent } from '$lib/tag-functions/undent'
 	import { linkListifyDefinitionList } from '$lib/markdown/dl-to-link-list'
 	import { page } from '$app/state'
+	import { gg } from '@leftium/gg'
+
 	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
 		[markdownitDeflist],
+		[linkifyRelative],
 	])
 
 	let { params, data } = $props()
@@ -61,15 +66,22 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 	register()
 
+	import { goto } from '$app/navigation'
+
+	function slideToHash(hash: string) {
+		hash = hash.replace('#', '')
+		if (swiperContainer) {
+			const slideIndex = swiperContainer.swiper.slides.findIndex(
+				(slide) => slide.dataset.hash === hash,
+			)
+			swiperContainer.swiper.slideTo(slideIndex)
+			activeHash = hash
+		}
+	}
+
 	function makeSlideToHash(hash: string) {
 		return function () {
-			if (swiperContainer) {
-				const slideIndex = swiperContainer.swiper.slides.findIndex(
-					(slide) => slide.dataset.hash === hash,
-				)
-				swiperContainer.swiper.slideTo(slideIndex)
-				activeHash = hash
-			}
+			slideToHash(hash)
 		}
 	}
 
@@ -90,9 +102,6 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	onMount(() => {
 		const swiperParams = {
 			spaceBetween: 4,
-			hashNavigation: {
-				replaceState: true, // Prevents adding to history and scroll jump
-			},
 			autoHeight: true,
 		}
 
@@ -102,8 +111,75 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 			document.querySelectorAll('swiper-slide[role="group"]').forEach((el) => {
 				el.removeAttribute('role')
 			})
+
+			const swiper = swiperContainer.swiper
+			swiper.on('slideChange', () => {
+				gg('slideChange')
+				// Assuming each slide has <div class="swiper-slide" data-hash="slide-2">
+				const currentSlide = swiper.slides[swiper.activeIndex]
+				const hash = currentSlide.getAttribute('data-hash') ?? swiper.activeIndex.toString()
+
+				// Replace state so browser back/forward still works predictably
+				goto(`#${hash}`, { replaceState: true, noScroll: true })
+			})
 		}
 	})
+
+	$effect(() => {
+		// reading `$page` here auto-subscribes to changes
+		slideToHash(page.url.hash)
+	})
+
+	function internalizeLinks(markdown: string): string {
+		const lines = markdown.split(/\r?\n/)
+		const out: string[] = []
+		let i = 0
+
+		while (i < lines.length) {
+			const line = lines[i++]
+
+			const links = linkify.find(line)
+			if (links.length) {
+				gg(line, links)
+				const href = links[0].href
+
+				let matches = href.match(DOCUMENT_URL_REGEX.g) || href.match(DOCUMENT_URL_REGEX.f)
+				if (matches) {
+					const documentId = matches.groups?.id || ''
+					const prefix = documentId.length > 20 ? 'f' : 'g'
+					const id = `${prefix}.${documentId}`
+
+					let internalLink = `/7/${id}`
+					if (/신청/.test(line)) {
+						internalLink += '#form'
+						if (data.form.isOk() && data.form.value.documentId === id) {
+							internalLink = `${page.url.pathname}&SAME#form`
+						}
+					}
+
+					out.push(line.replace(href, internalLink))
+					continue
+				}
+
+				matches = href.match(DOCUMENT_URL_REGEX.s)
+				if (matches) {
+					const id = `s.${matches.groups?.id || ''}`
+
+					let internalLink = `/7/${id}`
+					if (data.form.isOk() && data.sheet.isOk() && data.sheet.value.documentId === id) {
+						if (/신청/.test(line)) {
+							internalLink = `${page.url.pathname}?SAME#list`
+						}
+					}
+					out.push(line.replace(href, internalLink))
+					continue
+				}
+			}
+
+			out.push(line)
+		}
+		return out.join('\n')
+	}
 </script>
 
 <svelte:head>
@@ -137,7 +213,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 			{#if data.navTabs.info.icon}
 				<swiper-slide data-hash="info">
 					{#if data.info}
-						<content class="markdown">{@html md`${data.info}`}</content>
+						<content class="markdown">{@html md`${internalizeLinks(data.info)}`}</content>
 						<pre hidden>{data.info}</pre>
 					{/if}
 				</swiper-slide>
@@ -189,7 +265,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	<footer>
 		<content>
 			{#each data.footers as footer}
-				<section>{@html md`${linkListifyDefinitionList(footer)}`}</section>
+				<section>{@html md`${internalizeLinks(linkListifyDefinitionList(footer))}`}</section>
 			{/each}
 
 			<section>{@html md`${linkListifyDefinitionList(footerSources)}`}</section>
