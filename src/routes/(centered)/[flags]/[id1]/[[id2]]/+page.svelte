@@ -25,6 +25,22 @@
 	let swiperContainer = $state<SwiperContainer>()
 	let activeHash = $state('info')
 
+	const sourceUrlForm = data.form.isOk() ? urlFromDocumentId(data.form.value.documentId, false) : ''
+	const sourceUrlSheet = data.sheet.isOk()
+		? urlFromDocumentId(data.sheet.value.documentId, false)
+		: ''
+
+	const footerSources =
+		!sourceUrlForm && !sourceUrlSheet
+			? ''
+			: `
+# Source Documents
+<div>
+
+${!sourceUrlForm ? '' : `Google Form\n~ ${sourceUrlForm}`}
+${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
+`
+
 	const standardFooter = undent`
 		# Powered by Veneer
 
@@ -41,8 +57,6 @@
 
 		See other projects
 		~ https://github.com/Leftium?tab=repositories&type=source
-
-		</div>
 	`
 
 	register()
@@ -132,7 +146,6 @@
 			{#if data.navTabs.form.icon}
 				<swiper-slide data-hash="form">
 					{#if data.form.isOk()}
-						{@const link = urlFromDocumentId(data.form.value.documentId)}
 						{#if !data.navTabs.info.icon}
 							<content class="markdown">
 								{@html md`${data.info}`}
@@ -143,8 +156,6 @@
 						<content>
 							<GoogleForm googleForm={data.form.value as GoogleFormDocument}></GoogleForm>
 						</content>
-
-						<center><a href={link}>Original Google Form</a></center>
 						<pre hidden>{stringify(data.form.value)}</pre>
 					{:else}
 						<pre>{stringify(data.form.error)}</pre>
@@ -155,13 +166,10 @@
 			{#if data.navTabs.responses.icon}
 				<swiper-slide data-hash="responses">
 					{#if data.sheet.isOk()}
-						{@const link = urlFromDocumentId(data.sheet.value.documentId, false)}
 						<Sheet
 							googleSheet={data.sheet.value as GoogleSheet}
 							onToggle={callSwiperUpdateAutoHeight}
 						></Sheet>
-
-						<center><a href={link}>Original Google Sheet</a> </center>
 
 						<pre hidden>{stringify(data.sheet.value)}}</pre>
 					{:else}
@@ -183,6 +191,8 @@
 			{#each data.footers as footer}
 				<section>{@html md`${linkListifyDefinitionList(footer)}`}</section>
 			{/each}
+
+			<section>{@html md`${linkListifyDefinitionList(footerSources)}`}</section>
 			<section>{@html md`${linkListifyDefinitionList(standardFooter)}`}</section>
 		</content>
 	</footer>
