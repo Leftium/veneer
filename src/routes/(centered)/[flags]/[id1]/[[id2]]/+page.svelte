@@ -163,8 +163,8 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				</swiper-slide>
 			{/if}
 
-			{#if data.navTabs.responses.icon}
-				<swiper-slide data-hash="responses">
+			{#if data.navTabs.list.icon}
+				<swiper-slide data-hash="list">
 					{#if data.sheet.isOk()}
 						<Sheet
 							googleSheet={data.sheet.value as GoogleSheet}

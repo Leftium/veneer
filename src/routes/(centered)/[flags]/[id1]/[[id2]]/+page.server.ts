@@ -17,10 +17,10 @@ export const load = async ({ params, url }) => {
 
 	// prettier-ignore
 	const TABS: Record<string, [number, string, string]> ={
-        info:      [0b0001, 'ℹ️', 'Info'],
-        form:      [0b0010, '✍', 'Form'], 
-        responses: [0b0100, '📋', 'Responses'],
-        dev:       [0b1000, '🔧', 'Dev'], 
+        info: [0b0001, 'ℹ️', 'Info'],
+        form: [0b0010, '✍', 'Form'], 
+        list: [0b0100, '📋', 'Responses'],
+        dev:  [0b1000, '🔧', 'Dev'], 
     }
 
 	const flags = Number(params.flags)
@@ -135,7 +135,7 @@ export const load = async ({ params, url }) => {
 		(acc, [hash, [bit, icon, name]]) => {
 			const error =
 				((hash === 'info' || hash === 'form') && form.isErr()) ||
-				(hash === 'responses' && sheet.isErr()) ||
+				(hash === 'list' && sheet.isErr()) ||
 				(hash === 'dev' && !!warnings.length)
 
 			acc[hash] = {
