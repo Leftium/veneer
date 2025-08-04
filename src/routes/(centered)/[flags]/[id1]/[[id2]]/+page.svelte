@@ -135,6 +135,8 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		const out: string[] = []
 		let i = 0
 
+		const basepath = page.url.pathname.split('/')[1]
+
 		while (i < lines.length) {
 			const line = lines[i++]
 
@@ -149,7 +151,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 					const prefix = documentId.length > 20 ? 'f' : 'g'
 					const id = `${prefix}.${documentId}`
 
-					let internalLink = `/7/${id}`
+					let internalLink = `/${basepath}/${id}`
 					if (/신청/.test(line)) {
 						internalLink += '#form'
 						if (data.form.isOk() && data.form.value.documentId === id) {
@@ -165,7 +167,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				if (matches) {
 					const id = `s.${matches.groups?.id || ''}`
 
-					let internalLink = `/7/${id}`
+					let internalLink = `/${basepath}/${id}`
 					if (data.form.isOk() && data.sheet.isOk() && data.sheet.value.documentId === id) {
 						if (/신청/.test(line)) {
 							internalLink = `${page.url.pathname}?SAME#list`
