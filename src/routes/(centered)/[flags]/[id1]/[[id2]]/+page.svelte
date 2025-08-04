@@ -28,6 +28,8 @@
 	const standardFooter = undent`
 		# Powered by Veneer
 
+		<div>
+
 		Home
 		~ ${page.url.origin}
 
@@ -39,6 +41,8 @@
 
 		See other projects
 		~ https://github.com/Leftium?tab=repositories&type=source
+
+		</div>
 	`
 
 	register()
@@ -177,9 +181,9 @@
 	<footer>
 		<content>
 			{#each data.footers as footer}
-				{@html md`${linkListifyDefinitionList(footer)}`}
+				<section>{@html md`${linkListifyDefinitionList(footer)}`}</section>
 			{/each}
-			{@html md`${linkListifyDefinitionList(standardFooter)}`}
+			<section>{@html md`${linkListifyDefinitionList(standardFooter)}`}</section>
 		</content>
 	</footer>
 </article>
@@ -423,10 +427,23 @@
 	}
 
 	footer {
-		:global {
-			--pico-muted-color: color-mix(in srgb, var(--pico-color) 30%, transparent);
+		content {
+			display: grid;
+			grid-template-columns: repeat(
+				auto-fit,
+				minmax(calc(($size-content-2 - 2 * $size-3) / 3), 1fr)
+			);
+			grid-template-rows: repeat(20, auto);
+			column-gap: $size-3;
+		}
 
-			color: var(--pico-muted-color);
+		:global {
+			section {
+				grid-row: span 2;
+				display: grid;
+				grid-template-rows: subgrid;
+			}
+			--pico-muted-color: color-mix(in srgb, var(--pico-color) 30%, transparent);
 
 			:where(article, address, blockquote, dl, figure, form, ol, p, pre, table, ul)
 				~ :is(h1, h2, h3, h4, h5, h6) {
@@ -434,13 +451,20 @@
 			}
 
 			h1 {
-				margin-bottom: $size-2;
+				grid-row: 1;
+				align-self: end;
+				margin-bottom: $size-1;
+
+				color: var(--pico-muted-color);
 				font-size: $font-size-1;
 			}
 
-			ul {
-				margin: $size-2;
-				padding: 0;
+			div {
+				grid-row: 2;
+
+				ul {
+					padding: 0;
+				}
 
 				li {
 					list-style: none; /* Removes the bullets */

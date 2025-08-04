@@ -112,12 +112,14 @@ export const load = async ({ params, url }) => {
 			footers = infoAndFooters
 			info = footers.shift() || 'EMPTY'
 
-			footers = footers.map((footer, index) => {
-				if (index % 2 == 0 && footer) {
-					return `# ${footer}`
+			footers = footers.reduce((result, footer, i, footers) => {
+				if (i % 2 === 0) {
+					const header = footer ? `# ${footer}` : ''
+					const body = footers[i + 1] || ''
+					result.push(`${header}\n<div>${body}</div>`)
 				}
-				return footer
-			})
+				return result
+			}, [] as string[])
 
 			// Remove info fields from form.
 			form.value.fields = form.value.fields.filter((f) => f.inputIndex)
