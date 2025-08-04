@@ -119,7 +119,7 @@
 			{#if data.navTabs.info.icon}
 				<swiper-slide data-hash="info">
 					{#if data.info}
-						<div class="markdown">{@html md`${data.info}`}</div>
+						<content class="markdown">{@html md`${data.info}`}</content>
 						<pre hidden>{data.info}</pre>
 					{/if}
 				</swiper-slide>
@@ -129,14 +129,18 @@
 				<swiper-slide data-hash="form">
 					{#if data.form.isOk()}
 						{@const link = urlFromDocumentId(data.form.value.documentId)}
-
-						{#if !data.navTabs.info}
-							<div class="markdown">{@html md`${data.info}`}</div>
+						{#if !data.navTabs.info.icon}
+							<content class="markdown">
+								{@html md`${data.info}`}
+								<hr />
+							</content>
 						{/if}
 
-						<GoogleForm googleForm={data.form.value as GoogleFormDocument}></GoogleForm>
+						<content>
+							<GoogleForm googleForm={data.form.value as GoogleFormDocument}></GoogleForm>
+						</content>
 
-						<center><a href={link}>Original Google Form</a> </center>
+						<center><a href={link}>Original Google Form</a></center>
 						<pre hidden>{stringify(data.form.value)}</pre>
 					{:else}
 						<pre>{stringify(data.form.error)}</pre>
@@ -171,11 +175,12 @@
 		</swiper-container>
 	</main>
 	<footer>
-		{#each data.footers as footer}
-			{@html md`${linkListifyDefinitionList(footer)}`}
-		{/each}
-
-		{@html md`${linkListifyDefinitionList(standardFooter)}`}
+		<content>
+			{#each data.footers as footer}
+				{@html md`${linkListifyDefinitionList(footer)}`}
+			{/each}
+			{@html md`${linkListifyDefinitionList(standardFooter)}`}
+		</content>
 	</footer>
 </article>
 
@@ -343,9 +348,14 @@
 		}
 	}
 
+	content {
+		display: block;
+		margin: auto;
+
+		max-width: $size-content-2;
+	}
+
 	.markdown {
-		max-width: $size-15;
-		margin: $size-3 auto;
 
 		:global {
 			h1 {
@@ -414,6 +424,11 @@
 	}
 
 	footer {
+		.wrap {
+			max-width: $size-content-2;
+			margin: $size-3 auto;
+		}
+
 		:global {
 			:where(article, address, blockquote, dl, figure, form, ol, p, pre, table, ul)
 				~ :is(h1, h2, h3, h4, h5, h6) {

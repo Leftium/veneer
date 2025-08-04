@@ -226,21 +226,23 @@
 {#snippet danceEventRow(row, r)}
 	{@const ci = danceEventInfo.ci}
 	<gd onclick={makeToggleDetails(r)} role="none">
-		<fi-index>
-			<div>{@html row[0].rendered.replace(/^0*/, '<gz>$&</gz>')}.</div>
-			<div>{row[ci.paid]?.rendered ? '💰' : ''}</div>
-		</fi-index>
-		<fi-role
-			>{REGEX_DANCE_LEADER.test(row[ci.role]?.rendered)
-				? '🕺'
-				: REGEX_DANCE_FOLLOW.test(row[ci.role]?.rendered)
-					? '💃'
-					: '❓'}</fi-role
-		>
-		<fi-info>
-			<h4>{row[ci.name]?.rendered}</h4>
-			<div>{row[ci.wish]?.rendered}</div>
-		</fi-info>
+		<content>
+			<fi-index>
+				<div>{@html row[0].rendered.replace(/^0*/, '<gz>$&</gz>')}.</div>
+				<div>{row[ci.paid]?.rendered ? '💰' : ''}</div>
+			</fi-index>
+			<fi-role
+				>{REGEX_DANCE_LEADER.test(row[ci.role]?.rendered)
+					? '🕺'
+					: REGEX_DANCE_FOLLOW.test(row[ci.role]?.rendered)
+						? '💃'
+						: '❓'}</fi-role
+			>
+			<fi-info>
+				<h4>{row[ci.name]?.rendered}</h4>
+				<div>{row[ci.wish]?.rendered}</div>
+			</fi-info>
+		</content>
 	</gd>
 
 	{#if r === detailsOpened}
@@ -385,33 +387,36 @@
 
 		gd {
 			grid-column: 1 / -1;
-			display: flex;
-			justify-content: center;
 
-			width: 100%;
-			column-gap: $size-2;
+			content {
+				display: flex;
+				column-gap: $size-2;
 
-			fi-index {
-				opacity: 0.5;
-				text-align: right;
-			}
+				margin: auto;
 
-			fi-role {
-				font-size: $font-size-6;
-			}
+				max-width: $size-content-2;
 
-			fi-info {
-				flex-basis: $size-content-2;
-				flex-shrink: 1;
-
-				white-space: wrap;
-
-				h4 {
-					margin-bottom: $size-1;
+				fi-index {
+					opacity: 0.5;
+					text-align: right;
 				}
 
-				div {
-					opacity: 0.5;
+				fi-role {
+					font-size: $font-size-6;
+				}
+
+				fi-info {
+					flex-shrink: 1;
+
+					white-space: wrap;
+
+					h4 {
+						margin-bottom: $size-1;
+					}
+
+					div {
+						opacity: 0.5;
+					}
 				}
 			}
 		}
