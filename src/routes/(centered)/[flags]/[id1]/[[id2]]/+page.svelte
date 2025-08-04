@@ -446,6 +446,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	}
 
 	.markdown {
+		margin-top: $size-2;
 		:global {
 			h1 {
 				text-align: center;
