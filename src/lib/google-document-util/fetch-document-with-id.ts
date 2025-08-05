@@ -43,7 +43,7 @@ export async function fetchWithDocumentId(
 			? ok({
 					type: 'sheet',
 					documentId: googleDocumentId.value.documentId,
-                    veneerId: googleDocumentId.value.veneerId,
+					veneerId: googleDocumentId.value.veneerId,
 					...dataSheet.value,
 				})
 			: err(dataSheet.error)
@@ -52,7 +52,7 @@ export async function fetchWithDocumentId(
 	return ok({
 		type: 'form',
 		documentId: googleDocumentId.value.documentId,
-        veneerId: googleDocumentId.value.veneerId, 
+		veneerId: googleDocumentId.value.veneerId,
 		...adjustGoogleFormData(parseGoogleForm(text)),
 	})
 }
