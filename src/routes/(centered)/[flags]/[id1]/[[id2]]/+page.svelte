@@ -166,9 +166,15 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 					if (/신청/.test(line)) {
 						internalLink += '#form'
-						if (data.form.isOk() && [data.form.value.documentId, data.form.value.veneerId].includes(id)) {
-							internalLink = `${page.url.pathname}?SAME#form`
+						if (
+							data.form.isOk() &&
+							[data.form.value.documentId, data.form.value.veneerId].includes(id)
+						) {
+							internalLink = '#form'
 						}
+						const button = `<a href="${internalLink}" role=button class=outline>신청 ➡️</a>`
+						out.push(button)
+						continue
 					}
 
 					out.push(line.replace(href, internalLink))
@@ -180,10 +186,14 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 					const id = `s.${matches.groups?.id || ''}`
 
 					let internalLink = `/${basepath}/${id}`
-					if (data.form.isOk() && data.sheet.isOk() && data.sheet.value.documentId === id) {
-						if (/신청/.test(line)) {
-							internalLink = `${page.url.pathname}?SAME#list`
+
+					if (/확인/.test(line)) {
+						if (data.form.isOk() && data.sheet.isOk() && data.sheet.value.documentId === id) {
+							internalLink = '#list'
 						}
+						const button = `<a href="${internalLink}" role=button class=outline>확인 👀</a>`
+						out.push(button)
+						continue
 					}
 					out.push(line.replace(href, internalLink))
 					continue
@@ -466,12 +476,18 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				text-align: center;
 			}
 
+			a[role='button'] {
+				width: 100%;
+				margin-block: $size-1;
+			}
+
 			// Render definition lists as simple table:
 			dl {
 				display: grid;
 				grid-template-columns: max-content 1fr;
 				max-width: 100%;
 				width: fit-content;
+				margin-bottom: 0;
 				margin-inline: auto;
 				padding: $size-3;
 
