@@ -3,6 +3,8 @@ import { gg } from '@leftium/gg'
 import { err, ok } from 'neverthrow'
 import * as linkify from 'linkifyjs'
 
+import { m } from '$lib/paraglide/messages.js'
+
 import { getGoogleDocumentId } from '$lib/google-document-util/url-id.js'
 import { stripHidden } from '$lib/google-document-util/google-sheets.js'
 import type { ResultGoogleForm, ResultGoogleSheet } from '$lib/google-document-util/types'
@@ -17,10 +19,10 @@ export const load = async ({ params, url }) => {
 
 	// prettier-ignore
 	const TABS: Record<string, [number, string, string]> ={
-        info: [0b0001, 'ℹ️', 'Info'],
-        form: [0b0010, '✍', 'Form'], 
-        list: [0b0100, '📋', 'Responses'],
-        dev:  [0b1000, '🔧', 'Dev'], 
+        info: [0b0001, 'ℹ️', m.info()],
+        form: [0b0010, '✍', m.form()], 
+        list: [0b0100, '📋', m.list()],
+        dev:  [0b1000, '🔧', m.dev()], 
     }
 
 	const flags = Number(params.flags)

@@ -1,4 +1,9 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"hello_world": "Hello, {name} from ko!"
+	"hello_world": "Hello, {name} from ko!",
+	"info": "안내",
+	"form": "신청",
+	"list": "확인",
+	"dev": "DEV",
+	"submit": "신청"
 }

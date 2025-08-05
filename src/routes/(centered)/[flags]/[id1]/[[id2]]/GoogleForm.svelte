@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { GoogleFormDocument } from '$lib/google-document-util/types'
+	import { m } from '$lib/paraglide/messages'
 
 	import GoogleFormField from './GoogleFormField.svelte'
 
@@ -37,7 +38,7 @@
 		{/each}
 
 		{#if true || googleForm.hasInput}
-			<input type="submit" value="Sign up 신청" />
+			<input type="submit" value="{m.submit()}" />
 		{/if}
 	</form>
 
