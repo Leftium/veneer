@@ -60,6 +60,7 @@
 		]
 	},
 	"dependencies": {
+		"@inlang/paraglide-js": "^2.0.0",
 		"markdown-it-deflist": "^3.0.0"
 	}
 }
