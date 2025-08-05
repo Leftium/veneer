@@ -54,10 +54,10 @@ export const load = async ({ params, url }) => {
 
 		if (form.isOk()) {
 			// Set info to markdown of initial non-question fields.
+            let skippedFirstTitle = false
 			const infoAndFooters = form.value.fields
 				.slice(0, form.value.firstInput === -1 ? undefined : form.value.firstInput)
 				.map((f) => {
-					let skippedFirstTitle = false
 					let s = ''
 					function add(t: string | null, prefix = '') {
 						if (t) {
