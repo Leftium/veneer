@@ -42,7 +42,7 @@ export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 
 	const rows = data.rowData.map((rowDatum) =>
 		!rowDatum.values
-			? null
+			? []
 			: rowDatum.values.map((value) => {
 					const excelSerialDate = value?.userEnteredFormat?.numberFormat?.type.includes('DATE')
 						? value?.effectiveValue?.numberValue
