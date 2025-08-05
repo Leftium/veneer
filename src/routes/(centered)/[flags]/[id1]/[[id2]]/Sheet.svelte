@@ -12,8 +12,8 @@
 	import { stringify } from '$lib/util'
 
 	import type { GoogleSheet } from '$lib/google-document-util/types'
-	import { expoInOut } from 'svelte/easing'
-	import { slide } from 'svelte/transition'
+
+	import StickyHeaderGrid from '$lib/components/StickyHeaderSummaryDetailsGrid.svelte'
 
 	interface Props {
 		googleSheet: GoogleSheet
@@ -21,20 +21,6 @@
 	}
 
 	let { googleSheet, onToggle }: Props = $props()
-
-	let detailsOpened = $state(-1)
-
-	let gridTableElement = $state<HTMLElement>()
-	let headerHeight = $derived((gridTableElement?.children[0] as HTMLElement).offsetHeight)
-
-	function makeToggleDetails(index: number) {
-		return function () {
-			detailsOpened = detailsOpened === index ? -1 : index
-			if (onToggle) {
-				onToggle()
-			}
-		}
-	}
 
 	const REGEX_DANCE_ROLE = /role|역할|리드|리더/i
 	const REGEX_DANCE_NAME = /name|닉네임/i
@@ -188,101 +174,68 @@
 	})
 </script>
 
-{#snippet tableHeader()}
-	{#each columns as column}
-		<gh>{column.title}</gh>
-	{/each}
-{/snippet}
-
-{#snippet tableRow(row, r)}
-	{#each columns as _, c}
-		{@const column = columns[c]}
-		<gd onclick={makeToggleDetails(r)} role="none">
-			{@html column?.type === 'numeric'
-				? row[c]?.rendered.replace(/^0*/, '<gz>$&</gz>')
-				: row[c]?.rendered}</gd
-		>
-	{/each}
-	{#if r === detailsOpened}
-		{@const transitionOptions = { duration: 500, easing: expoInOut }}
-		<grid-details transition:slide={transitionOptions} onclick={makeToggleDetails(r)} role="none">
-			<dl>
-				{#each row.slice(1) as cell, indexColumn}
-					<dt>{columns[indexColumn + 1]?.title}</dt>
-					<dd>{cell.value}</dd>
-				{/each}
-			</dl>
-		</grid-details>
-	{/if}
-{/snippet}
-
-{#snippet danceEventHeaders()}
-	<gh>
-		<span>{danceEventInfo.total}명 신청</span>
-		<span>💃{danceEventInfo.follows} 🕺{danceEventInfo.leaders}</span>
-	</gh>
-{/snippet}
-
-{#snippet danceEventRow(row, r)}
-	{@const ci = danceEventInfo.ci}
-	<gd onclick={makeToggleDetails(r)} role="none">
-		<content>
-			<fi-index>
-				<div>{@html row[0].rendered.replace(/^0*/, '<gz>$&</gz>')}.</div>
-				<div>{row[ci.paid]?.rendered ? '💰' : ''}</div>
-			</fi-index>
-			<fi-role
-				>{REGEX_DANCE_LEADER.test(row[ci.role]?.rendered)
-					? '🕺'
-					: REGEX_DANCE_FOLLOW.test(row[ci.role]?.rendered)
-						? '💃'
-						: '❓'}</fi-role
-			>
-			<fi-info>
-				<h4>{row[ci.name]?.rendered}</h4>
-				<div>{row[ci.wish]?.rendered}</div>
-			</fi-info>
-		</content>
-	</gd>
-
-	{#if r === detailsOpened}
-		{@const transitionOptions = { duration: 500, easing: expoInOut }}
-		<grid-details transition:slide={transitionOptions} onclick={makeToggleDetails(r)} role="none">
-			<dl>
-				{#each row.slice(1) as cell, indexColumn}
-					<dt>{columns[indexColumn + 1]?.title}</dt>
-					<dd>{cell.value}</dd>
-				{/each}
-			</dl>
-		</grid-details>
-	{/if}
-{/snippet}
-
-{#snippet tableGrid(gridTemplateColumns: string, header, snippetRow, classes = '')}
-	<grid-table
-		class={classes}
-		bind:this={gridTableElement}
-		style:--col-count={columns.length}
-		style:--header-height="{headerHeight}px"
-		style:grid-template-columns={gridTemplateColumns}
-	>
-		{@render header()}
-
-		{#each rows as row, r}
-			{@render snippetRow(row, r)}
+{#snippet rowDetails(row: string | any[], r: any)}
+	<dl>
+		{#each row.slice(1) as cell, indexColumn}
+			<dt>{columns[indexColumn + 1]?.title}</dt>
+			<dd>{cell.value}</dd>
 		{/each}
-	</grid-table>
+	</dl>
 {/snippet}
 
-{#if type === 'dance-event'}
-	{@render tableGrid(`1fr`, danceEventHeaders, danceEventRow, type)}
-{:else}
-	{@render tableGrid(
-		`auto repeat(${columns.length - 1}, minmax(120px, 1fr))`,
-		tableHeader,
-		tableRow,
-	)}
-{/if}
+<div class={type}>
+	{#if type === 'dance-event'}
+		<StickyHeaderGrid gridTemplateColumns="1fr" data={{ columns, rows }} {onToggle} {rowDetails}>
+			{#snippet header()}
+				<gh>
+					<span>{danceEventInfo.total}명 신청</span>
+					<span>💃{danceEventInfo.follows} 🕺{danceEventInfo.leaders}</span>
+				</gh>
+			{/snippet}
+
+			{#snippet rowSummary(columns, row, r, makeToggleDetails)}
+				{@const ci = danceEventInfo.ci}
+				<gd onclick={makeToggleDetails(r)} role="none">
+					<content>
+						<fi-index>
+							<div>{@html row[0].rendered.replace(/^0*/, '<gz>$&</gz>')}.</div>
+							<div>{row[ci.paid]?.rendered ? '💰' : ''}</div>
+						</fi-index>
+						<fi-role
+							>{REGEX_DANCE_LEADER.test(row[ci.role]?.rendered)
+								? '🕺'
+								: REGEX_DANCE_FOLLOW.test(row[ci.role]?.rendered)
+									? '💃'
+									: '❓'}</fi-role
+						>
+						<fi-info>
+							<h4>{row[ci.name]?.rendered}</h4>
+							<div>{row[ci.wish]?.rendered}</div>
+						</fi-info>
+					</content>
+				</gd>
+			{/snippet}
+		</StickyHeaderGrid>
+	{:else}
+		{@const gridTemplateColumns = `auto repeat(${columns.length - 1}, minmax(120px, 1fr))`}
+		<StickyHeaderGrid {gridTemplateColumns} data={{ columns, rows }} {onToggle} {rowDetails}>
+			{#snippet header()}
+				{#each columns as column}
+					<gh>{column.title}</gh>
+				{/each}
+			{/snippet}
+
+			{#snippet rowSummary(columns, row, r, makeToggleDetails)}
+				{#each columns as { type }, c}
+					{@const rendered = row[c]?.rendered || ''}
+					<gd onclick={makeToggleDetails(r)} role="none">
+						{@html type === 'numeric' ? rendered.replace(/^0*/, '<gz>$&</gz>') : rendered}
+					</gd>
+				{/each}
+			{/snippet}
+		</StickyHeaderGrid>
+	{/if}
+</div>
 
 <div hidden>
 	<pre>type    = {type}</pre>
@@ -292,13 +245,6 @@
 
 <style lang="scss">
 	@use 'open-props-scss' as *;
-
-	grid-table {
-		display: grid;
-		// grid-template-columns: as inline style
-
-		border-bottom: 2px solid var(--pico-muted-border-color);
-	}
 
 	gh,
 	gd {
@@ -340,19 +286,6 @@
 		text-overflow: ellipsis;
 
 		border-top: 1px solid var(--pico-muted-border-color);
-	}
-
-	grid-details {
-		z-index: 10;
-		grid-column: 1 / -1;
-
-		background-color: var(--pico-card-sectioning-background-color);
-
-		display: flex;
-		justify-content: center;
-
-		padding-inline: $size-3;
-		box-shadow: shadow('inner-3');
 	}
 
 	dl {
