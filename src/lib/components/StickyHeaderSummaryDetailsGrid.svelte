@@ -5,7 +5,7 @@
 
 	interface Props {
 		data: any
-        gridTemplateColumns: string
+		gridTemplateColumns: string
 		onToggle: (() => void) | void
 		header: Snippet
 		rowSummary: Snippet<
@@ -34,7 +34,7 @@
 <grid-table
 	bind:this={gridTableElement}
 	style:--header-height="{headerHeight}px"
-	style:grid-template-columns={gridTemplateColumns}	
+	style:grid-template-columns={gridTemplateColumns}
 >
 	{@render header()}
 
@@ -42,8 +42,11 @@
 		{@render rowSummary(data.columns, row, ri, makeToggleDetails)}
 
 		{#if ri === detailsOpened}
-			{@const transitionOptions = { duration: 500, easing: expoInOut }}
-			<grid-details transition:slide={transitionOptions} onclick={makeToggleDetails(ri)} role="none">
+			<grid-details
+				transition:slide={{ duration: 500, easing: expoInOut }}
+				onclick={makeToggleDetails(ri)}
+				role="none"
+			>
 				{@render rowDetails(row, ri)}
 			</grid-details>
 		{/if}

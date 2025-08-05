@@ -38,7 +38,7 @@
 		{/each}
 
 		{#if true || googleForm.hasInput}
-			<input type="submit" value="{m.submit()}" />
+			<input type="submit" value={m.submit()} />
 		{/if}
 	</form>
 
