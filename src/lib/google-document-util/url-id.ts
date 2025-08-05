@@ -1,5 +1,12 @@
 import { err, ok } from 'neverthrow'
 import { finalUrl } from '../../routes/api/final-url/finalurl'
+import { gg } from '@leftium/gg'
+
+// Definition of different ID types:
+
+// Veneer ID: {prefix}.{id}
+
+// DocumentId: {f|s}.{id} (subset of Veneer ID)
 
 export const DOCUMENT_URL_REGEX = {
 	// Google sheets
@@ -19,7 +26,7 @@ const GOOGLE_FORM_OR_SHEET_REGEX = {
 	f: DOCUMENT_URL_REGEX.f,
 }
 
-const DOCUMENT_ID_REGEX = /^(?<prefix>[sfgbh])\.(?<id>[a-zA-Z0-9_-]+)$/
+const VENEER_ID_REGEX = /^(?<prefix>[sfgbh])\.(?<id>[a-zA-Z0-9_-]+)$/
 
 export const URL_TEMPLATES: Record<string, string> = {
 	s: 'https://docs.google.com/spreadsheets/d/{ID}',
@@ -43,8 +50,8 @@ function makeGoogleSheetUrl(id: string) {
 	return `https://sheets.googleapis.com/v4/spreadsheets/${id}?${searchParams}`
 }
 
-export function urlFromDocumentId(documentId: string, apiUrl = true) {
-	const [prefix, id] = documentId.split('.')
+export function urlFromVeneerId(veneerId: string, apiUrl = true) {
+	const [prefix, id] = veneerId.split('.')
 
 	if (apiUrl && prefix === 's' && id.length === 44) {
 		return makeGoogleSheetUrl(id)
@@ -67,23 +74,28 @@ function googleDocumentIdFromUrl(url: string) {
 // Follow (shortened) URL redirect if necessary.
 export async function getGoogleDocumentId(urlOrId: string) {
 	let url = urlOrId
+	let veneerId = null
+	let documentId = null
 
-	// First try to get match a Veneer document id:
-	const matches = urlOrId.match(DOCUMENT_ID_REGEX)
+	// First try to match a Veneer document id:
+	const matches = urlOrId.match(VENEER_ID_REGEX)
 	if (matches) {
 		const prefix = matches.groups?.prefix || ''
 		const id = matches.groups?.id || ''
 		if (prefix === 'f' || prefix === 's') {
-			return ok(`${prefix}.${id}`)
+			documentId = `${prefix}.${id}`
 		}
+		veneerId = `${prefix}.${id}`
 
 		url = URL_TEMPLATES[prefix].replaceAll('{ID}', id)
 	}
 
-	// Then try to match a Google form/sheet URL:
-	let documentId = googleDocumentIdFromUrl(url)
-
 	if (!documentId) {
+		// Then try to match a Google form/sheet URL:
+		documentId = googleDocumentIdFromUrl(url)
+	}
+
+	if (!documentId && veneerId) {
 		// Finally try any (shortened) URL redirects:
 		const jsoned = await finalUrl(url)
 		if (jsoned.urlFinal) {
@@ -92,7 +104,7 @@ export async function getGoogleDocumentId(urlOrId: string) {
 	}
 
 	if (documentId) {
-		return ok(documentId)
+		return ok({ documentId, veneerId })
 	}
 	return err({ message: `Unable to get Google document id for: (${url})` })
 }

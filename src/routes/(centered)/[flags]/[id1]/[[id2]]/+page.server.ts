@@ -117,8 +117,8 @@ export const load = async ({ params, url }) => {
 			for (const link of links) {
 				gg(`Smart sheet ID scan #${++numLinksChecked}: ${link.href}`)
 				const googleDocumentId = await getGoogleDocumentId(link.href)
-				if (googleDocumentId.isOk() && googleDocumentId.value[0] === 's') {
-					const document = await fetchWithDocumentId(googleDocumentId.value)
+				if (googleDocumentId.isOk() && googleDocumentId.value.documentId[0] === 's') {
+					const document = await fetchWithDocumentId(googleDocumentId.value.documentId)
 					if (document.isOk() && document.value.type === 'sheet') {
 						sheet = document as ResultGoogleSheet
 						break

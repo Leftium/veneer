@@ -13,7 +13,7 @@
 	// @ts-expect-error
 	import markdownitDeflist from 'markdown-it-deflist'
 	import { linkifyRelative, makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
-	import { DOCUMENT_URL_REGEX, urlFromDocumentId } from '$lib/google-document-util/url-id'
+	import { DOCUMENT_URL_REGEX, urlFromVeneerId } from '$lib/google-document-util/url-id'
 	import GoogleForm from './GoogleForm.svelte'
 	import { undent } from '$lib/tag-functions/undent'
 	import { linkListifyDefinitionList } from '$lib/markdown/dl-to-link-list'
@@ -31,10 +31,10 @@
 	let activeHash = $state('info')
 
 	let sourceUrlForm = $derived(
-		data.form.isOk() ? urlFromDocumentId(data.form.value.documentId, false) : '',
+		data.form.isOk() ? urlFromVeneerId(data.form.value.documentId, false) : '',
 	)
 	let sourceUrlSheet = $derived(
-		data.sheet.isOk() ? urlFromDocumentId(data.sheet.value.documentId, false) : '',
+		data.sheet.isOk() ? urlFromVeneerId(data.sheet.value.documentId, false) : '',
 	)
 
 	let footerSources = $derived(
@@ -166,8 +166,8 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 					if (/신청/.test(line)) {
 						internalLink += '#form'
-						if (data.form.isOk() && data.form.value.documentId === id) {
-							internalLink = `${page.url.pathname}&SAME#form`
+						if (data.form.isOk() && [data.form.value.documentId, data.form.value.veneerId].includes(id)) {
+							internalLink = `${page.url.pathname}?SAME#form`
 						}
 					}
 

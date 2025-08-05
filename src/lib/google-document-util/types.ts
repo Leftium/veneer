@@ -19,11 +19,13 @@ type GoogleSheetData = {
 export type GoogleSheet = {
 	type: 'sheet'
 	documentId: string
+	veneerId: string | null
 } & GoogleSheetData
 
 export type GoogleFormDocument = {
 	type: 'form'
 	documentId: string
+	veneerId: string | null
 } & ReturnType<typeof adjustGoogleFormData>
 
 export type ResultGoogleForm = Result<GoogleFormDocument, GoogleDocumentError>

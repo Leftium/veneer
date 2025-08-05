@@ -3,7 +3,7 @@ import { Result, err, ok } from 'neverthrow'
 import { adjustGoogleFormData, parseGoogleForm } from './google-form'
 import { adjustGoogleSheetData } from './google-sheets'
 import type { GoogleSheet, GoogleFormDocument, GoogleDocumentError } from './types'
-import { getGoogleDocumentId, urlFromDocumentId, DOCUMENT_URL_REGEX } from './url-id'
+import { getGoogleDocumentId, urlFromVeneerId, DOCUMENT_URL_REGEX } from './url-id'
 
 export async function fetchWithDocumentId(
 	documentId?: string,
@@ -17,7 +17,7 @@ export async function fetchWithDocumentId(
 		return err({ documentId, message: googleDocumentId.error.message })
 	}
 
-	const url = urlFromDocumentId(googleDocumentId.value)
+	const url = urlFromVeneerId(googleDocumentId.value.documentId)
 	const type = DOCUMENT_URL_REGEX.s.test(url)
 		? 'sheet'
 		: DOCUMENT_URL_REGEX.f.test(url)
@@ -42,7 +42,8 @@ export async function fetchWithDocumentId(
 		return dataSheet.isOk()
 			? ok({
 					type: 'sheet',
-					documentId: googleDocumentId.value,
+					documentId: googleDocumentId.value.documentId,
+                    veneerId: googleDocumentId.value.veneerId,
 					...dataSheet.value,
 				})
 			: err(dataSheet.error)
@@ -50,7 +51,8 @@ export async function fetchWithDocumentId(
 
 	return ok({
 		type: 'form',
-		documentId: googleDocumentId.value,
+		documentId: googleDocumentId.value.documentId,
+        veneerId: googleDocumentId.value.veneerId, 
 		...adjustGoogleFormData(parseGoogleForm(text)),
 	})
 }
