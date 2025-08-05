@@ -126,6 +126,7 @@
 					}
 					return {
 						value: valueString,
+						valueTs,
 						rendered: renderedString,
 					}
 				})
@@ -175,10 +176,14 @@
 </script>
 
 {#snippet rowDetails(row: string | any[], r: any)}
+	{@const skippedColumns = 0}
 	<dl>
-		{#each row.slice(1) as cell, indexColumn}
-			<dt>{columns[indexColumn + 1]?.title}</dt>
-			<dd>{cell.value}</dd>
+		{#each row.slice(skippedColumns) as cell, ci}
+			<dt>{columns[ci + skippedColumns]?.title}</dt>
+			<dd>
+				{cell.value}
+				{#if cell.valueTs}({dayjs().utc().to(cell.valueTs)}){/if}
+			</dd>
 		{/each}
 	</dl>
 {/snippet}
@@ -206,8 +211,8 @@
 								? '🕺'
 								: REGEX_DANCE_FOLLOW.test(row[ci.role]?.rendered)
 									? '💃'
-									: '❓'}</fi-role
-						>
+									: '❓'}
+						</fi-role>
 						<fi-info>
 							<h4>{row[ci.name]?.rendered}</h4>
 							<div>{row[ci.wish]?.rendered}</div>
