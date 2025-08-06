@@ -61,9 +61,10 @@
 	{:else if extra.type === 'dance-event'}
 		<StickyHeaderGrid gridTemplateColumns="1fr" data={{ columns, rows }} {onToggle} {rowDetails}>
 			{#snippet header()}
+				{@const count = extra.count}
 				<gh>
-					<span>{extra.total}명 신청</span>
-					<span>💃{extra.follows} 🕺{extra.leaders}</span>
+					<span>{count.total}명 신청</span>
+					<span>💃{count.follows} 🕺{count.leaders}</span>
 				</gh>
 			{/snippet}
 

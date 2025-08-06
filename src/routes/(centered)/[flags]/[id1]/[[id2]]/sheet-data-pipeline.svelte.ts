@@ -197,14 +197,15 @@ export function collectExtraDance({ extra, columns, rows }: SheetDataPipe) {
 		return { extra, columns, rows }
 	}
 
-	const follows = rows.filter((row) => REGEX_DANCE_FOLLOW.test(row[ci.role]?.value)).length
-	const leaders = rows.filter((row) => REGEX_DANCE_LEADER.test(row[ci.role]?.value)).length
+	const count = {
+		total: rows.length,
+		follows: rows.filter((row) => REGEX_DANCE_FOLLOW.test(row[ci.role]?.value)).length,
+		leaders: rows.filter((row) => REGEX_DANCE_LEADER.test(row[ci.role]?.value)).length,
+	}
 
 	extra = {
 		type: 'dance-event',
-		total: rows.length,
-		follows,
-		leaders,
+		count,
 		ci,
 	}
 
