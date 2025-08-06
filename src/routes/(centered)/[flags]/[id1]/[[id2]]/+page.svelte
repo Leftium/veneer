@@ -292,13 +292,6 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				</swiper-slide>
 			{/if}
 
-			<swiper-slide data-hash="raw">
-				{#if data.sheet.isOk()}
-					<Sheet data={raw} onToggle={callSwiperUpdateAutoHeight}></Sheet>
-				{/if}
-				<pre>{stringify(raw)}</pre>
-			</swiper-slide>
-
 			{#if data.navTabs.list.icon}
 				<swiper-slide data-hash="list">
 					{#if data.sheet.isOk()}
@@ -312,6 +305,13 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 			{/if}
 
 			{#if data.navTabs.dev.icon}
+				<swiper-slide data-hash="raw">
+					{#if data.sheet.isOk()}
+						<Sheet data={raw} onToggle={callSwiperUpdateAutoHeight}></Sheet>
+					{/if}
+					<pre hidden>{stringify(raw)}</pre>
+				</swiper-slide>
+
 				<swiper-slide data-hash="dev">
 					<pre>params: {stringify(params)}</pre>
 					<pre>finalData: {stringify(finalData)}</pre>

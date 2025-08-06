@@ -22,8 +22,8 @@ export const load = async ({ params, url }) => {
         info: [0b0001, 'ℹ️', m.info()],
         form: [0b0010, '✍', m.form()], 
         list: [0b0100, '📋', m.list()],
-        raw:  [0b1111, '🔧', 'RAW'],
-        dev:  [0b1000, '🔧', m.dev()], 
+        raw:  [0b1000, '🔧', 'RAW'], 
+        dev:  [0b1000, '🔧', m.dev()],
     }
 
 	const flags = Number(params.flags)
