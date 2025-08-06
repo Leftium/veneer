@@ -81,7 +81,7 @@ export function appendColumnLabel({ extra, columns, rows }: SheetDataPipe) {
 }
 
 export function stripEmptyRows({ extra, columns, rows }: SheetDataPipe) {
-	rows = rows.filter((row) => row.length)
+	rows = rows.filter((row) => row.map((cell) => cell.value).join().length)
 	return { extra, columns, rows }
 }
 
@@ -131,7 +131,7 @@ export function adjustColumnTypes({ extra, columns, rows }: SheetDataPipe) {
 export function padNumericRenders({ extra, columns, rows }: SheetDataPipe) {
 	for (const row of rows) {
 		for (const [ci, cell] of row.entries()) {
-			if (columns[ci].isNumeric && !cell.ts) {
+			if (cell.value && columns[ci].isNumeric && !cell.ts) {
 				cell.render = cell.value.padStart(columns[ci].lengthMax, '0')
 			}
 		}
