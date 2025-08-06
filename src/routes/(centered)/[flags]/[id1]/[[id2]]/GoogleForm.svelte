@@ -31,7 +31,7 @@
 
 		{#each googleForm.fields || [] as field}
 			{#if /*googleForm.hasInput &&*/ googleForm.hasRequired && field.inputIndex === 1}
-				<span class="required-mark">* Required 필수항목</span>
+				<span class="required-mark">* {m.required()}</span>
 			{/if}
 
 			<GoogleFormField {field} />
