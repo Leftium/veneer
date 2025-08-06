@@ -279,7 +279,6 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 						{#if !data.navTabs.info.icon}
 							<content class="markdown">
 								{@html md`${internalizeLinks(data.info)}`}
-								<hr />
 							</content>
 						{/if}
 

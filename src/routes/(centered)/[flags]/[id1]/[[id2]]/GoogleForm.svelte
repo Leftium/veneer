@@ -26,18 +26,17 @@
 	{/if}
 
 	<form method="POST">
-		<input type="hidden" name="formUrl" value={googleForm.formUrl} />
-		<input type="hidden" name="formAction" value={googleForm.formAction} />
+		<input type="hidden" name="documentId" value={googleForm.documentId} />
 
 		{#each googleForm.fields || [] as field}
-			{#if /*googleForm.hasInput &&*/ googleForm.hasRequired && field.inputIndex === 1}
+			{#if googleForm.hasRequired && field.inputIndex === 1}
 				<span class="required-mark">* {m.required()}</span>
 			{/if}
 
 			<GoogleFormField {field} />
 		{/each}
 
-		{#if true || googleForm.hasInput}
+		{#if googleForm.firstInput !== -1}
 			<input type="submit" value={m.submit()} />
 		{/if}
 	</form>
@@ -59,7 +58,7 @@
 		color: $red-7;
 	}
 
-	input[type=submit] {
+	input[type='submit'] {
 		font-size: $font-size-2;
 		font-weight: $font-weight-7;
 	}
