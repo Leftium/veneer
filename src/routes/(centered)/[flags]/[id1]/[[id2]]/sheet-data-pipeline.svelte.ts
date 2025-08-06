@@ -96,15 +96,17 @@ export function adjustColumnLengths({ extra, columns, rows }: SheetDataPipe) {
 }
 
 export function extractColumnHeaders({ extra, columns, rows }: SheetDataPipe) {
-	let titleRowIndex = 0
-	for (const [ri, row] of rows.entries()) {
-		if (row.length > rows[titleRowIndex].length) {
-			titleRowIndex = ri
+	if (rows.length) {
+		let titleRowIndex = 0
+		for (const [ri, row] of rows.entries()) {
+			if (row.length > rows[titleRowIndex].length) {
+				titleRowIndex = ri
+			}
 		}
-	}
 
-	columns = rows[titleRowIndex].map((cell) => makeColumn({ title: cell.value }))
-	rows = rows.toSpliced(titleRowIndex, 1)
+		columns = rows[titleRowIndex].map((cell) => makeColumn({ title: cell.value }))
+		rows = rows.toSpliced(titleRowIndex, 1)
+	}
 
 	return { extra, columns, rows }
 }
