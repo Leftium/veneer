@@ -130,8 +130,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				const currentSlide = swiper.slides[swiper.activeIndex]
 				const hash = currentSlide.getAttribute('data-hash') ?? swiper.activeIndex.toString()
 
-				// Replace state so browser back/forward still works predictably
-				goto(`#${hash}`, { replaceState: true, noScroll: true })
+				goto(`#${hash}`)
 			})
 		}
 	})
@@ -179,7 +178,12 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 						) {
 							internalLink = '#form'
 						}
+						const count = finalData.extra.count
+						const callout = !count
+							? ''
+							: `<div class="tooltip">${count.total}명 신청 💃${count.follows} 🕺${count.leaders}</div>`
 						const button = `<a href="${internalLink}" role=button class=outline>신청 ➡️</a>`
+						out.push(callout)
 						out.push(button)
 						continue
 					}
@@ -509,7 +513,18 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 			a[role='button'] {
 				width: 100%;
-				margin-block: $size-1;
+				margin-bottom: $size-2;
+
+				font-size: $font-size-4;
+				font-weight: $font-weight-7;
+			}
+
+			img {
+				border-radius: $size-9;
+				//border-bottom-left-radius: $size-1;
+				//border-top-right-radius: $size-1;
+				border-top-left-radius: $size-2;
+				border-bottom-right-radius: $size-2;
 			}
 
 			// Render definition lists as simple table:
@@ -518,9 +533,10 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				grid-template-columns: max-content 1fr;
 				max-width: 100%;
 				width: fit-content;
-				margin-bottom: 0;
+				margin-block: $size-2;
 				margin-inline: auto;
-				padding: $size-3;
+				padding: 0;
+				padding-inline: $size-3;
 
 				dt,
 				dd {
@@ -627,6 +643,80 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 					}
 				}
 			}
+		}
+	}
+
+	:global {
+		// Based on: https://css-generators.com/tooltip-speech-bubble
+		/* HTML: <div class="tooltip">This is a Tooltip with a border and with a border radius. Border and background have a solid coloration</div> */
+		.tooltip {
+			//color: #fff;
+			font-size: $font-size-2;
+			//font-weight: $font-weight-9;
+			//max-width: 22ch;
+			width: fit-content;
+			text-align: center;
+
+			margin: auto;
+			margin-bottom: $size-2;
+		}
+		.tooltip {
+			/* triangle dimension */
+			--a: 90deg; /* angle */
+			--h: #{$size-2}; /* height */
+
+			--p: 50%; /* triangle position (0%:left 100%:right) */
+			--r: #{$size-2}; /* the radius */
+			--b: 2px; /* border width  */
+			--c1: color-mix(in srgb, var(--pico-color) 60%, transparent);
+			--c2: var(--pico-card-sectioning-background-color);
+
+			padding: $size-1 $size-3;
+			border-radius: var(--r) var(--r) min(var(--r), 100% - var(--p) - var(--h) * tan(var(--a) / 2))
+				min(var(--r), var(--p) - var(--h) * tan(var(--a) / 2)) / var(--r);
+			clip-path: polygon(
+				0 100%,
+				0 0,
+				100% 0,
+				100% 100%,
+				min(100%, var(--p) + var(--h) * tan(var(--a) / 2)) 100%,
+				var(--p) calc(100% + var(--h)),
+				max(0%, var(--p) - var(--h) * tan(var(--a) / 2)) 100%
+			);
+			background: var(--c1);
+			border-image: conic-gradient(var(--c1) 0 0) fill 0 / var(--r)
+				max(0%, 100% - var(--p) - var(--h) * tan(var(--a) / 2)) 0
+				max(0%, var(--p) - var(--h) * tan(var(--a) / 2)) / 0 0 var(--h) 0;
+			position: relative;
+		}
+		.tooltip:before {
+			content: '';
+			position: absolute;
+			z-index: -1;
+			inset: 0;
+			padding: var(--b);
+			border-radius: inherit;
+			clip-path: polygon(
+				0 100%,
+				0 0,
+				100% 0,
+				100% 100%,
+				min(
+						100% - var(--b),
+						var(--p) + var(--h) * tan(var(--a) / 2) - var(--b) * tan(45deg - var(--a) / 4)
+					)
+					calc(100% - var(--b)),
+				var(--p) calc(100% + var(--h) - var(--b) / sin(var(--a) / 2)),
+				max(
+						var(--b),
+						var(--p) - var(--h) * tan(var(--a) / 2) + var(--b) * tan(45deg - var(--a) / 4)
+					)
+					calc(100% - var(--b))
+			);
+			background: var(--c2) content-box;
+			border-image: conic-gradient(var(--c2) 0 0) fill 0 / var(--r)
+				max(var(--b), 100% - var(--p) - var(--h) * tan(var(--a) / 2)) 0
+				max(var(--b), var(--p) - var(--h) * tan(var(--a) / 2)) / 0 0 var(--h) 0;
 		}
 	}
 </style>
