@@ -27,7 +27,7 @@
 		[linkifyRelative],
 	])
 
-	let { params, data } = $props()
+	let { params, data, form } = $props()
 
 	let swiperContainer = $state<SwiperContainer>()
 	let activeHash = $state('info')
@@ -138,7 +138,11 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 	$effect(() => {
 		// reading `$page` here auto-subscribes to changes
-		slideToHash(page.url.hash)
+		if (form?.success) {
+			slideToHash('#list')
+		} else {
+			slideToHash(page.url.hash)
+		}
 	})
 
 	function internalizeLinks(markdown: string): string {
