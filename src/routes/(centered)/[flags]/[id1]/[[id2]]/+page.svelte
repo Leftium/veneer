@@ -115,14 +115,15 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		const swiperParams = {
 			spaceBetween: 4,
 			autoHeight: true,
+			// Prevent role=group attributes interfering with PicoCSS.
+			a11y: {
+				enabled: false,
+			},
 		}
 
 		if (swiperContainer) {
 			Object.assign(swiperContainer, swiperParams)
 			swiperContainer.initialize()
-			document.querySelectorAll('swiper-slide[role="group"]').forEach((el) => {
-				el.removeAttribute('role')
-			})
 
 			const swiper = swiperContainer.swiper
 			swiper.on('slideChange', () => {
