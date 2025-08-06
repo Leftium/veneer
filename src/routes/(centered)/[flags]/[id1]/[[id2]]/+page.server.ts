@@ -9,6 +9,7 @@ import { getGoogleDocumentId } from '$lib/google-document-util/url-id.js'
 import { stripHidden } from '$lib/google-document-util/google-sheets.js'
 import type { ResultGoogleForm, ResultGoogleSheet } from '$lib/google-document-util/types'
 import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-with-id'
+import { fail } from '@sveltejs/kit'
 
 export const load = async ({ params, url }) => {
 	// URL params that control inclusion of sheet data hidden by user:
@@ -171,4 +172,34 @@ export const load = async ({ params, url }) => {
 		form,
 		sheet,
 	}
+}
+
+export const actions = {
+	default: async ({ request }) => {
+		const formData = await request.formData()
+
+		const documentId = formData.get('documentId')?.toString()
+
+		if (!documentId) {
+			return fail(555, {
+				status: 555,
+				statusText: `No documentId: <${documentId}>`,
+			})
+		}
+
+		const fetchUrl = `https://docs.google.com/forms/d/e/${documentId.slice(2)}/formResponse`
+		const resp = await fetch(fetchUrl, {
+			method: 'POST',
+			body: formData,
+		})
+
+		if (resp.status !== 200) {
+			return fail(resp.status, {
+				status: resp.status,
+				statusText: resp.statusText,
+			})
+		}
+
+		return { success: true }
+	},
 }
