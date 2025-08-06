@@ -226,7 +226,9 @@
 	<pre hidden>{JSON.stringify({ value, group, storeValue }, null, 4)}</pre>
 </section>
 
-<style>
+<style lang="scss">
+	@use 'open-props-scss' as *;
+
 	:global(.wrap-youtube) {
 		position: relative;
 		width: 100%;
@@ -263,7 +265,7 @@
 	}
 
 	.required-mark {
-		color: red;
+		color: $red-7;
 	}
 
 	.hidden {
