@@ -17,8 +17,7 @@
 	let { data, gridTemplateColumns, onToggle, header, rowSummary, rowDetails }: Props = $props()
 
 	let gridTableElement = $state<HTMLElement>()
-	let headerHeight = $derived((gridTableElement?.children[0] as HTMLElement).offsetHeight)
-
+	let headerHeight = $derived((gridTableElement?.children[0] as HTMLElement)?.offsetHeight || 0)
 	let detailsOpened = $state(-1)
 
 	function makeToggleDetails(index: number) {

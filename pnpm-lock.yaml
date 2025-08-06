@@ -63,6 +63,9 @@ importers:
       eslint-plugin-svelte:
         specifier: ^3.11.0
         version: 3.11.0(eslint@9.32.0)(svelte@5.37.3)
+      fp-ts:
+        specifier: ^2.16.10
+        version: 2.16.10
       globals:
         specifier: ^16.3.0
         version: 16.3.0
@@ -951,6 +954,9 @@ packages:
 
   flatted@3.3.3:
     resolution: {integrity: sha512-GX+ysw4PBCz0PzosHDepZGANEuFCMLrnRTiEy9McGjmkCQYwRq4A/X786G/fjM/+OjsWSU1ZrY5qyARZmO/uwg==}
+
+  fp-ts@2.16.10:
+    resolution: {integrity: sha512-vuROzbNVfCmUkZSUbnWSltR1sbheyQbTzug7LB/46fEa1c0EucLeBaCEUE0gF3ZGUGBt9lVUiziGOhhj6K1ORA==}
 
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
@@ -2450,6 +2456,8 @@ snapshots:
       keyv: 4.5.4
 
   flatted@3.3.3: {}
+
+  fp-ts@2.16.10: {}
 
   fsevents@2.3.3:
     optional: true

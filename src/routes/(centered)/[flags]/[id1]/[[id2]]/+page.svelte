@@ -6,7 +6,7 @@
 	import { stringify } from '$lib/util'
 	import { onMount } from 'svelte'
 	import Sheet from './Sheet.svelte'
-	import type { GoogleSheet, GoogleFormDocument } from '$lib/google-document-util/types'
+	import type { GoogleFormDocument } from '$lib/google-document-util/types'
 
 	import * as linkify from 'linkifyjs'
 
@@ -19,6 +19,8 @@
 	import { linkListifyDefinitionList } from '$lib/markdown/dl-to-link-list'
 	import { page } from '$app/state'
 	import { gg } from '@leftium/gg'
+
+	import { pipe } from 'fp-ts/function'
 
 	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
 		[markdownitDeflist],
@@ -70,6 +72,19 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	register()
 
 	import { goto } from '$app/navigation'
+	import {
+		addIndex,
+		adjustColumnLengths,
+		adjustColumnTypes,
+		collectExtraDance,
+		extractColumnHeaders,
+		hidePhoneNumbers,
+		makeRaw,
+		padNumericRenders,
+		renderRelativeTimes,
+		stripEmptyColumns,
+		stripEmptyRows,
+	} from './sheet-data-pipeline.svelte'
 
 	function slideToHash(hash: string) {
 		hash = hash.replace('#', '')
@@ -79,12 +94,6 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 			)
 			swiperContainer.swiper.slideTo(slideIndex)
 			activeHash = hash
-		}
-	}
-
-	function makeSlideToHash(hash: string) {
-		return function () {
-			slideToHash(hash)
 		}
 	}
 
@@ -117,7 +126,6 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 			const swiper = swiperContainer.swiper
 			swiper.on('slideChange', () => {
-				gg('slideChange')
 				// Assuming each slide has <div class="swiper-slide" data-hash="slide-2">
 				const currentSlide = swiper.slides[swiper.activeIndex]
 				const hash = currentSlide.getAttribute('data-hash') ?? swiper.activeIndex.toString()
@@ -145,7 +153,6 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 			const links = linkify.find(line)
 			if (links.length) {
-				gg(line, links)
 				const href = links[0].href
 
 				let matches = href.match(DOCUMENT_URL_REGEX.g) || href.match(DOCUMENT_URL_REGEX.f)
@@ -204,6 +211,24 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		}
 		return out.join('\n')
 	}
+
+	const raw = makeRaw(data.sheet)
+
+	const finalData = pipe(
+		raw,
+		extractColumnHeaders,
+		stripEmptyRows,
+		addIndex,
+		adjustColumnTypes,
+		adjustColumnLengths,
+		stripEmptyColumns,
+		hidePhoneNumbers,
+		padNumericRenders,
+		//ghostLeadingZeros,
+		//appendColumnLabel,
+		renderRelativeTimes,
+		collectExtraDance,
+	)
 </script>
 
 <svelte:head>
@@ -222,7 +247,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 					{#if icon}
 						<button
 							class={['glass', { active: activeHash === hash }]}
-							onclick={makeSlideToHash(hash)}
+							onclick={() => slideToHash(hash)}
 						>
 							{icon}
 							{name}{error ? ' ⚠️' : ''}
@@ -263,13 +288,17 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				</swiper-slide>
 			{/if}
 
+			<swiper-slide data-hash="raw">
+				{#if data.sheet.isOk()}
+					<Sheet data={raw} onToggle={callSwiperUpdateAutoHeight}></Sheet>
+				{/if}
+				<pre>{stringify(raw)}</pre>
+			</swiper-slide>
+
 			{#if data.navTabs.list.icon}
 				<swiper-slide data-hash="list">
 					{#if data.sheet.isOk()}
-						<Sheet
-							googleSheet={data.sheet.value as GoogleSheet}
-							onToggle={callSwiperUpdateAutoHeight}
-						></Sheet>
+						<Sheet data={finalData} onToggle={callSwiperUpdateAutoHeight}></Sheet>
 
 						<pre hidden>{stringify(data.sheet.value)}}</pre>
 					{:else}
@@ -281,6 +310,8 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 			{#if data.navTabs.dev.icon}
 				<swiper-slide data-hash="dev">
 					<pre>params: {stringify(params)}</pre>
+					<pre>finalData: {stringify(finalData)}</pre>
+					<pre>raw: {stringify(raw)}</pre>
 					<pre>data: {stringify(data)}</pre>
 				</swiper-slide>
 			{/if}
@@ -451,7 +482,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				margin-bottom: 0;
 				///background-color: #00f6;
 
-				///overflow: auto;
+				overflow: clip;
 
 				pre {
 					width: 100%;
