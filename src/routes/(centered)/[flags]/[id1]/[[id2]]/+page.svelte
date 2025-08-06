@@ -119,6 +119,11 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 			a11y: {
 				enabled: false,
 			},
+			// ✅ Allow touch swipe on mobile
+			simulateTouch: window.matchMedia('(pointer: coarse)').matches,
+
+			// ✅ Prevent default touch behavior only on desktop
+			touchStartPreventDefault: !window.matchMedia('(pointer: coarse)').matches,
 		}
 
 		if (swiperContainer) {
