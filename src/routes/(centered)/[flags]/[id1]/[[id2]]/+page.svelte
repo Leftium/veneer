@@ -20,7 +20,7 @@
 	import { page } from '$app/state'
 	import { gg } from '@leftium/gg'
 
-	import { pipe } from 'fp-ts/function'
+	import { pipe } from 'fp-ts/lib/function.js'
 
 	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
 		[markdownitDeflist],
