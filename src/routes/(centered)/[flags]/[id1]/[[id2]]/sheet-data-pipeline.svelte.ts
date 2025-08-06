@@ -104,8 +104,13 @@ export function extractColumnHeaders({ extra, columns, rows }: SheetDataPipe) {
 			}
 		}
 
-		columns = rows[titleRowIndex].map((cell) => makeColumn({ title: cell.value }))
-		rows = rows.toSpliced(titleRowIndex, 1)
+		columns = rows[titleRowIndex].map((cell, ci) =>
+			makeColumn({ title: cell.value || rows[0][ci].value }),
+		)
+
+		// Remove (partial) copies of header rows
+		const columnTitles = columns.map((column) => column.title)
+		rows = rows.filter((row) => row.filter((cell) => columnTitles.includes(cell.value)).length < 3)
 	}
 
 	return { extra, columns, rows }
