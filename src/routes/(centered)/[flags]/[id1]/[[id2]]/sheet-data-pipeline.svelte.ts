@@ -200,7 +200,7 @@ export function collectExtraDance({ extra, columns, rows }: SheetDataPipe) {
 		wish: columns.findIndex((c) => REGEX_DANCE_WISH.test(c.title)),
 	}
 
-	if (ci.name === -1 && ci.role === -1) {
+	if (ci.name === -1 || ci.role === -1) {
 		return { extra, columns, rows }
 	}
 
