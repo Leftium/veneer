@@ -28,4 +28,9 @@ export const transport: Transport = {
 	},
 }
 
-export const reroute = (request) => deLocalizeUrl(request.url).pathname
+export const reroute = ({ url }) => {
+	if (url.pathname === '/') {
+		return '/7/f.1FAIpQLSesCAm6R0BOW8sKVBZJPW6ySaDIvcYujg9lfsW36rDiD2MF0w'
+	}
+	return deLocalizeUrl(url).pathname
+}
