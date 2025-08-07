@@ -29,6 +29,8 @@
 
 	let { params, data, form } = $props()
 
+	let notificationBoxHidden = $state(false)
+
 	let swiperContainer = $state<SwiperContainer>()
 	let activeHash = $state('info')
 
@@ -71,7 +73,6 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 	register()
 
-	import { goto } from '$app/navigation'
 	import {
 		addIndex,
 		adjustColumnLengths,
@@ -85,6 +86,9 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		stripEmptyColumns,
 		stripEmptyRows,
 	} from './sheet-data-pipeline.svelte'
+	import NotificationBox from '$lib/components/NotificationBox.svelte'
+	import { slide } from 'svelte/transition'
+	import type { Swiper } from 'swiper/types'
 
 	function slideToHash(hash: string) {
 		hash = hash.replace('#', '')
@@ -126,11 +130,12 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 			touchStartPreventDefault: !window.matchMedia('(pointer: coarse)').matches,
 		}
 
+		let swiper: Swiper
 		if (swiperContainer) {
 			Object.assign(swiperContainer, swiperParams)
 			swiperContainer.initialize()
 
-			const swiper = swiperContainer.swiper
+			swiper = swiperContainer.swiper
 			swiper.on('slideChange', () => {
 				// Assuming each slide has <div class="swiper-slide" data-hash="slide-2">
 				const currentSlide = swiper.slides[swiper.activeIndex]
@@ -138,6 +143,13 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 				history.pushState(null, '', `#${hash}`)
 			})
+		}
+
+		return () => {
+			if (swiper) {
+				swiper.off() // removes all event listeners
+				swiper.destroy(true, true) // optional: clean DOM and detach
+			}
 		}
 	})
 
@@ -271,7 +283,27 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 			</nav-buttons>
 		{/if}
 	</header>
+
 	<main>
+		<pre hidden>{stringify({ form })}</pre>
+		{#if form && !notificationBoxHidden}
+			{@const level = form.success ? 'success' : 'warning'}
+			{@const subject = form.success
+				? 'Successfully signed up!'
+				: 'Please try again. There was a problem:'}
+			{@const message = form.success ? '' : `${form.status}: ${form.statusText}`}
+			<div transition:slide={{ delay: 300 }}>
+				<NotificationBox {level} bind:notificationBoxHidden>
+					{#snippet title()}
+						{subject}
+					{/snippet}
+					{#snippet description()}
+						{@html message}
+					{/snippet}
+				</NotificationBox>
+			</div>
+		{/if}
+
 		<swiper-container init="false" bind:this={swiperContainer}>
 			{#if data.navTabs.info.icon}
 				<swiper-slide data-hash="info">
