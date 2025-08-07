@@ -50,10 +50,10 @@
 			{/snippet}
 
 			{#snippet rowSummary(columns, row, r, makeToggleDetails)}
-				{#each columns as { type }, c}
+				{#each columns as { isNumeric }, c}
 					{@const render = row[c]?.render || ''}
-					<gd onclick={makeToggleDetails(r)} role="none">
-						{@html type === 'numeric' ? render.replace(/^0*/, '<gz>$&</gz>') : render}
+					<gd class={{ numeric: isNumeric }} onclick={makeToggleDetails(r)} role="none">
+						{@html isNumeric ? render.replace(/^0*/, '<gz>$&</gz>') : render}
 					</gd>
 				{/each}
 			{/snippet}
@@ -106,8 +106,10 @@
 	gd {
 		padding: $size-2 $size-2;
 
-		.numeric {
-			font-family: Lato, sans-serif;
+		&.numeric {
+			font-family: Lato, Helvetica, sans-serif;
+			font-feature-settings: 'tnum';
+			font-variant-numeric: tabular-nums;
 		}
 
 		// Ghost zero: takes up space for alignment but cannot be seen/selected.

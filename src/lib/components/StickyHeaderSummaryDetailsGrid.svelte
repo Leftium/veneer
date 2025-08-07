@@ -9,7 +9,7 @@
 		onToggle: (() => void) | void
 		header: Snippet
 		rowSummary: Snippet<
-			[{ title: string; type: string }[], string | any[], number, (arg0: number) => void]
+			[{ title: string; isNumeric: boolean }[], string | any[], number, (arg0: number) => void]
 		>
 		rowDetails: Snippet<[string | any[], number]>
 	}
