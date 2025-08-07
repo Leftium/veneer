@@ -79,6 +79,9 @@
 		justify-content: center;
 
 		padding-inline: $size-3;
-		box-shadow: shadow('inner-3');
+		box-shadow:
+			inset 0 2px 8px 0 rgba(149, 157, 165, 25%),
+			inset 0 -0.5px 0 0 #fff,
+			inset 0 0.5px 0 0 rgba(0, 0, 0, 0.0666666667);
 	}
 </style>

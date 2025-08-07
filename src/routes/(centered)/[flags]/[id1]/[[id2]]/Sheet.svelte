@@ -134,7 +134,8 @@
 
 		font-weight: $font-weight-7;
 
-		border-bottom: 2px solid var(--pico-muted-border-color);
+		border: 2px solid var(--pico-muted-border-color);
+		border-inline: none;
 	}
 
 	gd {
