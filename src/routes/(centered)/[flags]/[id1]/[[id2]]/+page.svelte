@@ -136,7 +136,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				const currentSlide = swiper.slides[swiper.activeIndex]
 				const hash = currentSlide.getAttribute('data-hash') ?? swiper.activeIndex.toString()
 
-				goto(`#${hash}`)
+				history.pushState(null, '', `#${hash}`)
 			})
 		}
 	})
