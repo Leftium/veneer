@@ -20,6 +20,8 @@
 	import { page } from '$app/state'
 	import { gg } from '@leftium/gg'
 
+	import { Confetti } from 'svelte-confetti'
+
 	import { pipe } from 'fp-ts/lib/function.js'
 
 	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
@@ -292,6 +294,21 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				? 'Successfully signed up!'
 				: 'Please try again. There was a problem:'}
 			{@const message = form.success ? '' : `${form.status}: ${form.statusText}`}
+
+			{#if form.success}
+				<wrap-confetti>
+					<Confetti
+						x={[-4, 4]}
+						y={[0, 0]}
+						delay={[0, 9000]}
+						infinite
+						duration={9000}
+						amount={500}
+						fallDistance="1600px"
+					></Confetti>
+				</wrap-confetti>
+			{/if}
+
 			<div transition:slide={{ delay: 300 }}>
 				<NotificationBox {level} bind:notificationBoxHidden>
 					{#snippet title()}
@@ -759,5 +776,19 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				max(var(--b), 100% - var(--p) - var(--h) * tan(var(--a) / 2)) 0
 				max(var(--b), var(--p) - var(--h) * tan(var(--a) / 2)) / 0 0 var(--h) 0;
 		}
+	}
+
+	wrap-confetti {
+		position: fixed;
+		inset: 0;
+		top: -50px;
+		height: calc(50vh + 50px);
+
+		z-index: 9999;
+
+		display: flex;
+		justify-content: center;
+		overflow: visible;
+		pointer-events: none;
 	}
 </style>
