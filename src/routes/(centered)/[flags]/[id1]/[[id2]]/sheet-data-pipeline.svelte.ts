@@ -67,7 +67,7 @@ export function makeRaw(sheet: ResultGoogleSheet) {
 type SheetDataPipe = ReturnType<typeof makeRaw>
 
 export function addIndex({ extra, columns, rows }: SheetDataPipe) {
-	columns = [makeColumn({ title: 'Index' }), ...columns]
+	columns = [makeColumn({ title: '#' }), ...columns]
 	rows = rows.map((row, ri) => [makeCell({ value: `${ri + 1}` }), ...row])
 	return { extra, columns, rows }
 }
