@@ -22,6 +22,13 @@
 
 	function makeToggleDetails(index: number) {
 		return function () {
+			const selection = window.getSelection()
+			if (selection && selection.toString().length > 0) {
+				// 🛑 User is selecting text — don't toggle
+				return
+			}
+
+			// ✅ Proceed with toggle
 			detailsOpened = detailsOpened === index ? -1 : index
 			if (onToggle) {
 				onToggle()
