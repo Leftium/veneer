@@ -152,7 +152,6 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 				// Only push state if the hash is different to avoid unnecessary history entries
 				if (activeHash !== hash) {
-
 					setTimeout(() => {
 						pushState(`#${hash}`, {})
 					}, 0)
@@ -305,9 +304,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		<pre hidden>{stringify({ form })}</pre>
 		{#if form && !notificationBoxHidden}
 			{@const level = form.success ? 'success' : 'warning'}
-			{@const subject = form.success
-				? 'Successfully signed up!'
-				: 'Please try again. There was a problem:'}
+			{@const subject = form.success ? 'Successfully signed up!' : 'Sorry! There was a problem:'}
 			{@const message = form.success ? '' : `${form.status}: ${form.statusText}`}
 
 			{#if form.success}
