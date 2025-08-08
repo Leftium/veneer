@@ -171,10 +171,11 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 	$effect(() => {
 		// reading `$page` here auto-subscribes to changes
-		if (form?.success) {
-			slideToHash('#list')
-		} else {
-			slideToHash(page.url.hash)
+
+		const targetHash = form?.success ? 'list' : page.url.hash.replace('#', '')
+
+		if (targetHash !== activeHash) {
+			slideToHash(targetHash)
 		}
 	})
 
