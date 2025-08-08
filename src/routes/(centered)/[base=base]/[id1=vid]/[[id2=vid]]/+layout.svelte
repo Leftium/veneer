@@ -33,6 +33,7 @@
 	import { page } from '$app/state'
 	import { DOCUMENT_URL_REGEX } from '$lib/google-document-util/url-id.js'
 	import GoogleForm from '$lib/components/GoogleForm.svelte'
+	import Sheet from '$lib/components/Sheet.svelte'
 
 	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
 		[markdownitDeflist],
@@ -231,6 +232,20 @@
 		}
 		return out.join('\n')
 	}
+
+	function callSwiperUpdateAutoHeight() {
+		const endTime = performance.now() + 1000
+
+		function tick(currentTime: number) {
+			if (currentTime < endTime) {
+				if (swiperContainer) {
+					swiperContainer.swiper.updateAutoHeight()
+				}
+				requestAnimationFrame(tick)
+			}
+		}
+		requestAnimationFrame(tick)
+	}
 </script>
 
 <article>
@@ -289,16 +304,21 @@
 			{#if data.navTabs.list.icon}
 				<swiper-slide data-tid="list">
 					{#if data.sheet.isOk()}
-						<pre>{stringify(data.sheet.value)}}</pre>
+						<Sheet data={finalData} onToggle={callSwiperUpdateAutoHeight}></Sheet>
+
+						<pre hidden>{stringify(data.sheet.value)}}</pre>
 					{:else}
-						<pre>{data.sheet.error}</pre>
+						<pre>{stringify(data.sheet.error)}</pre>
 					{/if}
 				</swiper-slide>
 			{/if}
 
 			{#if data.navTabs.dev.icon}
 				<swiper-slide data-tid="raw">
-					<pre>{stringify(raw)}</pre>
+					{#if data.sheet.isOk()}
+						<Sheet data={raw} onToggle={callSwiperUpdateAutoHeight}></Sheet>
+					{/if}
+					<pre hidden>{stringify(raw)}</pre>
 				</swiper-slide>
 
 				<swiper-slide data-tid="dev">
