@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Based on: https://codepen.io/alvarotrigo/pen/OJELWoM
 
-	import type { Snippet } from 'svelte'
+	import { type Snippet } from 'svelte'
 	import { fade } from 'svelte/transition'
 
 	type NotificationLevel = 'info' | 'success' | 'warning'
@@ -32,7 +32,7 @@
 			<d-body>
 				<d-subject>
 					<div>{@render title()}</div>
-					<s-icon {onclick} class="close" role="none"></s-icon>
+					<s-icon {onclick} class="close ifjs" role="none"></s-icon>
 				</d-subject>
 				<p>{@render description?.()}</p>
 			</d-body>

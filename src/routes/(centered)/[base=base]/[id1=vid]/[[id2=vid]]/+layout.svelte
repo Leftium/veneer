@@ -503,7 +503,7 @@
 
 	main {
 		.active {
-			background-color: #8882;
+			//background-color: #8882;
 		}
 
 		// This prevents a scrolling context from forming,
