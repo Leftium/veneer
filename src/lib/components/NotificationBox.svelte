@@ -11,6 +11,7 @@
 		level?: NotificationLevel
 		title: Snippet
 		description?: Snippet
+		confetti?: Snippet
 	}
 
 	let {
@@ -18,26 +19,39 @@
 		level = 'info',
 		title,
 		description,
+		confetti,
 	}: Props = $props()
 
-	function onclick() {
+	function onclick(e) {
+		e.preventDefault()
 		notificationBoxHidden = true
 	}
 </script>
 
 {#if !notificationBoxHidden}
-	<d-wrap class={level} transition:fade|global>
-		<d-card>
-			<d-accent><s-icon></s-icon></d-accent>
-			<d-body>
-				<d-subject>
-					<div>{@render title()}</div>
-					<s-icon {onclick} class="close ifjs" role="none"></s-icon>
-				</d-subject>
-				<p>{@render description?.()}</p>
-			</d-body>
-		</d-card>
-	</d-wrap>
+	<div class="notification-wrapper">
+		<input type="checkbox" class="vis-toggle" id="dismiss-toggle" hidden />
+
+		{#if level === 'success'}
+			{@render confetti?.()}
+		{/if}
+
+		<d-wrap class={level} transition:fade|global>
+			<d-card>
+				<d-accent><s-icon></s-icon></d-accent>
+				<d-body>
+					<d-subject>
+						<div>{@render title()}</div>
+
+						<label {onclick} for="dismiss-toggle" class="close-icon" role="none">
+							<s-icon class="close"></s-icon>
+						</label>
+					</d-subject>
+					<p>{@render description?.()}</p>
+				</d-body>
+			</d-card>
+		</d-wrap>
+	</div>
 {/if}
 
 <style lang="scss">
@@ -91,6 +105,13 @@
 
 		:first-child {
 			font-size: $subject-font-size;
+		}
+
+		label {
+			align-self: end;
+			padding: 0;
+			margin: 0;
+			border: none;
 		}
 	}
 
@@ -162,5 +183,11 @@
 		--svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512'%3E%3Cpath fill='%23000' d='M55.1 73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L147.2 256L9.9 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l137.3-137.4l137.4 137.3c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.8 256l137.3-137.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192.5 210.7z'/%3E%3C/svg%3E");
 		-webkit-mask-image: var(--svg);
 		mask-image: var(--svg);
+	}
+
+	:global {
+		.vis-toggle:checked ~ * {
+			display: none !important;
+		}
 	}
 </style>
