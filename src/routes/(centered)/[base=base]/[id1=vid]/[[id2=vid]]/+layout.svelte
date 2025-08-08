@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { GoogleFormDocument } from '$lib/google-document-util/types'
+
 	import type { SwiperContainer } from 'swiper/element/bundle'
 	import { register } from 'swiper/element/bundle'
 
@@ -30,6 +32,7 @@
 	import markdownitDeflist from 'markdown-it-deflist'
 	import { page } from '$app/state'
 	import { DOCUMENT_URL_REGEX } from '$lib/google-document-util/url-id.js'
+	import GoogleForm from '$lib/components/GoogleForm.svelte'
 
 	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
 		[markdownitDeflist],
@@ -267,7 +270,16 @@
 			{#if data.navTabs.form.icon}
 				<swiper-slide data-tid="form">
 					{#if data.form.isOk()}
-						<pre>{stringify(data.form.value)}</pre>
+						{#if !data.navTabs.info.icon}
+							<content class="markdown">
+								{@html md`${internalizeLinks(data.info)}`}
+							</content>
+						{/if}
+
+						<content>
+							<GoogleForm googleForm={data.form.value as GoogleFormDocument}></GoogleForm>
+						</content>
+						<pre hidden>{stringify(data.form.value)}</pre>
 					{:else}
 						<pre>{stringify(data.form.error)}</pre>
 					{/if}
