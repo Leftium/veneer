@@ -87,7 +87,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		renderRelativeTimes,
 		stripEmptyColumns,
 		stripEmptyRows,
-	} from './sheet-data-pipeline.svelte'
+	} from '$lib/google-document-util/sheet-data-pipeline.svelte'
 	import NotificationBox from '$lib/components/NotificationBox.svelte'
 	import { slide } from 'svelte/transition'
 	import type { Swiper } from 'swiper/types'
@@ -174,9 +174,9 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 		const targetHash = form?.success ? 'list' : page.url.hash.replace('#', '')
 
-		if (targetHash !== activeHash) {
-			slideToHash(targetHash)
-		}
+		//if (targetHash !== untrack(() => activeHash) {
+		slideToHash(targetHash)
+		//}
 	})
 
 	function internalizeLinks(markdown: string): string {
