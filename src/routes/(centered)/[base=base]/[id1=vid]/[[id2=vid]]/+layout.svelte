@@ -303,17 +303,16 @@
 	</footer>
 </article>
 
-<hr />
-
-{#if true}
+{#if false}
+	<hr />
 	{@render children()}
 
 	<hr />
 
 	<pre>params = {stringify(params)}</pre>
 	<pre>finalData = {stringify(finalData)}</pre>
+	<pre>data = {stringify(data)}</pre>
 {/if}
-<pre>data = {stringify(data)}</pre>
 
 <style lang="scss">
 	@use 'open-props-scss' as *;
