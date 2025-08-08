@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { SwiperContainer } from 'swiper/element/bundle'
-
 	import { register } from 'swiper/element/bundle'
+
+	import * as linkify from 'linkifyjs'
 
 	import { pipe } from 'fp-ts/lib/function.js'
 
@@ -23,13 +24,22 @@
 	import { onMount } from 'svelte'
 	import { afterNavigate, goto } from '$app/navigation'
 	import { gg } from '@leftium/gg'
+	import { linkifyRelative, makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
+
+	// @ts-expect-error
+	import markdownitDeflist from 'markdown-it-deflist'
+	import { page } from '$app/state'
+	import { DOCUMENT_URL_REGEX } from '$lib/google-document-util/url-id.js'
+
+	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
+		[markdownitDeflist],
+		[linkifyRelative],
+	])
 
 	let { params, data, children } = $props()
 
 	let swiperContainer = $state<SwiperContainer>()
 	let activeTab = $state(params.tid || 'info')
-
-	let tid = $derived(params.tid || 'info')
 
 	const raw = makeRaw(data.sheet)
 
@@ -129,15 +139,95 @@
 	})
 
 	afterNavigate(({ to, type }) => {
+		// 1) skip if this was our own programmatic slideToTab
 		if (skipNextSlideChange) {
 			skipNextSlideChange = false
 			return
 		}
-		if (type !== 'popstate') return
 
+		// 2) only respond to link, goto, or popstate navigations
+		if (type !== 'link' && type !== 'goto' && type !== 'popstate') return
+
+		// 3) extract the tab ID and slide WITHOUT touching history
 		const tid = to?.url.pathname.split('/').pop() ?? 'info'
 		slideToTab(tid, { updateHistory: false })
 	})
+
+	function internalizeLinks(markdown: string): string {
+		const lines = markdown.split(/\r?\n/)
+		const out: string[] = []
+		let i = 0
+
+		const basepath = page.url.pathname.split('/')[1] || '7'
+
+		while (i < lines.length) {
+			const line = lines[i++]
+
+			const links = linkify.find(line)
+			if (links.length) {
+				const href = links[0].href
+
+				let matches = href.match(DOCUMENT_URL_REGEX.g) || href.match(DOCUMENT_URL_REGEX.f)
+				if (matches) {
+					const documentId = matches.groups?.id || ''
+					const prefix = documentId.length > 20 ? 'f' : 'g'
+					const id = `${prefix}.${documentId}`
+
+					let internalLink = `/${basepath}/${id}`
+
+					// TODO: Remove hardcoded rules:
+					if (/home/i.test(line)) {
+						internalLink = `/base/${id}`
+					}
+					if (/오시는 길|수칙/i.test(line)) {
+						internalLink = `/base/${id}`
+					}
+
+					if (/신청/.test(line)) {
+						internalLink += '/form'
+						if (
+							data.form.isOk() &&
+							[data.form.value.documentId, data.form.value.veneerId].includes(id)
+						) {
+							internalLink = './form'
+						}
+						const count = finalData.extra.count
+						const callout = !count
+							? ''
+							: `<div class="tooltip">${count.total}명 신청 💃${count.follows} 🕺${count.leaders}</div>`
+						const button = `<a href="${internalLink}" role=button class=outline>신청 ➡️</a>`
+						out.push(callout)
+						out.push(button)
+						continue
+					}
+
+					out.push(line.replace(href, internalLink))
+					continue
+				}
+
+				matches = href.match(DOCUMENT_URL_REGEX.s)
+				if (matches) {
+					const id = `s.${matches.groups?.id || ''}`
+
+					let internalLink = `/${basepath}/${id}`
+
+					if (/확인/.test(line)) {
+						if (data.form.isOk() && data.sheet.isOk() && data.sheet.value.documentId === id) {
+							internalLink = './list'
+						}
+						const button = `<a href="${internalLink}" role=button class=outline">확인 👀</a>`
+						out.push(button)
+						continue
+					}
+					out.push(line.replace(href, internalLink))
+					continue
+				}
+			}
+
+			out.push(line)
+		}
+		return out.join('\n')
+	}
 </script>
 
 <article>
@@ -168,7 +258,8 @@
 			{#if data.navTabs.info.icon}
 				<swiper-slide data-tid="info">
 					{#if data.info}
-						<pre>{data.info}</pre>
+						<content class="markdown">{@html md`${internalizeLinks(data.info)}`}</content>
+						<pre hidden>{data.info}</pre>
 					{/if}
 				</swiper-slide>
 			{/if}
