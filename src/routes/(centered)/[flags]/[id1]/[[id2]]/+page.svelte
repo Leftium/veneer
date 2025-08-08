@@ -91,15 +91,22 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	import NotificationBox from '$lib/components/NotificationBox.svelte'
 	import { slide } from 'svelte/transition'
 	import type { Swiper } from 'swiper/types'
+	import { pushState } from '$app/navigation'
 
 	function slideToHash(hash: string) {
 		hash = hash.replace('#', '')
-		if (swiperContainer) {
+		if (swiperContainer && swiperContainer.swiper) {
 			const slideIndex = swiperContainer.swiper.slides.findIndex(
 				(slide) => slide.dataset.hash === hash,
 			)
-			swiperContainer.swiper.slideTo(slideIndex)
-			activeHash = hash
+			// Only slide if the index is valid and it's not already the active slide
+			if (slideIndex !== -1 && swiperContainer.swiper.activeIndex !== slideIndex) {
+				swiperContainer.swiper.slideTo(slideIndex)
+				activeHash = hash // Update component state when we slide
+			} else if (slideIndex !== -1) {
+				// If it's already the active slide, ensure our internal hash state is correct
+				activeHash = hash
+			}
 		}
 	}
 
@@ -143,7 +150,15 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				const currentSlide = swiper.slides[swiper.activeIndex]
 				const hash = currentSlide.getAttribute('data-hash') ?? swiper.activeIndex.toString()
 
-				history.pushState(null, '', `#${hash}`)
+				// Only push state if the hash is different to avoid unnecessary history entries
+				if (activeHash !== hash) {
+
+					setTimeout(() => {
+						pushState(`#${hash}`, {})
+					}, 0)
+
+					activeHash = hash // Update internal state immediately
+				}
 			})
 		}
 
@@ -169,7 +184,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		const out: string[] = []
 		let i = 0
 
-		const basepath = page.url.pathname.split('/')[1]
+		const basepath = page.url.pathname.split('/')[1] || '7'
 
 		while (i < lines.length) {
 			const line = lines[i++]
@@ -206,7 +221,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 						const callout = !count
 							? ''
 							: `<div class="tooltip">${count.total}명 신청 💃${count.follows} 🕺${count.leaders}</div>`
-						const button = `<a href="${internalLink}" role=button class=outline>신청 ➡️</a>`
+						const button = `<a href="${internalLink}" role=button class=outline onclick="window.location.hash='#form'">신청 ➡️</a>`
 						out.push(callout)
 						out.push(button)
 						continue
@@ -226,7 +241,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 						if (data.form.isOk() && data.sheet.isOk() && data.sheet.value.documentId === id) {
 							internalLink = '#list'
 						}
-						const button = `<a href="${internalLink}" role=button class=outline>확인 👀</a>`
+						const button = `<a href="${internalLink}" role=button class=outline onclick="window.location.hash='#list'">확인 👀</a>`
 						out.push(button)
 						continue
 					}
