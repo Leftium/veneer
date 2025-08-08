@@ -34,6 +34,9 @@
 	import { DOCUMENT_URL_REGEX } from '$lib/google-document-util/url-id.js'
 	import GoogleForm from '$lib/components/GoogleForm.svelte'
 	import Sheet from '$lib/components/Sheet.svelte'
+	import Confetti from 'svelte-confetti'
+	import NotificationBox from '$lib/components/NotificationBox.svelte'
+	import { slide } from 'svelte/transition'
 
 	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
 		[markdownitDeflist],
@@ -44,6 +47,7 @@
 
 	let swiperContainer = $state<SwiperContainer>()
 	let activeTab = $state(params.tid || 'info')
+	let notificationBoxHidden = $state(false)
 
 	const raw = makeRaw(data.sheet)
 
@@ -272,6 +276,40 @@
 	</header>
 
 	<main>
+		{#if page.form && !notificationBoxHidden}
+			{@const form = page.form}
+			{@const level = form.success ? 'success' : 'warning'}
+			{@const subject = form.success ? 'Successfully signed up!' : 'Sorry! There was a problem:'}
+			{@const message = form.success ? '' : `${form.status}: ${form.statusText}`}
+
+			<pre hidden>{stringify({ form })}</pre>
+
+			{#if form.success}
+				<wrap-confetti>
+					<Confetti
+						x={[-4, 4]}
+						y={[0, 0]}
+						delay={[0, 9000]}
+						infinite
+						duration={9000}
+						amount={500}
+						fallDistance="1600px"
+					></Confetti>
+				</wrap-confetti>
+			{/if}
+
+			<div transition:slide={{ delay: 300 }}>
+				<NotificationBox {level} bind:notificationBoxHidden>
+					{#snippet title()}
+						{subject}
+					{/snippet}
+					{#snippet description()}
+						{@html message}
+					{/snippet}
+				</NotificationBox>
+			</div>
+		{/if}
+
 		<swiper-container init="false" bind:this={swiperContainer}>
 			{#if data.navTabs.info.icon}
 				<swiper-slide data-tid="info">
