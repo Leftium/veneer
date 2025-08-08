@@ -23,7 +23,7 @@
 		stripEmptyColumns,
 		stripEmptyRows,
 	} from '$lib/google-document-util/sheet-data-pipeline.svelte.js'
-	import { onMount } from 'svelte'
+	import { onDestroy, onMount, tick } from 'svelte'
 	import { afterNavigate, goto } from '$app/navigation'
 	import { gg } from '@leftium/gg'
 	import { linkifyRelative, makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
@@ -46,8 +46,10 @@
 	let { params, data, children } = $props()
 
 	let swiperContainer = $state<SwiperContainer>()
-	let activeTab = $state(params.tid || 'info')
+	let activeTab = $state(params.tid)
 	let notificationBoxHidden = $state(false)
+
+	let tid = $state(params.tid)
 
 	const successParty = page.url.searchParams.has('yay')
 
@@ -102,7 +104,21 @@
 	}
 
 	register()
-	onMount(() => {
+
+	let hasJS = $state(false)
+	onMount(async () => {
+		// Set JS flag, then wait for swiper-js slides to become unhidden:
+		hasJS = true
+		await tick()
+
+		// 1. Build an array of tab IDs in the order you render slides
+		const orderedTabs = Object.entries(data.navTabs)
+			.filter(([key, tab]) => tab.icon) // only include tabs with icons
+			.map(([key]) => key)
+
+		// 2. Find the index of the current tid
+		const initialSlide = orderedTabs.indexOf(tid || 'info')
+
 		const swiperParams = {
 			spaceBetween: 4,
 			autoHeight: true,
@@ -115,14 +131,15 @@
 
 			// ✅ Prevent default touch behavior only on desktop
 			touchStartPreventDefault: !window.matchMedia('(pointer: coarse)').matches,
+
+			initialSlide,
 		}
 
 		if (swiperContainer) {
 			Object.assign(swiperContainer, swiperParams)
 			swiperContainer.initialize()
 
-			const swiper = swiperContainer.swiper
-
+			const { swiper } = swiperContainer
 			swiper.on('slideChange', () => {
 				const tid = swiper.slides[swiper.activeIndex].dataset.tid
 				if (!tid || activeTab === tid) return
@@ -135,17 +152,11 @@
 					slideToTab(tid)
 				}
 			})
-
-			// initial sync: URL → slider
-			slideToTab(activeTab, { updateHistory: false })
 		}
+	})
 
-		return () => {
-			if (swiperContainer?.swiper) {
-				//swiper.detachEvents() // removes all event listeners
-				swiperContainer.swiper.destroy(true, true) // optional: clean DOM and detach
-			}
-		}
+	onDestroy(() => {
+		swiperContainer?.swiper?.destroy(true, true)
 	})
 
 	afterNavigate(({ to, type }) => {
@@ -159,8 +170,10 @@
 		if (type !== 'link' && type !== 'goto' && type !== 'popstate') return
 
 		// 3) extract the tab ID and slide WITHOUT touching history
-		const tid = to?.url.pathname.split('/').pop() ?? 'info'
-		slideToTab(tid, { updateHistory: false })
+		const tid = to?.url.pathname.split('/').pop()
+		if (tid && ['info', 'form', 'list', 'raw', 'dev'].includes(tid)) {
+			slideToTab(tid, { updateHistory: false })
+		}
 	})
 
 	function internalizeLinks(markdown: string): string {
@@ -264,13 +277,17 @@
 			<nav-buttons role="group">
 				{#each Object.entries(data.navTabs) as [tid, { name, icon, error }]}
 					{#if icon}
-						<button
+						<a
 							class={['glass', { active: activeTab === tid }]}
-							onclick={() => slideToTab(tid)}
+							onclick={(e) => {
+								e.preventDefault()
+								slideToTab(tid)
+							}}
+							href={`/${params.base}/${params.id1}/${tid}`}
 						>
 							{icon}
 							{name}{error ? ' ⚠️' : ''}
-						</button>
+						</a>
 					{/if}
 				{/each}
 			</nav-buttons>
@@ -314,7 +331,7 @@
 
 		<swiper-container init="false" bind:this={swiperContainer}>
 			{#if data.navTabs.info.icon}
-				<swiper-slide data-tid="info">
+				<swiper-slide data-tid="info" hidden={!hasJS && tid !== 'info'}>
 					{#if data.info}
 						<content class="markdown">{@html md`${internalizeLinks(data.info)}`}</content>
 						<pre hidden>{data.info}</pre>
@@ -323,7 +340,7 @@
 			{/if}
 
 			{#if data.navTabs.form.icon}
-				<swiper-slide data-tid="form">
+				<swiper-slide data-tid="form" hidden={!hasJS && tid !== 'form'}>
 					{#if data.form.isOk()}
 						{#if !data.navTabs.info.icon}
 							<content class="markdown">
@@ -342,7 +359,7 @@
 			{/if}
 
 			{#if data.navTabs.list.icon}
-				<swiper-slide data-tid="list">
+				<swiper-slide data-tid="list" hidden={!hasJS && tid !== 'list'}>
 					{#if data.sheet.isOk()}
 						<Sheet data={finalData} onToggle={callSwiperUpdateAutoHeight}></Sheet>
 
@@ -354,14 +371,14 @@
 			{/if}
 
 			{#if data.navTabs.dev.icon}
-				<swiper-slide data-tid="raw">
+				<swiper-slide data-tid="raw" hidden={!hasJS && tid !== 'raw'}>
 					{#if data.sheet.isOk()}
 						<Sheet data={raw} onToggle={callSwiperUpdateAutoHeight}></Sheet>
 					{/if}
 					<pre hidden>{stringify(raw)}</pre>
 				</swiper-slide>
 
-				<swiper-slide data-tid="dev">
+				<swiper-slide data-tid="dev" hidden={!hasJS && tid !== 'dev'}>
 					<pre>params: {stringify(params)}</pre>
 					<pre>finalData: {stringify(finalData)}</pre>
 					<pre>raw: {stringify(raw)}</pre>
@@ -423,11 +440,12 @@
 		white-space: nowrap;
 
 		&:focus-visible,
-		&:has(button:focus) {
+		&:has(button:focus) &:has(a:focus) {
 			box-shadow: none;
 		}
 
-		button {
+		button,
+		a {
 			flex: 0 1 auto;
 			min-width: 0;
 			white-space: nowrap;
