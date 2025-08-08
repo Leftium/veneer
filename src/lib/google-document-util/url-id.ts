@@ -26,7 +26,7 @@ const GOOGLE_FORM_OR_SHEET_REGEX = {
 	f: DOCUMENT_URL_REGEX.f,
 }
 
-const VENEER_ID_REGEX = /^(?<prefix>[sfgbh])\.(?<id>[a-zA-Z0-9_-]+)$/
+export const VENEER_ID_REGEX = /^(?<prefix>[sfgbh])\.(?<id>[a-zA-Z0-9_-]+)$/
 
 export const URL_TEMPLATES: Record<string, string> = {
 	s: 'https://docs.google.com/spreadsheets/d/{ID}',
