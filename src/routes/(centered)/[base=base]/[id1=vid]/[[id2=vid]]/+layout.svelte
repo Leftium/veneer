@@ -49,6 +49,8 @@
 	let activeTab = $state(params.tid || 'info')
 	let notificationBoxHidden = $state(false)
 
+	const successParty = page.url.searchParams.has('yay')
+
 	const raw = makeRaw(data.sheet)
 
 	const finalData = pipe(
@@ -276,15 +278,15 @@
 	</header>
 
 	<main>
-		{#if page.form && !notificationBoxHidden}
+		{#if (page.form || successParty) && !notificationBoxHidden}
 			{@const form = page.form}
-			{@const level = form.success ? 'success' : 'warning'}
-			{@const subject = form.success ? 'Successfully signed up!' : 'Sorry! There was a problem:'}
-			{@const message = form.success ? '' : `${form.status}: ${form.statusText}`}
+			{@const level = successParty ? 'success' : 'warning'}
+			{@const subject = successParty ? 'Successfully signed up!' : 'Sorry! There was a problem:'}
+			{@const message = successParty ? '' : `${form?.status}: ${form?.statusText}`}
 
 			<pre hidden>{stringify({ form })}</pre>
 
-			{#if form.success}
+			{#if successParty}
 				<wrap-confetti>
 					<Confetti
 						x={[-4, 4]}

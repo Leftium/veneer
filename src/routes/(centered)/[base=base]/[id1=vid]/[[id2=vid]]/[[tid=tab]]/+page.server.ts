@@ -26,8 +26,7 @@ export const actions = {
 			})
 		}
 
-		// return { success: true }
 		// on success
-		// throw redirect(303, `/${params.base}/${params.id1}/list`)
+		throw redirect(303, `/${params.base}/${params.id1}/list?yay`)
 	},
 }
