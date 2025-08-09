@@ -24,6 +24,9 @@ importers:
       '@leftium/gg':
         specifier: ^0.0.6
         version: 0.0.6(svelte@5.38.0)
+      '@neoconfetti/svelte':
+        specifier: ^2.2.2
+        version: 2.2.2(svelte@5.38.0)
       '@picocss/pico':
         specifier: ^2.1.1
         version: 2.1.1
@@ -120,9 +123,6 @@ importers:
       svelte-confetti:
         specifier: ^2.3.2
         version: 2.3.2(svelte@5.38.0)
-      svelte-confetti-explosion:
-        specifier: ^0.4.0
-        version: 0.4.0
       swiper:
         specifier: ^11.2.10
         version: 11.2.10
@@ -406,6 +406,11 @@ packages:
 
   '@lix-js/server-protocol-schema@0.1.1':
     resolution: {integrity: sha512-jBeALB6prAbtr5q4vTuxnRZZv1M2rKe8iNqRQhFJ4Tv7150unEa0vKyz0hs8Gl3fUGsWaNJBh3J8++fpbrpRBQ==}
+
+  '@neoconfetti/svelte@2.2.2':
+    resolution: {integrity: sha512-E7xCFVEEm5Ctnj2udTJy1b9oaTvjz1zi1mYdEtE8rB5BVwq6kHisosDS+zdWN5PMfEMjtbsOV9Cl6tsNSAD1sA==}
+    peerDependencies:
+      svelte: ^3.0.0 || ^4.0.0 || ^5.0.0
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -1581,10 +1586,6 @@ packages:
       svelte: ^4.0.0 || ^5.0.0-next.0
       typescript: '>=5.0.0'
 
-  svelte-confetti-explosion@0.4.0:
-    resolution: {integrity: sha512-EifYXjcNzcfrQ4gFLsjxEe5j5aGBZNnEJm+qA025LuZp7bD4YbCLNExNYvvenre3UnwVWGv3E8cTzjO1W01Ckw==}
-    deprecated: This package has been renamed to @neoconfetti/svelte
-
   svelte-confetti@2.3.2:
     resolution: {integrity: sha512-cfIwoGqMPYWRYDUz2g7mG1uHYWy7VBepelQdzCC3j/M42UrAqaBYmIi9xaoQfow4fbINHO9WuARnTyK2bjjGQg==}
     peerDependencies:
@@ -1982,6 +1983,10 @@ snapshots:
       - babel-plugin-macros
 
   '@lix-js/server-protocol-schema@0.1.1': {}
+
+  '@neoconfetti/svelte@2.2.2(svelte@5.38.0)':
+    dependencies:
+      svelte: 5.38.0
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -3099,8 +3104,6 @@ snapshots:
       typescript: 5.9.2
     transitivePeerDependencies:
       - picomatch
-
-  svelte-confetti-explosion@0.4.0: {}
 
   svelte-confetti@2.3.2(svelte@5.38.0):
     dependencies:
