@@ -22,7 +22,7 @@
 		confetti,
 	}: Props = $props()
 
-	function onclick(e) {
+	function onclick(e: Event) {
 		e.preventDefault()
 		notificationBoxHidden = true
 	}
@@ -33,7 +33,9 @@
 		<input type="checkbox" class="vis-toggle" id="dismiss-toggle" hidden />
 
 		{#if level === 'success'}
-			{@render confetti?.()}
+			<wrap-confetti>
+				{@render confetti?.()}
+			</wrap-confetti>
 		{/if}
 
 		<d-wrap class={level} transition:fade|global>
@@ -77,6 +79,8 @@
 		justify-content: center;
 		margin: op.$size-3;
 		margin-top: op.$size-2;
+		overflow: hidden;
+		max-height: 200px; // A sufficiently large initial max-height for the notification box
 	}
 
 	d-card {
@@ -185,9 +189,86 @@
 		mask-image: var(--svg);
 	}
 
+	// CSS variables for animation timing
+	:root {
+		--notification-box-exit-duration: 500ms; // Notification box fades/slides out
+		--parent-collapse-duration: 500ms; // Parent wrapper collapses
+		--parent-collapse-delay: 0s; // Delay before parent collapse starts
+	}
+
+	// Keyframes for just fading out confetti
+	@keyframes fadeOutConfetti {
+		0% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 0;
+			visibility: hidden; // Hide completely when faded
+		}
+	}
+
+	// Keyframes for the notification box (d-wrap)
+	@keyframes notificationBoxExit {
+		0% {
+			opacity: 1;
+			transform: translateY(0);
+			max-height: 200px; /* Keep initial max-height */
+		}
+		80% {
+			// Fade out and slide up significantly
+			opacity: 0;
+			transform: translateY(-50px);
+			max-height: 200px; /* Still maintains height during fade/slide */
+		}
+		100% {
+			opacity: 0;
+			transform: translateY(-50px);
+			max-height: 0; /* NEW: Collapse height to remove space */
+			margin-top: 0; /* NEW: Collapse margins */
+			margin-bottom: 0; /* NEW: Collapse margins */
+			padding: 0; /* NEW: Collapse padding */
+			visibility: hidden; // Hide completely
+		}
+	}
+
+	// Keyframes for the parent element (notification-wrapper)
+	@keyframes collapseParent {
+		0% {
+			max-height: 300px; /* Initial max-height for the wrapper */
+			padding-block: var(--op-size-3); // Retain original padding for wrapper
+		}
+		100% {
+			max-height: 0; /* Collapse the parent */
+			padding-block: 0; // Collapse padding
+			margin-block: 0; // Collapse margins
+			visibility: hidden; // Hide completely
+		}
+	}
+
+	// Notification Wrapper styles for animation
+	.notification-wrapper {
+		max-height: 300px; // Initial max-height for the wrapper itself (needs to be large enough)
+		overflow: hidden; // Important for parent collapse
+		padding-block: var(--op-size-3); // This will be animated too
+		// DELETED: Transition resets. Animations will control properties directly.
+	}
+
+	// Styles for dismissal animation
 	:global {
-		.vis-toggle:checked ~ * {
-			display: none !important;
+		// When checkbox is checked:
+		.vis-toggle:checked ~ d-wrap {
+			animation: notificationBoxExit var(--notification-box-exit-duration) ease-out forwards;
+		}
+
+		.vis-toggle:checked ~ wrap-confetti {
+			animation: fadeOutConfetti var(--notification-box-exit-duration) ease-out forwards;
+		}
+
+		// Animate the parent wrapper after a delay
+		// The `notification-wrapper` itself is the one with `max-height` for overall collapse.
+		.vis-toggle:checked ~ .notification-wrapper {
+			animation: collapseParent var(--parent-collapse-duration) ease-in-out forwards;
+			animation-delay: calc(var(--notification-box-exit-duration) + var(--parent-collapse-delay));
 		}
 	}
 </style>
