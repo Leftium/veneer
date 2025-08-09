@@ -308,7 +308,7 @@
 					{#snippet title()}
 						{subject}
 					{/snippet}
-					
+
 					{#snippet description()}
 						{@html message}
 					{/snippet}
