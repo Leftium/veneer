@@ -120,6 +120,9 @@ importers:
       svelte-confetti:
         specifier: ^2.3.2
         version: 2.3.2(svelte@5.37.3)
+      svelte-confetti-explosion:
+        specifier: ^0.4.0
+        version: 0.4.0
       swiper:
         specifier: ^11.2.10
         version: 11.2.10
@@ -1474,6 +1477,10 @@ packages:
     peerDependencies:
       svelte: ^4.0.0 || ^5.0.0-next.0
       typescript: '>=5.0.0'
+
+  svelte-confetti-explosion@0.4.0:
+    resolution: {integrity: sha512-EifYXjcNzcfrQ4gFLsjxEe5j5aGBZNnEJm+qA025LuZp7bD4YbCLNExNYvvenre3UnwVWGv3E8cTzjO1W01Ckw==}
+    deprecated: This package has been renamed to @neoconfetti/svelte
 
   svelte-confetti@2.3.2:
     resolution: {integrity: sha512-cfIwoGqMPYWRYDUz2g7mG1uHYWy7VBepelQdzCC3j/M42UrAqaBYmIi9xaoQfow4fbINHO9WuARnTyK2bjjGQg==}
@@ -2901,6 +2908,8 @@ snapshots:
       typescript: 5.9.2
     transitivePeerDependencies:
       - picomatch
+
+  svelte-confetti-explosion@0.4.0: {}
 
   svelte-confetti@2.3.2(svelte@5.37.3):
     dependencies:

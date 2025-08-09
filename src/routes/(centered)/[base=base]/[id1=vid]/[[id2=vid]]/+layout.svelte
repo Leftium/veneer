@@ -35,6 +35,7 @@
 	import GoogleForm from '$lib/components/GoogleForm.svelte'
 	import Sheet from '$lib/components/Sheet.svelte'
 	import Confetti from 'svelte-confetti'
+	import { ConfettiExplosion } from 'svelte-confetti-explosion'
 	import NotificationBox from '$lib/components/NotificationBox.svelte'
 	import { slide } from 'svelte/transition'
 
@@ -314,6 +315,9 @@
 					{/snippet}
 
 					{#snippet confetti()}
+						<wrap-confetti>
+							<ConfettiExplosion duration={10_000} force={0.5} stageHeight={1600} />
+						</wrap-confetti>
 						<wrap-confetti>
 							<Confetti
 								x={[-4, 4]}
