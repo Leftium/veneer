@@ -5,7 +5,7 @@
 
 	import { stringify } from '$lib/util'
 	import { onMount } from 'svelte'
-	import Sheet from './Sheet.svelte'
+	
 	import type { GoogleFormDocument } from '$lib/google-document-util/types'
 
 	import * as linkify from 'linkifyjs'
@@ -14,7 +14,7 @@
 	import markdownitDeflist from 'markdown-it-deflist'
 	import { linkifyRelative, makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
 	import { DOCUMENT_URL_REGEX, urlFromVeneerId } from '$lib/google-document-util/url-id'
-	import GoogleForm from './GoogleForm.svelte'
+
 	import { undent } from '$lib/tag-functions/undent'
 	import { linkListifyDefinitionList } from '$lib/markdown/dl-to-link-list'
 	import { page } from '$app/state'
@@ -92,6 +92,8 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	import { slide } from 'svelte/transition'
 	import type { Swiper } from 'swiper/types'
 	import { pushState } from '$app/navigation'
+	import GoogleForm from '$lib/components/GoogleForm.svelte'
+	import Sheet from '$lib/components/Sheet.svelte'
 
 	function slideToHash(hash: string) {
 		hash = hash.replace('#', '')
