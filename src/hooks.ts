@@ -30,7 +30,7 @@ export const transport: Transport = {
 
 export const reroute = ({ url }) => {
 	if (url.pathname === '/') {
-		return '/15/g.zUuXZZuvobvnU1ja7'
+		return '/7/g.r6eRUz2U9uf5oVFn6/s.13E_wsbrKLEsuV-eDaTKl0a967EdpYgcZrXH0Gq_KK3g'
 	}
 	return deLocalizeUrl(url).pathname
 }

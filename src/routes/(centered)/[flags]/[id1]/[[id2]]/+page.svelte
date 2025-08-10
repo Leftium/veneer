@@ -5,7 +5,7 @@
 
 	import { stringify } from '$lib/util'
 	import { onMount } from 'svelte'
-	
+
 	import type { GoogleFormDocument } from '$lib/google-document-util/types'
 
 	import * as linkify from 'linkifyjs'
@@ -60,17 +60,11 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 		<div>
 
-		Home
-		~ ${page.url.origin}
-
-		Source code
+		Source Code
 		~ https://github.com/Leftium/veneer
 
 		Made by Leftium
 		~ https://leftium.com
-
-		See other projects
-		~ https://github.com/Leftium?tab=repositories&type=source
 	`)
 
 	register()
@@ -240,9 +234,9 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 					let internalLink = `/${basepath}/${id}`
 
 					if (/확인/.test(line)) {
-						if (data.form.isOk() && data.sheet.isOk() && data.sheet.value.documentId === id) {
-							internalLink = '#list'
-						}
+						///if (data.form.isOk() && data.sheet.isOk() && data.sheet.value.documentId === id) {
+						internalLink = '#list'
+						///}
 						const button = `<a href="${internalLink}" role=button class=outline onclick="window.location.hash='#list'">확인 👀</a>`
 						out.push(button)
 						continue
