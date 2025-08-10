@@ -27,8 +27,8 @@ importers:
         specifier: ^9.33.0
         version: 9.33.0
       '@leftium/gg':
-        specifier: ^0.0.11
-        version: 0.0.11(svelte@5.38.0)
+        specifier: ^0.0.12
+        version: 0.0.12(svelte@5.38.0)
       '@neoconfetti/svelte':
         specifier: ^2.2.2
         version: 2.2.2(svelte@5.38.0)
@@ -400,8 +400,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.29':
     resolution: {integrity: sha512-uw6guiW/gcAGPDhLmd77/6lW8QLeiV5RUTsAX46Db6oLhGaVj4lhnPwb184s1bkc8kdVg/+h988dro8GRDpmYQ==}
 
-  '@leftium/gg@0.0.11':
-    resolution: {integrity: sha512-Mh9kGu/C3M0Dcnu29EBBITAR6ZaIMUoBALAFC/KVZDye99h0El1E1WvLi5v5xINYbT69pdqV5hYSDVU+b4D/Aw==}
+  '@leftium/gg@0.0.12':
+    resolution: {integrity: sha512-0WkoQa00lrLfcQCDJ9O+uvcF/H9s5ApC/VwDeS9UIz/DyudwiooM0ZzwZ0njRuuuB7j5qMoJr7um3YE0AagYTw==}
     peerDependencies:
       svelte: ^5.0.0
 
@@ -2142,7 +2142,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.4
 
-  '@leftium/gg@0.0.11(svelte@5.38.0)':
+  '@leftium/gg@0.0.12(svelte@5.38.0)':
     dependencies:
       debug: 4.4.1(patch_hash=cc12de5995df0e1811e9a7690ea65ffa4edc13323b248d28792d684c87f496b7)
       dotenv: 17.2.1
