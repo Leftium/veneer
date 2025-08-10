@@ -4,11 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  debug@4.4.1:
-    hash: cc12de5995df0e1811e9a7690ea65ffa4edc13323b248d28792d684c87f496b7
-    path: patches/debug@4.4.1.patch
-
 importers:
 
   .:
@@ -27,8 +22,8 @@ importers:
         specifier: ^9.33.0
         version: 9.33.0
       '@leftium/gg':
-        specifier: ^0.0.12
-        version: 0.0.12(svelte@5.38.0)
+        specifier: ^0.0.11
+        version: 0.0.11(svelte@5.38.0)
       '@neoconfetti/svelte':
         specifier: ^2.2.2
         version: 2.2.2(svelte@5.38.0)
@@ -400,8 +395,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.29':
     resolution: {integrity: sha512-uw6guiW/gcAGPDhLmd77/6lW8QLeiV5RUTsAX46Db6oLhGaVj4lhnPwb184s1bkc8kdVg/+h988dro8GRDpmYQ==}
 
-  '@leftium/gg@0.0.12':
-    resolution: {integrity: sha512-0WkoQa00lrLfcQCDJ9O+uvcF/H9s5ApC/VwDeS9UIz/DyudwiooM0ZzwZ0njRuuuB7j5qMoJr7um3YE0AagYTw==}
+  '@leftium/gg@0.0.11':
+    resolution: {integrity: sha512-Mh9kGu/C3M0Dcnu29EBBITAR6ZaIMUoBALAFC/KVZDye99h0El1E1WvLi5v5xINYbT69pdqV5hYSDVU+b4D/Aw==}
     peerDependencies:
       svelte: ^5.0.0
 
@@ -2055,7 +2050,7 @@ snapshots:
   '@eslint/config-array@0.21.0':
     dependencies:
       '@eslint/object-schema': 2.1.6
-      debug: 4.4.1(patch_hash=cc12de5995df0e1811e9a7690ea65ffa4edc13323b248d28792d684c87f496b7)
+      debug: 4.4.1
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -2069,7 +2064,7 @@ snapshots:
   '@eslint/eslintrc@3.3.1':
     dependencies:
       ajv: 6.12.6
-      debug: 4.4.1(patch_hash=cc12de5995df0e1811e9a7690ea65ffa4edc13323b248d28792d684c87f496b7)
+      debug: 4.4.1
       espree: 10.4.0
       globals: 14.0.0
       ignore: 5.3.2
@@ -2142,9 +2137,9 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.4
 
-  '@leftium/gg@0.0.12(svelte@5.38.0)':
+  '@leftium/gg@0.0.11(svelte@5.38.0)':
     dependencies:
-      debug: 4.4.1(patch_hash=cc12de5995df0e1811e9a7690ea65ffa4edc13323b248d28792d684c87f496b7)
+      debug: 4.4.1
       dotenv: 17.2.1
       error-stack-parser: 2.1.4
       esm-env: 1.2.2
@@ -2345,7 +2340,7 @@ snapshots:
   '@sveltejs/vite-plugin-svelte-inspector@5.0.0(@sveltejs/vite-plugin-svelte@6.1.1(svelte@5.38.0)(vite@7.1.1(@types/node@24.2.1)(sass-embedded@1.90.0)(sass@1.90.0)(yaml@2.8.1)))(svelte@5.38.0)(vite@7.1.1(@types/node@24.2.1)(sass-embedded@1.90.0)(sass@1.90.0)(yaml@2.8.1))':
     dependencies:
       '@sveltejs/vite-plugin-svelte': 6.1.1(svelte@5.38.0)(vite@7.1.1(@types/node@24.2.1)(sass-embedded@1.90.0)(sass@1.90.0)(yaml@2.8.1))
-      debug: 4.4.1(patch_hash=cc12de5995df0e1811e9a7690ea65ffa4edc13323b248d28792d684c87f496b7)
+      debug: 4.4.1
       svelte: 5.38.0
       vite: 7.1.1(@types/node@24.2.1)(sass-embedded@1.90.0)(sass@1.90.0)(yaml@2.8.1)
     transitivePeerDependencies:
@@ -2354,7 +2349,7 @@ snapshots:
   '@sveltejs/vite-plugin-svelte@6.1.1(svelte@5.38.0)(vite@7.1.1(@types/node@24.2.1)(sass-embedded@1.90.0)(sass@1.90.0)(yaml@2.8.1))':
     dependencies:
       '@sveltejs/vite-plugin-svelte-inspector': 5.0.0(@sveltejs/vite-plugin-svelte@6.1.1(svelte@5.38.0)(vite@7.1.1(@types/node@24.2.1)(sass-embedded@1.90.0)(sass@1.90.0)(yaml@2.8.1)))(svelte@5.38.0)(vite@7.1.1(@types/node@24.2.1)(sass-embedded@1.90.0)(sass@1.90.0)(yaml@2.8.1))
-      debug: 4.4.1(patch_hash=cc12de5995df0e1811e9a7690ea65ffa4edc13323b248d28792d684c87f496b7)
+      debug: 4.4.1
       deepmerge: 4.3.1
       kleur: 4.1.5
       magic-string: 0.30.17
@@ -2414,7 +2409,7 @@ snapshots:
       '@typescript-eslint/types': 8.39.0
       '@typescript-eslint/typescript-estree': 8.39.0(typescript@5.9.2)
       '@typescript-eslint/visitor-keys': 8.39.0
-      debug: 4.4.1(patch_hash=cc12de5995df0e1811e9a7690ea65ffa4edc13323b248d28792d684c87f496b7)
+      debug: 4.4.1
       eslint: 9.33.0
       typescript: 5.9.2
     transitivePeerDependencies:
@@ -2424,7 +2419,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/tsconfig-utils': 8.39.0(typescript@5.9.2)
       '@typescript-eslint/types': 8.39.0
-      debug: 4.4.1(patch_hash=cc12de5995df0e1811e9a7690ea65ffa4edc13323b248d28792d684c87f496b7)
+      debug: 4.4.1
       typescript: 5.9.2
     transitivePeerDependencies:
       - supports-color
@@ -2443,7 +2438,7 @@ snapshots:
       '@typescript-eslint/types': 8.39.0
       '@typescript-eslint/typescript-estree': 8.39.0(typescript@5.9.2)
       '@typescript-eslint/utils': 8.39.0(eslint@9.33.0)(typescript@5.9.2)
-      debug: 4.4.1(patch_hash=cc12de5995df0e1811e9a7690ea65ffa4edc13323b248d28792d684c87f496b7)
+      debug: 4.4.1
       eslint: 9.33.0
       ts-api-utils: 2.1.0(typescript@5.9.2)
       typescript: 5.9.2
@@ -2458,7 +2453,7 @@ snapshots:
       '@typescript-eslint/tsconfig-utils': 8.39.0(typescript@5.9.2)
       '@typescript-eslint/types': 8.39.0
       '@typescript-eslint/visitor-keys': 8.39.0
-      debug: 4.4.1(patch_hash=cc12de5995df0e1811e9a7690ea65ffa4edc13323b248d28792d684c87f496b7)
+      debug: 4.4.1
       fast-glob: 3.3.3
       is-glob: 4.0.3
       minimatch: 9.0.5
@@ -2633,7 +2628,7 @@ snapshots:
 
   dayjs@1.11.13: {}
 
-  debug@4.4.1(patch_hash=cc12de5995df0e1811e9a7690ea65ffa4edc13323b248d28792d684c87f496b7):
+  debug@4.4.1:
     dependencies:
       ms: 2.1.3
 
@@ -2781,7 +2776,7 @@ snapshots:
       ajv: 6.12.6
       chalk: 4.1.2
       cross-spawn: 7.0.6
-      debug: 4.4.1(patch_hash=cc12de5995df0e1811e9a7690ea65ffa4edc13323b248d28792d684c87f496b7)
+      debug: 4.4.1
       escape-string-regexp: 4.0.0
       eslint-scope: 8.4.0
       eslint-visitor-keys: 4.2.1
