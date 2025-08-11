@@ -171,12 +171,13 @@ export function renderRelativeTimes({ extra, columns, rows }: SheetDataPipe) {
 	const utcjs = dayjs.utc
 
 	for (const row of rows) {
-		for (const [ci, cell] of row.entries()) {
+		for (const cell of row) {
 			if (cell.ts) {
 				// Relative date if within 25 days:
 				if (utcjs(cell.ts).isBetween(utcjs().subtract(25, 'd'), utcjs().add(25, 'd'))) {
 					cell.render = dayjs().utc().to(cell.ts)
 				} else {
+                    // @ts-expect-error: TODO
 					cell.render = dayjs.tz(cell.ts, extra.timeZone).format('YYYY-MM-DD')
 				}
 			}

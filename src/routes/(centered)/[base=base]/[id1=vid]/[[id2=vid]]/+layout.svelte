@@ -215,6 +215,7 @@
 						) {
 							internalLink = './form'
 						}
+						//@ts-expect-error: TODO
 						const count = finalData.extra.count
 						const callout = !count
 							? ''
@@ -445,12 +446,12 @@
 		max-width: 100%;
 		white-space: nowrap;
 
-		&:focus-visible,
-		&:has(button:focus) &:has(a:focus) {
+		&:focus-visible/*,
+		&:has(button:focus) &:has(a:focus)*/ {
 			box-shadow: none;
 		}
 
-		button,
+		//button,
 		a {
 			flex: 0 1 auto;
 			min-width: 0;
@@ -508,9 +509,11 @@
 	}
 
 	main {
+		/*
 		.active {
-			//background-color: #8882;
+			background-color: #8882;
 		}
+		*/
 
 		// This prevents a scrolling context from forming,
 		// so the <body> can be the scrolling context for sticky elements inside <swiper-slide>.

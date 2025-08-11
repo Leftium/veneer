@@ -9,7 +9,6 @@ import { getGoogleDocumentId } from '$lib/google-document-util/url-id.js'
 import { stripHidden } from '$lib/google-document-util/google-sheets.js'
 import type { ResultGoogleForm, ResultGoogleSheet } from '$lib/google-document-util/types'
 import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-with-id'
-import { fail } from '@sveltejs/kit'
 
 export const load = async ({ params, url }) => {
 	// URL params that control inclusion of sheet data hidden by user:
@@ -27,6 +26,7 @@ export const load = async ({ params, url }) => {
         dev:  [0b1000, '🔧', m.dev()],
     }
 
+    // @ts-expect-error: TODO
 	const flags = Number(params.flags)
 
 	const warnings = []
@@ -145,7 +145,7 @@ export const load = async ({ params, url }) => {
 
 	type TabsKey = keyof typeof TABS
 	const navTabs = Object.entries(TABS).reduce(
-		(acc, [hash, [bit, icon, name]]) => {
+		(acc, [hash, [,icon, name]]) => {
 			const error =
 				((hash === 'info' || hash === 'form') && form.isErr()) ||
 				(hash === 'list' && sheet.isErr()) ||

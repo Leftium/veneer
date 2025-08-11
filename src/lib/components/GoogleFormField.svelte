@@ -2,9 +2,13 @@
 	import type { Question } from '$lib'
 	import MarkdownIt from 'markdown-it'
 	//import emoji from 'markdown-it-emoji'
+	//@ts-expect-error: TODO
 	import easyTables from 'markdown-it-easy-tables'
+	//@ts-expect-error: TODO
 	import sup from 'markdown-it-sup'
+	//@ts-expect-error: TODO
 	import sub from 'markdown-it-sub'
+	//@ts-expect-error: TODO
 	import deflist from 'markdown-it-deflist'
 
 	import multimdTable from 'markdown-it-multimd-table'

@@ -165,7 +165,6 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 		return () => {
 			if (swiper) {
-				swiper.off() // removes all event listeners
 				swiper.destroy(true, true) // optional: clean DOM and detach
 			}
 		}
@@ -219,6 +218,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 						) {
 							internalLink = '#form'
 						}
+						// @ts-expect-error: TODO
 						const count = finalData.extra.count
 						const callout = !count
 							? ''
@@ -533,10 +533,6 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	}
 
 	main {
-		.active {
-			background-color: #8882;
-		}
-
 		// This prevents a scrolling context from forming,
 		// so the <body> can be the scrolling context for sticky elements inside <swiper-slide>.
 		swiper-container::part(container) {

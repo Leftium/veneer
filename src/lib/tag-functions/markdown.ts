@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import MarkdownIt from 'markdown-it'
 import type { Options, PluginSimple, PluginWithOptions } from 'markdown-it'
 import { undent } from './undent'
@@ -20,8 +21,10 @@ export function makeTagFunctionMd(
 
 const REL_LINK_RE = /(?<=^|\s)(\/[^\s"'<>]+)(?=\s|$)/g
 
-export function linkifyRelative(md) {
-	md.core.ruler.after('inline', 'relative_linkify', (state) => {
+
+
+export function linkifyRelative(md: { core: { ruler: { after: (arg0: string, arg1: string, arg2: (state: any) => void) => void } } }) {
+	md.core.ruler.after('inline', 'relative_linkify', (state: { tokens: any; Token: new (arg0: string, arg1: string, arg2: number) => any }) => {
 		for (const token of state.tokens) {
 			if (token.type !== 'inline' || !token.children) continue
 

@@ -106,7 +106,7 @@
 	gd {
 		padding: $size-2 $size-2;
 
-		&.numeric {
+		&:global(.numeric) {
 			font-family: Lato, Helvetica, sans-serif;
 			font-feature-settings: 'tnum';
 			font-variant-numeric: tabular-nums;
