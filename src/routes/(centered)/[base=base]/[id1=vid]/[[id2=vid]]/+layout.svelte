@@ -38,6 +38,7 @@
 	import { confetti } from '@neoconfetti/svelte'
 	import NotificationBox from '$lib/components/NotificationBox.svelte'
 	import { slide } from 'svelte/transition'
+	import { isOk } from 'wellcrafted/result'
 
 	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
 		[markdownitDeflist],
@@ -210,8 +211,8 @@
 					if (/신청/.test(line)) {
 						internalLink += '/form'
 						if (
-							data.form.isOk() &&
-							[data.form.value.documentId, data.form.value.veneerId].includes(id)
+							isOk(data.form) &&
+							[data.form.data.documentId, data.form.data.veneerId].includes(id)
 						) {
 							internalLink = './form'
 						}
@@ -237,7 +238,7 @@
 					let internalLink = `/${basepath}/${id}`
 
 					if (/확인/.test(line)) {
-						if (data.form.isOk() && data.sheet.isOk() && data.sheet.value.documentId === id) {
+						if (isOk(data.form) && isOk(data.sheet) && data.sheet.data.documentId === id) {
 							internalLink = './list'
 						}
 						const button = `<a href="${internalLink}" role=button class=outline">확인 👀</a>`
@@ -348,7 +349,7 @@
 
 			{#if data.navTabs.form.icon}
 				<swiper-slide data-tid="form" hidden={!hasJS && tid !== 'form'}>
-					{#if data.form.isOk()}
+					{#if isOk(data.form)}
 						{#if !data.navTabs.info.icon}
 							<content class="markdown">
 								{@html md`${internalizeLinks(data.info)}`}
@@ -356,9 +357,9 @@
 						{/if}
 
 						<content>
-							<GoogleForm googleForm={data.form.value as GoogleFormDocument}></GoogleForm>
+							<GoogleForm googleForm={data.form.data as GoogleFormDocument}></GoogleForm>
 						</content>
-						<pre hidden>{stringify(data.form.value)}</pre>
+						<pre hidden>{stringify(data.form.data)}</pre>
 					{:else}
 						<pre>{stringify(data.form.error)}</pre>
 					{/if}
@@ -367,10 +368,10 @@
 
 			{#if data.navTabs.list.icon}
 				<swiper-slide data-tid="list" hidden={!hasJS && tid !== 'list'}>
-					{#if data.sheet.isOk()}
+					{#if isOk(data.sheet)}
 						<Sheet data={finalData} onToggle={callSwiperUpdateAutoHeight}></Sheet>
 
-						<pre hidden>{stringify(data.sheet.value)}}</pre>
+						<pre hidden>{stringify(data.sheet.data)}}</pre>
 					{:else}
 						<pre>{stringify(data.sheet.error)}</pre>
 					{/if}
@@ -379,7 +380,7 @@
 
 			{#if data.navTabs.dev.icon}
 				<swiper-slide data-tid="raw" hidden={!hasJS && tid !== 'raw'}>
-					{#if data.sheet.isOk()}
+					{#if isOk(data.sheet)}
 						<Sheet data={raw} onToggle={callSwiperUpdateAutoHeight}></Sheet>
 					{/if}
 					<pre hidden>{stringify(raw)}</pre>

@@ -37,10 +37,10 @@
 	let activeHash = $state('info')
 
 	let sourceUrlForm = $derived(
-		data.form.isOk() ? urlFromVeneerId(data.form.value.documentId, false) : '',
+		isOk(data.form) ? urlFromVeneerId(data.form.data.documentId, false) : '',
 	)
 	let sourceUrlSheet = $derived(
-		data.sheet.isOk() ? urlFromVeneerId(data.sheet.value.documentId, false) : '',
+		isOk(data.sheet) ? urlFromVeneerId(data.sheet.data.documentId, false) : '',
 	)
 
 	let footerSources = $derived(
@@ -94,6 +94,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	import { pushState } from '$app/navigation'
 	import GoogleForm from '$lib/components/GoogleForm.svelte'
 	import Sheet from '$lib/components/Sheet.svelte'
+	import { isOk } from 'wellcrafted/result'
 
 	function slideToHash(hash: string) {
 		hash = hash.replace('#', '')
@@ -213,8 +214,8 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 					if (/신청/.test(line)) {
 						internalLink += '#form'
 						if (
-							data.form.isOk() &&
-							[data.form.value.documentId, data.form.value.veneerId].includes(id)
+							isOk(data.form) &&
+							[data.form.data.documentId, data.form.data.veneerId].includes(id)
 						) {
 							internalLink = '#form'
 						}
@@ -240,7 +241,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 					let internalLink = `/${basepath}/${id}`
 
 					if (/확인/.test(line)) {
-						if (data.form.isOk() && data.sheet.isOk() && data.sheet.value.documentId === id) {
+						if (isOk(data.form) && isOk(data.sheet) && data.sheet.data.documentId === id) {
 							internalLink = '#list'
 						}
 						const button = `<a href="${internalLink}" role=button class=outline onclick="window.location.hash='#list'">확인 👀</a>`
@@ -348,7 +349,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 			{#if data.navTabs.form.icon}
 				<swiper-slide data-hash="form">
-					{#if data.form.isOk()}
+					{#if isOk(data.form)}
 						{#if !data.navTabs.info.icon}
 							<content class="markdown">
 								{@html md`${internalizeLinks(data.info)}`}
@@ -356,9 +357,9 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 						{/if}
 
 						<content>
-							<GoogleForm googleForm={data.form.value as GoogleFormDocument}></GoogleForm>
+							<GoogleForm googleForm={data.form.data as GoogleFormDocument}></GoogleForm>
 						</content>
-						<pre hidden>{stringify(data.form.value)}</pre>
+						<pre hidden>{stringify(data.form.data)}</pre>
 					{:else}
 						<pre>{stringify(data.form.error)}</pre>
 					{/if}
@@ -367,10 +368,10 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 			{#if data.navTabs.list.icon}
 				<swiper-slide data-hash="list">
-					{#if data.sheet.isOk()}
+					{#if isOk(data.sheet)}
 						<Sheet data={finalData} onToggle={callSwiperUpdateAutoHeight}></Sheet>
 
-						<pre hidden>{stringify(data.sheet.value)}}</pre>
+						<pre hidden>{stringify(data.sheet.data)}}</pre>
 					{:else}
 						<pre>{stringify(data.sheet.error)}</pre>
 					{/if}
@@ -379,7 +380,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 			{#if data.navTabs.dev.icon}
 				<swiper-slide data-hash="raw">
-					{#if data.sheet.isOk()}
+					{#if isOk(data.sheet)}
 						<Sheet data={raw} onToggle={callSwiperUpdateAutoHeight}></Sheet>
 					{/if}
 					<pre hidden>{stringify(raw)}</pre>

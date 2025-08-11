@@ -1,6 +1,6 @@
 import { gg } from '@leftium/gg'
 
-import { err, ok } from 'neverthrow'
+import { Err, isErr, isOk, Ok } from 'wellcrafted/result'
 import * as linkify from 'linkifyjs'
 
 import { m } from '$lib/paraglide/messages.js'
@@ -37,15 +37,15 @@ export const load = async ({ params, url }) => {
 	let info = ''
 	let footers: string[] = []
 
-	let form: ResultGoogleForm = err({ message: `Initial form` })
-	let sheet: ResultGoogleSheet = err({ message: `Initial sheet` })
+	let form: ResultGoogleForm = Err({ message: `Initial form` })
+	let sheet: ResultGoogleSheet = Err({ message: `Initial sheet` })
 
 	const [document1, document2] = await Promise.all([
 		fetchWithDocumentId(params.id1),
 		fetchWithDocumentId(params.id2),
 	])
 
-	if (document1.isErr()) {
+	if (isErr(document1)) {
 		if (!document1.error.type) {
 			form = document1 as ResultGoogleForm
 			sheet = document1 as ResultGoogleSheet
@@ -53,14 +53,14 @@ export const load = async ({ params, url }) => {
 		form = (document1.error.type === 'form' ? document1 : document2) as ResultGoogleForm
 		sheet = (document1.error.type === 'sheet' ? document1 : document2) as ResultGoogleSheet
 	} else {
-		form = (document1.value.type === 'form' ? document1 : document2) as ResultGoogleForm
-		sheet = (document1.value.type === 'sheet' ? document1 : document2) as ResultGoogleSheet
+		form = (document1.data.type === 'form' ? document1 : document2) as ResultGoogleForm
+		sheet = (document1.data.type === 'sheet' ? document1 : document2) as ResultGoogleSheet
 
-		if (form.isOk()) {
+		if (isOk(form)) {
 			// Set info to markdown of initial non-question fields.
 			let skippedFirstTitle = false
-			const infoAndFooters = form.value.fields
-				.slice(0, form.value.firstInput === -1 ? undefined : form.value.firstInput)
+			const infoAndFooters = form.data.fields
+				.slice(0, form.data.firstInput === -1 ? undefined : form.data.firstInput)
 				.map((f) => {
 					let s = ''
 					function add(t: string | null, prefix = '') {
@@ -97,15 +97,15 @@ export const load = async ({ params, url }) => {
 			}, [] as string[])
 
 			// Remove info fields from form.
-			form.value.fields = form.value.fields.filter((f) => f.inputIndex)
+			form.data.fields = form.data.fields.filter((f) => f.inputIndex)
 		}
 
 		// Detect and load sheet if necessary.
 		if (
 			!skipSheetIdScan &&
-			form.isOk() &&
-			form.value.firstInput !== -1 &&
-			sheet.isErr() &&
+			isOk(form) &&
+			form.data.firstInput !== -1 &&
+			isErr(sheet) &&
 			!sheet.error.documentId
 		) {
 			const links = linkify.find(info).filter((link) => !/googleusercontent.com/.test(link.href))
@@ -121,9 +121,9 @@ export const load = async ({ params, url }) => {
 			for (const link of links) {
 				gg(`Smart sheet ID scan #${++numLinksChecked}: ${link.href}`)
 				const googleDocumentId = await getGoogleDocumentId(link.href)
-				if (googleDocumentId.isOk() && googleDocumentId.value.documentId[0] === 's') {
-					const document = await fetchWithDocumentId(googleDocumentId.value.documentId)
-					if (document.isOk() && document.value.type === 'sheet') {
+				if (isOk(googleDocumentId) && googleDocumentId.data.documentId[0] === 's') {
+					const document = await fetchWithDocumentId(googleDocumentId.data.documentId)
+					if (isOk(document) && document.data.type === 'sheet') {
 						sheet = document as ResultGoogleSheet
 						break
 					}
@@ -136,10 +136,10 @@ export const load = async ({ params, url }) => {
 			}
 		}
 
-		title = form.isOk() ? form.value.title : sheet.isOk() ? sheet.value.title : ''
+		title = isOk(form) ? form.data.title : isOk(sheet) ? sheet.data.title : ''
 
-		if (sheet.isOk()) {
-			sheet = ok(stripHidden(sheet.value, allCols, allRows))
+		if (isOk(sheet)) {
+			sheet = Ok(stripHidden(sheet.data, allCols, allRows))
 		}
 	}
 
@@ -147,8 +147,8 @@ export const load = async ({ params, url }) => {
 	const navTabs = Object.entries(TABS).reduce(
 		(acc, [hash, [bit, icon, name]]) => {
 			const error =
-				((hash === 'info' || hash === 'form') && form.isErr()) ||
-				(hash === 'list' && sheet.isErr()) ||
+				((hash === 'info' || hash === 'form') && isErr(form)) ||
+				(hash === 'list' && isErr(sheet)) ||
 				(hash === 'dev' && !!warnings.length)
 
 			acc[hash] = {

@@ -1,5 +1,5 @@
 import type { adjustGoogleFormData } from '$lib/google-document-util/google-form'
-import type { Result } from 'neverthrow'
+import type { Result } from 'wellcrafted/result'
 
 export type GoogleDocumentError = {
 	message: string

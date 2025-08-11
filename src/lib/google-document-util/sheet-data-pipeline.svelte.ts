@@ -3,6 +3,7 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import isBetween from 'dayjs/plugin/isBetween'
 import utc from 'dayjs/plugin/utc'
 import type { ResultGoogleSheet } from '$lib/google-document-util/types'
+import { isErr } from 'wellcrafted/result'
 
 dayjs.extend(relativeTime)
 dayjs.extend(isBetween)
@@ -43,11 +44,11 @@ function makeCell(cell: Partial<SheetDataPipe['rows'][number][number]>) {
 }
 
 export function makeRaw(sheet: ResultGoogleSheet) {
-	if (sheet.isErr()) {
+	if (isErr(sheet)) {
 		return { extra: { timeZone: 'utc' }, columns: [], rows: [] }
 	}
 
-	const rows = sheet.value.rows.map((row) =>
+	const rows = sheet.data.rows.map((row) =>
 		row.map((cell) => {
 			const value = (Array.isArray(cell) ? cell[0] : cell) as string
 			const ts = Array.isArray(cell) && typeof cell[1] === 'number' ? (cell[1] as number) : null
@@ -59,7 +60,7 @@ export function makeRaw(sheet: ResultGoogleSheet) {
 
 	const columns = Array.from({ length: maxColumns }, () => DEFAULT_COLUMN)
 
-	const timeZone = sheet.value.timeZone
+	const timeZone = sheet.data.timeZone
 
 	return { extra: { timeZone } as unknown, columns, rows }
 }

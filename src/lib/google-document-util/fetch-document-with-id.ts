@@ -1,5 +1,5 @@
 import { GCP_API_KEY } from '$env/static/private'
-import { Result, err, ok } from 'neverthrow'
+import { Err, isOk, Ok, type Result } from 'wellcrafted/result'
 import { adjustGoogleFormData, parseGoogleForm } from './google-form'
 import { adjustGoogleSheetData } from './google-sheets'
 import type { GoogleSheet, GoogleFormDocument, GoogleDocumentError } from './types'
@@ -9,15 +9,15 @@ export async function fetchWithDocumentId(
 	documentId?: string,
 ): Promise<Result<GoogleSheet | GoogleFormDocument, GoogleDocumentError>> {
 	if (!documentId) {
-		return err({ message: `DocumentId not set: <${documentId}>` })
+		return Err({ message: `DocumentId not set: <${documentId}>` })
 	}
 
-	const googleDocumentId = await getGoogleDocumentId(documentId)
-	if (googleDocumentId.isErr()) {
-		return err({ documentId, message: googleDocumentId.error.message })
+	const { data, error } = await getGoogleDocumentId(documentId)
+	if (error) {
+		return Err(error)
 	}
 
-	const url = urlFromVeneerId(googleDocumentId.value.documentId)
+	const url = urlFromVeneerId(data.documentId)
 	const type = DOCUMENT_URL_REGEX.s.test(url)
 		? 'sheet'
 		: DOCUMENT_URL_REGEX.f.test(url)
@@ -25,34 +25,34 @@ export async function fetchWithDocumentId(
 			: undefined
 
 	if (!type) {
-		const message = `${googleDocumentId.value} not a Google form/sheet url: ${url}`
-		return err({ documentId, type, message })
+		const message = `${data.documentId} not a Google form/sheet url: ${url}`
+		return Err({ documentId, type, message })
 	}
 
 	const fetched = await fetch(url.replace('GCP_API_KEY', GCP_API_KEY))
 	if (!fetched.ok) {
-		const message = `[${fetched.status}: ${fetched.statusText}] while fetching ${googleDocumentId.value} (${url}).`
-		return err({ documentId, type, message })
+		const message = `[${fetched.status}: ${fetched.statusText}] while fetching ${documentId} (${url}).`
+		return Err({ documentId, type, message })
 	}
 
 	const text = await fetched.text()
 
 	if (type === 'sheet') {
 		const dataSheet = adjustGoogleSheetData(JSON.parse(text))
-		return dataSheet.isOk()
-			? ok({
+		return isOk(dataSheet)
+			? Ok({
 					type: 'sheet',
-					documentId: googleDocumentId.value.documentId,
-					veneerId: googleDocumentId.value.veneerId,
-					...dataSheet.value,
+					documentId: data.documentId,
+					veneerId: data.veneerId,
+					...dataSheet.data,
 				})
-			: err(dataSheet.error)
+			: Err(dataSheet.error)
 	}
 
-	return ok({
+	return Ok({
 		type: 'form',
-		documentId: googleDocumentId.value.documentId,
-		veneerId: googleDocumentId.value.veneerId,
+		documentId: data.documentId,
+		veneerId: data.veneerId,
 		...adjustGoogleFormData(parseGoogleForm(text)),
 	})
 }

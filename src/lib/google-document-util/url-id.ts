@@ -1,4 +1,4 @@
-import { err, ok } from 'neverthrow'
+import { Err, Ok } from 'wellcrafted/result'
 import { finalUrl } from '../../routes/api/final-url/finalurl'
 //import { gg } from '@leftium/gg'
 
@@ -104,7 +104,7 @@ export async function getGoogleDocumentId(urlOrId: string) {
 	}
 
 	if (documentId) {
-		return ok({ documentId, veneerId })
+		return Ok({ documentId, veneerId })
 	}
-	return err({ message: `Unable to get Google document id for: (${url})` })
+	return Err({ message: `Unable to get Google document id for: (${url})` })
 }

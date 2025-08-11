@@ -1,5 +1,4 @@
-import { err, ok } from 'neverthrow'
-
+import { Err, Ok } from 'wellcrafted/result'
 import { excelDateToUnix } from '$lib/util'
 import type { GoogleSheet } from './types'
 
@@ -30,7 +29,7 @@ type GoogleSheetsApiResult = {
 export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 	const data = json?.sheets?.[0]?.data[0]
 	if (!data) {
-		return err({ message: `JSON Google Sheet data has unexpected shape.`, json })
+		return Err({ message: `JSON Google Sheet data has unexpected shape.`, json })
 	}
 
 	const title = json.properties.title
@@ -53,7 +52,7 @@ export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 				}),
 	)
 
-	return ok({ title, sheetTitle, timeZone, rows, hiddenColumns, hiddenRows })
+	return Ok({ title, sheetTitle, timeZone, rows, hiddenColumns, hiddenRows })
 }
 
 export function stripHidden(json: GoogleSheet, skipCols = false, skipRows = false) {
