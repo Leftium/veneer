@@ -26,7 +26,7 @@ export const load = async ({ params, url }) => {
         dev:  [0b1000, '🔧', m.dev()],
     }
 
-    // @ts-expect-error: TODO
+	// @ts-expect-error: TODO
 	const flags = Number(params.flags)
 
 	const warnings = []
@@ -145,7 +145,7 @@ export const load = async ({ params, url }) => {
 
 	type TabsKey = keyof typeof TABS
 	const navTabs = Object.entries(TABS).reduce(
-		(acc, [hash, [,icon, name]]) => {
+		(acc, [hash, [, icon, name]]) => {
 			const error =
 				((hash === 'info' || hash === 'form') && form.isErr()) ||
 				(hash === 'list' && sheet.isErr()) ||

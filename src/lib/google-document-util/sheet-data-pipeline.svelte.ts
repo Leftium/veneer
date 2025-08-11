@@ -177,7 +177,7 @@ export function renderRelativeTimes({ extra, columns, rows }: SheetDataPipe) {
 				if (utcjs(cell.ts).isBetween(utcjs().subtract(25, 'd'), utcjs().add(25, 'd'))) {
 					cell.render = dayjs().utc().to(cell.ts)
 				} else {
-                    // @ts-expect-error: TODO
+					// @ts-expect-error: TODO
 					cell.render = dayjs.tz(cell.ts, extra.timeZone).format('YYYY-MM-DD')
 				}
 			}

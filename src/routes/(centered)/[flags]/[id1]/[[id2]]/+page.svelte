@@ -5,7 +5,7 @@
 
 	import { stringify } from '$lib/util'
 	import { onMount } from 'svelte'
-	
+
 	import type { GoogleFormDocument } from '$lib/google-document-util/types'
 
 	import * as linkify from 'linkifyjs'
