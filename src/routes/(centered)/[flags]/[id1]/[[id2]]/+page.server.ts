@@ -143,26 +143,6 @@ Home
 			footers = infoAndFooters
 			info = footers.shift() || 'EMPTY'
 
-			const lines = info.split('\n')
-			const output = []
-			let prevWasDefinition = false
-
-			for (const line of lines) {
-				const isLink = /https?:\/\//.test(line)
-				const defMatch = line.match(/^([^\s:]+)\s*:\s*(.+)$/)
-
-				if (defMatch && !isLink) {
-					if (!prevWasDefinition) output.push('<div></div>\n')
-					output.push(`${defMatch[1]}\n~ ${defMatch[2]}\n`)
-					prevWasDefinition = true
-				} else {
-					output.push(line)
-					prevWasDefinition = false
-				}
-			}
-
-            info = output.join('\n')
-
 			footers = footers.reduce((result, footer, i, footers) => {
 				if (i % 2 === 0) {
 					const header = footer ? `# ${footer}` : ''
