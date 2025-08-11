@@ -301,7 +301,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		<pre hidden>{stringify({ form })}</pre>
 		{#if form && !notificationBoxHidden}
 			{@const level = form.success ? 'success' : 'warning'}
-			{@const subject = form.success ? 'Successfully signed up!' : 'Sorry! There was a problem:'}
+			{@const subject = form.success ? '신청 완료!' : '오류가 발생 됐어요:'}
 			{@const message = form.success ? '' : `${form.status}: ${form.statusText}`}
 
 			{#if form.success}
