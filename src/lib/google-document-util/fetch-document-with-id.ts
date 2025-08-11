@@ -12,12 +12,12 @@ export async function fetchWithDocumentId(
 		return Err({ message: `DocumentId not set: <${documentId}>` })
 	}
 
-	const { data, error } = await getGoogleDocumentId(documentId)
+	const { data: googleDocumentId, error } = await getGoogleDocumentId(documentId)
 	if (error) {
 		return Err(error)
 	}
 
-	const url = urlFromVeneerId(data.documentId)
+	const url = urlFromVeneerId(googleDocumentId.documentId)
 	const type = DOCUMENT_URL_REGEX.s.test(url)
 		? 'sheet'
 		: DOCUMENT_URL_REGEX.f.test(url)
@@ -25,7 +25,7 @@ export async function fetchWithDocumentId(
 			: undefined
 
 	if (!type) {
-		const message = `${data.documentId} not a Google form/sheet url: ${url}`
+		const message = `${googleDocumentId.documentId} not a Google form/sheet url: ${url}`
 		return Err({ documentId, type, message })
 	}
 
@@ -42,8 +42,8 @@ export async function fetchWithDocumentId(
 		return isOk(dataSheet)
 			? Ok({
 					type: 'sheet',
-					documentId: data.documentId,
-					veneerId: data.veneerId,
+					documentId: googleDocumentId.documentId,
+					veneerId: googleDocumentId.veneerId,
 					...dataSheet.data,
 				})
 			: Err(dataSheet.error)
@@ -51,8 +51,8 @@ export async function fetchWithDocumentId(
 
 	return Ok({
 		type: 'form',
-		documentId: data.documentId,
-		veneerId: data.veneerId,
+		documentId: googleDocumentId.documentId,
+		veneerId: googleDocumentId.veneerId,
 		...adjustGoogleFormData(parseGoogleForm(text)),
 	})
 }
