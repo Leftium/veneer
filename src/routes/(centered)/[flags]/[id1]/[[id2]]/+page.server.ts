@@ -59,7 +59,7 @@ export const load = async ({ params, url }) => {
 		if (form.isOk()) {
 			// Set info to markdown of initial non-question fields.
 			let skippedFirstTitle = false
-			let infoAndFooters = form.value.fields
+			const infoAndFooters = form.value.fields
 				.slice(0, form.value.firstInput === -1 ? undefined : form.value.firstInput)
 				.map((f) => {
 					let s = ''
@@ -83,62 +83,6 @@ export const load = async ({ params, url }) => {
 				})
 				.join('\n')
 				.split(/^={3,}\s*(?<header>.*?)\s*={3,}$/m)
-
-			if (params.id1 === 'g.r6eRUz2U9uf5oVFn6') {
-				infoAndFooters = `
-날짜
-~ 9월 14일 일요일
-
-파티 시간
-~ 오후 6:30~9:30
-
-장소
-~ 오뜨라 (탱고바)
-~ 서울 마포구 서교동 355-34 지하1층
-~ 홍대역 9번 출구
- 
-🎧DJ
-~ 6:30~8:00 **쵸리**
-~ 8:00~9:30 **애쉬**
-
-신청: https://forms.gle/r6eRUz2U9uf5oVFn6
-신청확인: https://docs.google.com/spreadsheets/d/13E_wsbrKLEsuV-eDaTKl0a967EdpYgcZrXH0Gq_KK3g
-
-![](https://lh7-rt.googleusercontent.com/formsz/AN7BsVCujzabFCv4aR685RcomoGklEO_iW2fJLnCSJckWWaF8CM51NMyw4F5FcIAc9qwgtMxrVMcDsxHmUSLyrGe1dy6yEUTk60Qvn3ZHdjPAMhv6NUE6918E8n0ieFjfZI4UfMpTLEvHPo_RGXZh8FQes5EpA=w740?key=BkxdXg6TnCgrK9mo7cW42g)
-
-
-
-# 💸 비비블 입장료 💸
-
-🐣 1.5만원
-~ 9월 3일 수요일 밤12시까지
-
-🐦 1.8만원
-~ 9월 10일 수요일 밤12시까지 신청+입금시
-
-🐌 2.0만원
-~ 9월 11일 목요일부터~14일 일요일 (현장결제 포함)
-
-> 카톡 친구 송금 (vivian830)
-> 카카오뱅크 3333278665234 (윤시은)
-
-> 😉 블파 최초로 선입금 후 못오면 
-🔹️ 환불 또는 이월 해드리지만 (카톡으로 연락)
-🔹️ 양도 하실분 먼저 찾아보길 간곡히 부탁드려요💕 
-
-
-=== 비비블 Links ===
-
-Home
-~ ${url.origin}
-
-오시는 길
-~ https://forms.gle/U3LdatNnxxW7yfAb6
-
-비비블 수칙
-~ https://forms.gle/1Maayp86fcwkJKeVA
-`.split(/^={3,}\s*(?<header>.*?)\s*={3,}$/m)
-			}
 
 			footers = infoAndFooters
 			info = footers.shift() || 'EMPTY'
