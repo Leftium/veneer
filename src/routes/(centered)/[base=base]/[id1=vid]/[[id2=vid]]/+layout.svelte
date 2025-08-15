@@ -30,6 +30,12 @@
 
 	// @ts-expect-error
 	import markdownitDeflist from 'markdown-it-deflist'
+	import MarkdownItGitHubAlerts from 'markdown-it-github-alerts'
+
+	import 'markdown-it-github-alerts/styles/github-colors-light.css'
+	import 'markdown-it-github-alerts/styles/github-colors-dark-media.css'
+	import 'markdown-it-github-alerts/styles/github-base.css'
+
 	import { page } from '$app/state'
 	import { DOCUMENT_URL_REGEX } from '$lib/google-document-util/url-id.js'
 	import GoogleForm from '$lib/components/GoogleForm.svelte'
@@ -41,6 +47,7 @@
 
 	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
 		[markdownitDeflist],
+		[MarkdownItGitHubAlerts],
 		[linkifyRelative],
 	])
 

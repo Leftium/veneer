@@ -37,6 +37,7 @@
 		"markdown-it": "^14.1.0",
 		"markdown-it-easy-tables": "^0.1.1",
 		"markdown-it-emoji": "^3.0.0",
+		"markdown-it-github-alerts": "^1.0.0",
 		"markdown-it-multimd-table": "^4.2.3",
 		"markdown-it-sub": "^2.0.0",
 		"markdown-it-sup": "^2.0.0",
