@@ -8,7 +8,6 @@
 	dayjs.extend(isBetween)
 	dayjs.extend(utc)
 
-	import { gg } from '@leftium/gg'
 	import { stringify } from '$lib/util'
 
 	import StickyHeaderGrid from '$lib/components/StickyHeaderSummaryDetailsGrid.svelte'

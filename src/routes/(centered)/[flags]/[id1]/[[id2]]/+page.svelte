@@ -18,7 +18,6 @@
 	import { undent } from '$lib/tag-functions/undent'
 	import { linkListifyDefinitionList } from '$lib/markdown/dl-to-link-list'
 	import { page } from '$app/state'
-	import { gg } from '@leftium/gg'
 
 	import { Confetti } from 'svelte-confetti'
 

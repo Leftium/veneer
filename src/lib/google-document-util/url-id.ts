@@ -1,6 +1,5 @@
 import { Err, Ok } from 'wellcrafted/result'
 import { finalUrl } from '../../routes/api/final-url/finalurl'
-//import { gg } from '@leftium/gg'
 
 // Definition of different ID types:
 

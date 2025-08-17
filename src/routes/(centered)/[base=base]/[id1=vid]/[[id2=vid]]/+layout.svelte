@@ -25,7 +25,6 @@
 	} from '$lib/google-document-util/sheet-data-pipeline.svelte.js'
 	import { onDestroy, onMount, tick } from 'svelte'
 	import { afterNavigate, goto } from '$app/navigation'
-	import { gg } from '@leftium/gg'
 	import { linkifyRelative, makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
 
 	// @ts-expect-error
