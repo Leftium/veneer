@@ -7,7 +7,7 @@ export const GET = async ({ url }) => {
 
 	const results = await finalUrl(urlShort)
 
-	gg(`api/final-url: ${urlShort} -> ${results.urlFinal}`)
+	///gg(`api/final-url: ${urlShort} -> ${results.urlFinal}`)
 
 	return json(results)
 }
