@@ -7,7 +7,7 @@ import { openInEditorPlugin } from '@leftium/gg'
 export default defineConfig({
 	plugins: [
 		sveltekit(),
-		openInEditorPlugin(),
+		///openInEditorPlugin(),
 		devtoolsJson(),
 		paraglideVitePlugin({
 			project: './project.inlang',
