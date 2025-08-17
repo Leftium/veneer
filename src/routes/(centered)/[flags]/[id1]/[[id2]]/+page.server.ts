@@ -1,3 +1,4 @@
+import { gg } from '@leftium/gg'
 
 import { Err, isErr, isOk, Ok } from 'wellcrafted/result'
 import * as linkify from 'linkifyjs'
@@ -118,6 +119,7 @@ export const load = async ({ params, url }) => {
 
 			let numLinksChecked = 0
 			for (const link of links) {
+				gg(`Smart sheet ID scan #${++numLinksChecked}: ${link.href}`)
 				const googleDocumentId = await getGoogleDocumentId(link.href)
 				if (isOk(googleDocumentId) && googleDocumentId.data.documentId[0] === 's') {
 					const document = await fetchWithDocumentId(googleDocumentId.data.documentId)

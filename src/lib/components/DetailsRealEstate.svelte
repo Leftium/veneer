@@ -2,6 +2,8 @@
 	import { stringify } from '$lib/util'
 	import { onMount } from 'svelte'
 
+	import { gg } from '@leftium/gg'
+
 	let { row, columns } = $props()
 
 	let mapElement = $state<HTMLDivElement>()
@@ -46,6 +48,7 @@
 
 	onMount(async () => {
 		const results = await geocode(address)
+		gg({ results })
 		if (results.length) {
 			latitude = Number(results[0].point.y)
 			longitude = Number(results[0].point.x)
@@ -69,6 +72,7 @@
 			map: map,
 		})
 
+		gg(map)
 	})
 </script>
 
