@@ -37,7 +37,7 @@
 	import 'markdown-it-github-alerts/styles/github-base.css'
 
 	import { page } from '$app/state'
-	import { DOCUMENT_URL_REGEX } from '$lib/google-document-util/url-id.js'
+	import { DOCUMENT_URL_REGEX, urlFromVeneerId } from '$lib/google-document-util/url-id.js'
 	import GoogleForm from '$lib/components/GoogleForm.svelte'
 	import Sheet from '$lib/components/Sheet.svelte'
 	import Confetti from 'svelte-confetti'
@@ -45,6 +45,8 @@
 	import NotificationBox from '$lib/components/NotificationBox.svelte'
 	import { slide } from 'svelte/transition'
 	import { isOk } from 'wellcrafted/result'
+	import { linkListifyDefinitionList } from '$lib/markdown/dl-to-link-list.js'
+	import { undent } from '$lib/tag-functions/undent.js'
 
 	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
 		[markdownitDeflist],
@@ -111,6 +113,43 @@
 			})
 		}
 	}
+
+	let sourceUrlForm = $derived(
+		isOk(data.form) ? urlFromVeneerId(data.form.data.documentId, false) : '',
+	)
+	let sourceUrlSheet = $derived(
+		isOk(data.sheet) ? urlFromVeneerId(data.sheet.data.documentId, false) : '',
+	)
+
+	let footerSources = $derived(
+		!sourceUrlForm && !sourceUrlSheet
+			? ''
+			: `
+# Source Documents
+<div>
+
+${!sourceUrlForm ? '' : `Google Form\n~ ${sourceUrlForm}`}
+${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
+`,
+	)
+
+	let standardFooter = $derived(undent`
+		# Powered by Veneer
+
+		<div>
+
+		Home
+		~ ${page.url.origin}
+
+		Source code
+		~ https://github.com/Leftium/veneer
+
+		Made by Leftium
+		~ https://leftium.com
+
+		See other projects
+		~ https://github.com/Leftium?tab=repositories&type=source
+	`)
 
 	register()
 
@@ -403,7 +442,14 @@
 		</swiper-container>
 	</main>
 	<footer>
-		<content> </content>
+		<content>
+			{#each data.footers as footer}
+				<section>{@html md`${internalizeLinks(linkListifyDefinitionList(footer))}`}</section>
+			{/each}
+
+			<section>{@html md`${linkListifyDefinitionList(footerSources)}`}</section>
+			<section>{@html md`${linkListifyDefinitionList(standardFooter)}`}</section>
+		</content>
 	</footer>
 </article>
 
