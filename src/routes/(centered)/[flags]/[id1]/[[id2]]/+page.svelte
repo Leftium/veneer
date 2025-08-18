@@ -1,6 +1,9 @@
 <script lang="ts">
+	import { dev } from '$app/environment'
 	import { injectAnalytics } from '@vercel/analytics/sveltekit'
-	
+
+	injectAnalytics({ mode: dev ? 'development' : 'production' })
+
 	// import function to register Swiper custom elements
 	import type { SwiperContainer } from 'swiper/element/bundle'
 	import { register } from 'swiper/element/bundle'
