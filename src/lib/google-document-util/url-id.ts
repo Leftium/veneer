@@ -76,6 +76,7 @@ export async function getGoogleDocumentId(urlOrId: string) {
 	let url = urlOrId
 	let veneerId = null
 	let documentId = null
+	let type: 'sheet' | 'form' | undefined
 
 	// First try to match a Veneer document id:
 	const matches = urlOrId.match(VENEER_ID_REGEX)
@@ -84,6 +85,7 @@ export async function getGoogleDocumentId(urlOrId: string) {
 		const id = matches.groups?.id || ''
 		if (prefix === 'f' || prefix === 's') {
 			documentId = `${prefix}.${id}`
+			type = prefix === 'f' ? 'form' : 'sheet'
 		}
 		veneerId = `${prefix}.${id}`
 
@@ -104,7 +106,13 @@ export async function getGoogleDocumentId(urlOrId: string) {
 	}
 
 	if (documentId) {
-		return Ok({ documentId, veneerId })
+		const url = urlFromVeneerId(documentId)
+		type = DOCUMENT_URL_REGEX.s.test(url)
+			? 'sheet'
+			: DOCUMENT_URL_REGEX.f.test(url)
+				? 'form'
+				: undefined
+		return Ok({ type, documentId, veneerId })
 	}
-	return Err({ message: `Unable to get Google document id for: (${url})` })
+	return Err({ message: `Unable to get Google document id for: (${url})`, type })
 }

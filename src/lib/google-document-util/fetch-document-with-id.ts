@@ -1,9 +1,10 @@
 import { GCP_API_KEY } from '$env/static/private'
-import { Err, isOk, Ok, type Result } from 'wellcrafted/result'
+import { Err, isErr, isOk, Ok, type Result } from 'wellcrafted/result'
 import { adjustGoogleFormData, parseGoogleForm } from './google-form'
 import { adjustGoogleSheetData } from './google-sheets'
 import type { GoogleSheet, GoogleFormDocument, GoogleDocumentError } from './types'
-import { getGoogleDocumentId, urlFromVeneerId, DOCUMENT_URL_REGEX } from './url-id'
+import { getGoogleDocumentId, urlFromVeneerId } from './url-id'
+import { gg } from '@leftium/gg'
 
 export async function fetchWithDocumentId(
 	documentId?: string,
@@ -16,15 +17,11 @@ export async function fetchWithDocumentId(
 	if (error) {
 		return Err(error)
 	}
+	const type = googleDocumentId.type
 
 	const url = urlFromVeneerId(googleDocumentId.documentId)
-	const type = DOCUMENT_URL_REGEX.s.test(url)
-		? 'sheet'
-		: DOCUMENT_URL_REGEX.f.test(url)
-			? 'form'
-			: undefined
 
-	if (!type) {
+	if (!googleDocumentId.type) {
 		const message = `${googleDocumentId.documentId} not a Google form/sheet url: ${url}`
 		return Err({ documentId, type, message })
 	}
@@ -49,10 +46,18 @@ export async function fetchWithDocumentId(
 			: Err(dataSheet.error)
 	}
 
-	return Ok({
-		type: 'form',
-		documentId: googleDocumentId.documentId,
-		veneerId: googleDocumentId.veneerId,
-		...adjustGoogleFormData(parseGoogleForm(text)),
-	})
+	const dataForm = parseGoogleForm(text)
+
+	if (isErr(dataForm)) {
+		gg('ERROR', dataForm.error)
+	}
+
+	return isOk(dataForm)
+		? Ok({
+				type: 'form',
+				documentId: googleDocumentId.documentId,
+				veneerId: googleDocumentId.veneerId,
+				...adjustGoogleFormData(dataForm.data),
+			})
+		: Err({ ...dataForm.error, type })
 }

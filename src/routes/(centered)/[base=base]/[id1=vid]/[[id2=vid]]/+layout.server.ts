@@ -45,102 +45,122 @@ export const load = async ({ params, url }) => {
 		fetchWithDocumentId(params.id2),
 	])
 
-	if (isErr(document1)) {
-		if (!document1.error.type) {
+	if (isOk(document1)) {
+		if (document1.data.type === 'form') {
 			form = document1 as ResultGoogleForm
+		}
+		if (document1.data.type === 'sheet') {
 			sheet = document1 as ResultGoogleSheet
 		}
-		form = (document1.error.type === 'form' ? document1 : document2) as ResultGoogleForm
-		sheet = (document1.error.type === 'sheet' ? document1 : document2) as ResultGoogleSheet
 	} else {
-		form = (document1.data.type === 'form' ? document1 : document2) as ResultGoogleForm
-		sheet = (document1.data.type === 'sheet' ? document1 : document2) as ResultGoogleSheet
+		if (document1.error.type === 'form') {
+			form = document1 as ResultGoogleForm
+		}
+		if (document1.error.type === 'sheet') {
+			sheet = document1 as ResultGoogleSheet
+		}
+	}
 
-		if (isOk(form)) {
-			// Set info to markdown of initial non-question fields.
-			let skippedFirstTitle = false
-			const infoAndFooters = form.data.fields
-				.slice(0, form.data.firstInput === -1 ? undefined : form.data.firstInput)
-				.map((f) => {
-					let s = ''
-					function add(t: string | null, prefix = '') {
-						if (t) {
-							s += `${prefix}${t}\n`
-						}
+	if (isOk(document2)) {
+		if (document2.data.type === 'form') {
+			form = document2 as ResultGoogleForm
+		}
+		if (document2.data.type === 'sheet') {
+			sheet = document2 as ResultGoogleSheet
+		}
+	} else {
+		if (document2.error.type === 'form') {
+			form = document2 as ResultGoogleForm
+		}
+		if (document2.error.type === 'sheet') {
+			sheet = document2 as ResultGoogleSheet
+		}
+	}
+
+	if (isOk(form)) {
+		// Set info to markdown of initial non-question fields.
+		let skippedFirstTitle = false
+		const infoAndFooters = form.data.fields
+			.slice(0, form.data.firstInput === -1 ? undefined : form.data.firstInput)
+			.map((f) => {
+				let s = ''
+				function add(t: string | null, prefix = '') {
+					if (t) {
+						s += `${prefix}${t}\n`
 					}
-					if (f.type === 'TITLE_AND_DESCRIPTION') {
-						if (!skippedFirstTitle) {
-							skippedFirstTitle = true
-						} else {
-							add(f.title, '# ')
-						}
-						add(f.description)
-					} else if (f.type === 'IMAGE') {
+				}
+				if (f.type === 'TITLE_AND_DESCRIPTION') {
+					if (!skippedFirstTitle) {
+						skippedFirstTitle = true
+					} else {
 						add(f.title, '# ')
-						add(`![](${f.imgUrl?.replace(/=w\d+$/i, '')})`)
 					}
-					return s
-				})
-				.join('\n')
-				.split(/^={3,}\s*(?<header>.*?)\s*={3,}$/m)
-
-			footers = infoAndFooters
-			info = footers.shift() || 'EMPTY'
-
-			footers = footers.reduce((result, footer, i, footers) => {
-				if (i % 2 === 0) {
-					const header = footer ? `# ${footer}` : ''
-					const body = footers[i + 1] || ''
-					result.push(`${header}\n<div>${body}</div>`)
+					add(f.description)
+				} else if (f.type === 'IMAGE') {
+					add(f.title, '# ')
+					add(`![](${f.imgUrl?.replace(/=w\d+$/i, '')})`)
 				}
-				return result
-			}, [] as string[])
+				return s
+			})
+			.join('\n')
+			.split(/^={3,}\s*(?<header>.*?)\s*={3,}$/m)
 
-			// Remove info fields from form.
-			form.data.fields = form.data.fields.filter((f) => f.inputIndex)
+		footers = infoAndFooters
+		info = footers.shift() || 'EMPTY'
+
+		footers = footers.reduce((result, footer, i, footers) => {
+			if (i % 2 === 0) {
+				const header = footer ? `# ${footer}` : ''
+				const body = footers[i + 1] || ''
+				result.push(`${header}\n<div>${body}</div>`)
+			}
+			return result
+		}, [] as string[])
+
+		// Remove info fields from form.
+		form.data.fields = form.data.fields.filter((f) => f.inputIndex)
+	}
+
+	// Detect and load sheet if necessary.
+	if (
+		!skipSheetIdScan &&
+		isOk(form) &&
+		form.data.firstInput !== -1 &&
+		isErr(sheet) &&
+		!sheet.error.documentId
+	) {
+		const links = linkify.find(info).filter((link) => !/googleusercontent.com/.test(link.href))
+
+		// Reorder array to minimize expected number of url fetches:
+		// Move first link (usually links to form itself) to 2nd slot.
+		const shifted = links.shift()
+		if (shifted) {
+			links.splice(1, 0, shifted)
 		}
 
-		// Detect and load sheet if necessary.
-		if (
-			!skipSheetIdScan &&
-			isOk(form) &&
-			form.data.firstInput !== -1 &&
-			isErr(sheet) &&
-			!sheet.error.documentId
-		) {
-			const links = linkify.find(info).filter((link) => !/googleusercontent.com/.test(link.href))
-
-			// Reorder array to minimize expected number of url fetches:
-			// Move first link (usually links to form itself) to 2nd slot.
-			const shifted = links.shift()
-			if (shifted) {
-				links.splice(1, 0, shifted)
-			}
-
-			let numLinksChecked = 0
-			for (const link of links) {
-				gg(`Smart sheet ID scan #${++numLinksChecked}: ${link.href}`)
-				const googleDocumentId = await getGoogleDocumentId(link.href)
-				if (isOk(googleDocumentId) && googleDocumentId.data.documentId[0] === 's') {
-					const document = await fetchWithDocumentId(googleDocumentId.data.documentId)
-					if (isOk(document) && document.data.type === 'sheet') {
-						sheet = document as ResultGoogleSheet
-						break
-					}
+		let numLinksChecked = 0
+		for (const link of links) {
+			gg(`Smart sheet ID scan #${++numLinksChecked}: ${link.href}`)
+			const googleDocumentId = await getGoogleDocumentId(link.href)
+			if (isOk(googleDocumentId) && googleDocumentId.data.documentId[0] === 's') {
+				const document = await fetchWithDocumentId(googleDocumentId.data.documentId)
+				if (isOk(document) && document.data.type === 'sheet') {
+					sheet = document as ResultGoogleSheet
+					break
 				}
 			}
-			if (numLinksChecked > 2) {
-				warnings.push({
-					message: `Smart sheet ID required many network requests. (Fetched ${numLinksChecked} links.)`,
-				})
-			}
 		}
-
-		title = isOk(form) ? form.data.title : isOk(sheet) ? sheet.data.title : ''
-
-		if (isOk(sheet)) {
-			sheet = Ok(stripHidden(sheet.data, allCols, allRows))
+		if (numLinksChecked > 2) {
+			warnings.push({
+				message: `Smart sheet ID required many network requests. (Fetched ${numLinksChecked} links.)`,
+			})
 		}
+	}
+
+	title = isOk(form) ? form.data.title : isOk(sheet) ? sheet.data.title : ''
+
+	if (isOk(sheet)) {
+		sheet = Ok(stripHidden(sheet.data, allCols, allRows))
 	}
 
 	type TabsKey = keyof typeof TABS
@@ -162,6 +182,8 @@ export const load = async ({ params, url }) => {
 	)
 
 	return {
+		document1,
+		document2,
 		warnings,
 		info,
 		footers,

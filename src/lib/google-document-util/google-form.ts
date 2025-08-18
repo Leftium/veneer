@@ -1,4 +1,6 @@
+import { gg } from '@leftium/gg'
 import * as cheerio from 'cheerio'
+import { Err, Ok } from 'wellcrafted/result'
 
 export type QuestionType =
 	| 'TEXT'
@@ -74,6 +76,9 @@ type Form = {
 
 export function parseGoogleForm(html: string) {
 	let data = html.split('FB_PUBLIC_LOAD_DATA_ = ')[1]
+	if (!data) {
+		return Err({ message: 'Error parsing Google form data.' })
+	}
 	data = data.substring(0, data.lastIndexOf(';'))
 
 	const jArray = JSON.parse(data)
@@ -204,7 +209,7 @@ export function parseGoogleForm(html: string) {
 		}
 	})
 
-	return form
+	return Ok(form)
 }
 
 export function adjustGoogleFormData(json: Form) {
