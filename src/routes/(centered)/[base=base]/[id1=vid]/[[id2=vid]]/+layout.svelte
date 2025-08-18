@@ -248,7 +248,7 @@
 						if (isOk(data.form) && isOk(data.sheet) && data.sheet.data.documentId === id) {
 							internalLink = './list'
 						}
-						const button = `<a href="${internalLink}" role=button class=outline">확인 👀</a>`
+						const button = `<a href="${internalLink}" role=button class=outline>확인 👀</a>`
 						out.push(button)
 						continue
 					}
