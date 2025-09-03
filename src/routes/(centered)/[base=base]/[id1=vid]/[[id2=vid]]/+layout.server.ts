@@ -117,8 +117,8 @@ export const load = async ({ params, url }) => {
 			return result
 		}, [] as string[])
 
-		// Remove info fields from form.
-		form.data.fields = form.data.fields.filter((f) => f.inputIndex)
+		// Remove info fields before first input.
+		form.data.fields = form.data.fields.filter((f, i) => i >= form.data.firstInput )
 	}
 
 	// Detect and load sheet if necessary.
