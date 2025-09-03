@@ -3,7 +3,7 @@ import { deLocalizeUrl } from '$lib/paraglide/runtime'
 
 export const reroute = ({ url }) => {
 	if (url.pathname === '/') {
-		return '/15/g.zUuXZZuvobvnU1ja7'
+		return '/base/g.chwbD7sLmAoLe65Z8'
 	}
 	return deLocalizeUrl(url).pathname
 }

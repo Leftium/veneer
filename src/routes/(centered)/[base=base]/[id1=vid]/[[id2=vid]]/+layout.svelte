@@ -229,7 +229,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		const out: string[] = []
 		let i = 0
 
-		const basepath = page.url.pathname.split('/')[1] || '7'
+		const basepath = page.url.pathname.split('/')[1] || 'base'
 
 		while (i < lines.length) {
 			const line = lines[i++]
@@ -260,14 +260,14 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 							isOk(data.form) &&
 							[data.form.data.documentId, data.form.data.veneerId].includes(id)
 						) {
-							internalLink = './form'
+							internalLink = '/base/g.chwbD7sLmAoLe65Z8/form'
 						}
 						//@ts-expect-error: TODO
 						const count = finalData.extra.count
 						const callout = !count
 							? ''
-							: `<div class="tooltip">${count.total}명 신청 💃${count.follows} 🕺${count.leaders}</div>`
-						const button = `<a href="${internalLink}" role=button class=outline>신청 ➡️</a>`
+							: `<div class="tooltip">${count.total} people going! 💃${count.follows} 🕺${count.leaders}</div>`
+						const button = `<a href="${internalLink}" role=button class=outline>Sign up ➡️</a>`
 						out.push(callout)
 						out.push(button)
 						continue
@@ -285,9 +285,10 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 					if (/확인/.test(line)) {
 						if (isOk(data.form) && isOk(data.sheet) && data.sheet.data.documentId === id) {
-							internalLink = './list'
+							//internalLink = './list'
+							internalLink = '/base/g.chwbD7sLmAoLe65Z8/list'
 						}
-						const button = `<a href="${internalLink}" role=button class=outline>확인 👀</a>`
+						const button = `<a href="${internalLink}" role=button class=outline>Check who's going 👀</a>`
 						out.push(button)
 						continue
 					}

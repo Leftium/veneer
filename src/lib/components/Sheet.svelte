@@ -63,7 +63,7 @@
 			{#snippet header()}
 				{@const count = extra.count}
 				<gh>
-					<span>{count.total}명 신청</span>
+					<span>{count.total} signups!</span>
 					<span>💃{count.follows} 🕺{count.leaders}</span>
 				</gh>
 			{/snippet}
