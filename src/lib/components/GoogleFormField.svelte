@@ -13,6 +13,12 @@
 
 	import multimdTable from 'markdown-it-multimd-table'
 
+	import MarkdownItGitHubAlerts from 'markdown-it-github-alerts'
+
+	import 'markdown-it-github-alerts/styles/github-colors-light.css'
+	import 'markdown-it-github-alerts/styles/github-colors-dark-media.css'
+	import 'markdown-it-github-alerts/styles/github-base.css'
+
 	const md = new MarkdownIt({ html: true, linkify: true, typographer: true, breaks: true })
 	md.use(sup) //.use(emoji)
 		.use(sub)
@@ -22,6 +28,7 @@
 			headerless: true,
 		})
 		.use(easyTables)
+		.use(MarkdownItGitHubAlerts)
 
 	import store from 'store'
 	import { browser } from '$app/environment'
