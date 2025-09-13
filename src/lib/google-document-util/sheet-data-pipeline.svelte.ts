@@ -187,7 +187,7 @@ export function renderRelativeTimes({ extra, columns, rows }: SheetDataPipe) {
 
 const REGEX_DANCE_ROLE = /role|역할|리드|리더/i
 const REGEX_DANCE_NAME = /name|닉네임/i
-const REGEX_DANCE_WISH = /말씀|한마디/i
+const REGEX_DANCE_WISH = /말씀|한마디|블루스경력/i
 const REGEX_DANCE_PAID = /입금여|입금확/i
 const REGEX_DANCE_LEADER = /lead|리더|리드/i
 const REGEX_DANCE_FOLLOW = /follow|팔뤄|팔로우/i
