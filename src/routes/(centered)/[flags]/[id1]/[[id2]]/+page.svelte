@@ -229,7 +229,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 						const callout = !count
 							? ''
 							: `<div class="tooltip">${count.total}명 신청 💃${count.follows} 🕺${count.leaders}</div>`
-						const button = `<a href="/#signup" role=button class=outline>신청</a>`
+						const button = `<center><a href="/#signup" role=button class=outline>신청</a></center>`
 						///out.push(callout)
 						out.push(button)
 						continue
@@ -249,7 +249,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 						///if (data.form.isOk() && data.sheet.isOk() && data.sheet.value.documentId === id) {
 						internalLink = '#list'
 						///}
-						const button = `<a href="/list" role=button class=outline >확인</a>`
+						const button = `<center><a href="/list" role=button class=outline >확인</a></center>`
 						out.push(button)
 						continue
 					}
@@ -591,11 +591,15 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 			}
 
 			a[role='button'] {
-				width: 100%;
+				width: initial;
 				margin-bottom: $size-2;
 
-				font-size: $font-size-4;
-				font-weight: $font-weight-7;
+				padding-inline: $size-8;
+
+				border-radius: 2rem;
+
+				//font-size: $font-size-4;
+				//font-weight: $font-weight-7;
 			}
 
 			img {
@@ -655,13 +659,13 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 		padding: 0;
 
-		background-image: url(/dance_night.gif);
+		//background-image: url(/dance_night.gif);
 		background-size: cover;
 		background-position: center;
-		background-color: #0b4474;
+		background-color: #D93526;
 
 		fi-spacer {
-			height: 100px;
+			height: $size-2;
 		}
 
 		& * {
