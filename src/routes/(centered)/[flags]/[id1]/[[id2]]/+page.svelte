@@ -316,20 +316,6 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 			{@const subject = form.success ? '신청 완료!' : '오류가 발생 됐어요:'}
 			{@const message = form.success ? '' : `${form.status}: ${form.statusText}`}
 
-			{#if form.success}
-				<wrap-confetti>
-					<Confetti
-						x={[-4, 4]}
-						y={[0, 0]}
-						delay={[0, 9000]}
-						infinite
-						duration={9000}
-						amount={500}
-						fallDistance="1600px"
-					></Confetti>
-				</wrap-confetti>
-			{/if}
-
 			<div transition:slide={{ delay: 300 }}>
 				<NotificationBox {level} bind:notificationBoxHidden>
 					{#snippet title()}
