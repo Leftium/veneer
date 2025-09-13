@@ -26,11 +26,11 @@
 	{/if}
 
 	<form method="POST">
-		<input type="hidden" name="documentId" value={googleForm.documentId} />
+		<input type="hidden" name="documentId" value={googleForm.documentId}/>
 
 		{#each googleForm.fields || [] as field}
 			{#if googleForm.hasRequired && field.inputIndex === 1}
-				<span class="required-mark">* {m.required()}</span>
+				<span class="required-mark" id="signup">* {m.required()}</span>
 			{/if}
 
 			<GoogleFormField {field} />

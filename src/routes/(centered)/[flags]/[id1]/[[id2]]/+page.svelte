@@ -229,8 +229,8 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 						const callout = !count
 							? ''
 							: `<div class="tooltip">${count.total}명 신청 💃${count.follows} 🕺${count.leaders}</div>`
-						const button = `<a href="${internalLink}" role=button class=outline onclick="window.location.hash='#form'">신청 ➡️</a>`
-						out.push(callout)
+						const button = `<a href="/#signup" role=button class=outline>신청</a>`
+						///out.push(callout)
 						out.push(button)
 						continue
 					}
@@ -249,7 +249,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 						///if (data.form.isOk() && data.sheet.isOk() && data.sheet.value.documentId === id) {
 						internalLink = '#list'
 						///}
-						const button = `<a href="${internalLink}" role=button class=outline onclick="window.location.hash='#list'">확인 👀</a>`
+						const button = `<a href="/list" role=button class=outline >확인</a>`
 						out.push(button)
 						continue
 					}
