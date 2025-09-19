@@ -2,7 +2,7 @@ name = "veneer"
 main = ".svelte-kit/cloudflare/_worker.js"
 compatibility_flags = [ "nodejs_compat" ]
 compatibility_date = "2025-08-17"
-# workers_dev = true
+preview_urls = true
 
 # Bind your static output directory (e.g. the client folder SvelteKit emitted)
 [assets]
