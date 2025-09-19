@@ -1,4 +1,4 @@
-name = "veneer"
+name = "veneer-${CF_PAGES_BRANCH}"
 main = ".svelte-kit/cloudflare/_worker.js"
 compatibility_flags = [ "nodejs_compat" ]
 compatibility_date = "2025-08-17"
