@@ -1,5 +1,3 @@
-import * as cheerio from 'cheerio'
-
 export type QuestionType =
 	| 'TEXT'
 	| 'PARAGRAPH_TEXT'
@@ -175,34 +173,24 @@ export function parseGoogleForm(html: string) {
 		form.headerImageUrl = matches[1]
 	}
 
-	// Inject media source url's:
-	const $ = cheerio.load(html)
+	// Inject media source url's using regex (replaces Cheerio for performance):
+	// Extract form action
+	const formActionMatch = html.match(/<form[^>]*action="([^"]*)"/)
+	form.formAction = formActionMatch?.[1] || ''
 
-	form.formAction = $('form').attr('action') || ''
+	// Extract form content images (from <img> tags with googleusercontent URLs containing /formsz/)
+	const imgMatches =
+		html.match(/<img[^>]*src="(https:\/\/lh[^"]*googleusercontent\.com\/formsz\/[^"]*)"/g) || []
+	const imgUrls = imgMatches.map((m) => m.match(/src="([^"]*)"/)?.[1]).filter(Boolean)
 
-	const itemDivs = $('div[role="list"] > div[role="listitem"]:not([jsname])')
-
-	const media = itemDivs
-		.map((_, itemDiv) => {
-			const itemId = $(itemDiv).find('[data-item-id]').attr('data-item-id')?.toString()
-			const imgUrl = $(itemDiv).find('img').attr('src')?.toString()
-
-			return {
-				itemId,
-				imgUrl,
-			}
-		})
-		.toArray()
-
-	media.map(({ imgUrl }, index) => {
-		if (form.questions[index]) {
-			if (imgUrl) {
-				form.questions[index].imgUrl = imgUrl
-			}
-		} else {
-			console.log({ index, imgUrl })
+	// Assign to questions with imageId by index
+	let imgIndex = 0
+	for (const question of form.questions) {
+		if (question.imageId && imgUrls[imgIndex]) {
+			question.imgUrl = imgUrls[imgIndex]
+			imgIndex++
 		}
-	})
+	}
 
 	return form
 }
