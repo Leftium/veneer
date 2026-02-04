@@ -190,15 +190,17 @@ export function parseGoogleForm(html: string) {
 	const formActionMatch = html.match(/<form[^>]*action="([^"]*)"/)
 	form.formAction = formActionMatch?.[1] || ''
 
-	// Extract image URLs by matching data-item-id and nearby img src
-	// Pattern: find listitem divs with data-item-id, then find img src within them
-	const imgPattern = /data-item-id="(\d+)"[\s\S]*?<img[^>]*src="([^"]*)"/g
-	let match
-	while ((match = imgPattern.exec(html)) !== null) {
-		const [, itemId, imgUrl] = match
-		const question = form.questions.find((q) => q.itemId === Number(itemId))
-		if (question && imgUrl) {
-			question.imgUrl = imgUrl
+	// Extract form content images (from <img> tags with googleusercontent URLs containing /formsz/)
+	const imgMatches =
+		html.match(/<img[^>]*src="(https:\/\/lh[^"]*googleusercontent\.com\/formsz\/[^"]*)"/g) || []
+	const imgUrls = imgMatches.map((m) => m.match(/src="([^"]*)"/)?.[1]).filter(Boolean)
+
+	// Assign to questions with imageId by index
+	let imgIndex = 0
+	for (const question of form.questions) {
+		if (question.imageId && imgUrls[imgIndex]) {
+			question.imgUrl = imgUrls[imgIndex]
+			imgIndex++
 		}
 	}
 	console.timeEnd('⏱️ parseGoogleForm:regex-extract')
