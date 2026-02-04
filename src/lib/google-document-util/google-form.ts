@@ -1,5 +1,3 @@
-import { gg } from '@leftium/gg'
-import * as cheerio from 'cheerio'
 import { Err, Ok } from 'wellcrafted/result'
 
 export type QuestionType =
@@ -75,13 +73,18 @@ type Form = {
 }
 
 export function parseGoogleForm(html: string) {
+	console.time('⏱️ parseGoogleForm:total')
+	console.time('⏱️ parseGoogleForm:json-extract')
 	let data = html.split('FB_PUBLIC_LOAD_DATA_ = ')[1]
 	if (!data) {
+		console.timeEnd('⏱️ parseGoogleForm:json-extract')
+		console.timeEnd('⏱️ parseGoogleForm:total')
 		return Err({ message: 'Error parsing Google form data.' })
 	}
 	data = data.substring(0, data.lastIndexOf(';'))
 
 	const jArray = JSON.parse(data)
+	console.timeEnd('⏱️ parseGoogleForm:json-extract')
 
 	const description = jArray[1]?.[0] ?? null
 	/// const descriptionHtml = jArray[1]?.[24]?.[1] ?? null
@@ -180,35 +183,27 @@ export function parseGoogleForm(html: string) {
 		form.headerImageUrl = matches[1]
 	}
 
-	// Inject media source url's:
-	const $ = cheerio.load(html)
+	// Inject media source url's using regex (replaces Cheerio for performance):
+	console.time('⏱️ parseGoogleForm:regex-extract')
 
-	form.formAction = $('form').attr('action') || ''
+	// Extract form action
+	const formActionMatch = html.match(/<form[^>]*action="([^"]*)"/)
+	form.formAction = formActionMatch?.[1] || ''
 
-	const itemDivs = $('div[role="list"] > div[role="listitem"]:not([jsname])')
-
-	const media = itemDivs
-		.map((_, itemDiv) => {
-			const itemId = $(itemDiv).find('[data-item-id]').attr('data-item-id')?.toString()
-			const imgUrl = $(itemDiv).find('img').attr('src')?.toString()
-
-			return {
-				itemId,
-				imgUrl,
-			}
-		})
-		.toArray()
-
-	media.map(({ imgUrl }, index) => {
-		if (form.questions[index]) {
-			if (imgUrl) {
-				form.questions[index].imgUrl = imgUrl
-			}
-		} else {
-			console.log({ index, imgUrl })
+	// Extract image URLs by matching data-item-id and nearby img src
+	// Pattern: find listitem divs with data-item-id, then find img src within them
+	const imgPattern = /data-item-id="(\d+)"[\s\S]*?<img[^>]*src="([^"]*)"/g
+	let match
+	while ((match = imgPattern.exec(html)) !== null) {
+		const [, itemId, imgUrl] = match
+		const question = form.questions.find((q) => q.itemId === Number(itemId))
+		if (question && imgUrl) {
+			question.imgUrl = imgUrl
 		}
-	})
+	}
+	console.timeEnd('⏱️ parseGoogleForm:regex-extract')
 
+	console.timeEnd('⏱️ parseGoogleForm:total')
 	return Ok(form)
 }
 
