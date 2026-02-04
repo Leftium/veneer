@@ -27,8 +27,10 @@ type GoogleSheetsApiResult = {
 }
 
 export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
+	console.time('⏱️ adjustGoogleSheetData')
 	const data = json?.sheets?.[0]?.data[0]
 	if (!data) {
+		console.timeEnd('⏱️ adjustGoogleSheetData')
 		return Err({ message: `JSON Google Sheet data has unexpected shape.`, json })
 	}
 
@@ -52,6 +54,7 @@ export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 				}),
 	)
 
+	console.timeEnd('⏱️ adjustGoogleSheetData')
 	return Ok({ title, sheetTitle, timeZone, rows, hiddenColumns, hiddenRows })
 }
 

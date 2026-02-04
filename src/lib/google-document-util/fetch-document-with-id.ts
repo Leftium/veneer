@@ -35,7 +35,10 @@ export async function fetchWithDocumentId(
 	const text = await fetched.text()
 
 	if (type === 'sheet') {
-		const dataSheet = adjustGoogleSheetData(JSON.parse(text))
+		console.time('⏱️ sheet:json-parse')
+		const jsonData = JSON.parse(text)
+		console.timeEnd('⏱️ sheet:json-parse')
+		const dataSheet = adjustGoogleSheetData(jsonData)
 		return isOk(dataSheet)
 			? Ok({
 					type: 'sheet',

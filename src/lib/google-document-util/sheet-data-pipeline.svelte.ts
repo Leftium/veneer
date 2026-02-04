@@ -44,7 +44,9 @@ function makeCell(cell: Partial<SheetDataPipe['rows'][number][number]>) {
 }
 
 export function makeRaw(sheet: ResultGoogleSheet) {
+	console.time('⏱️ sheet-pipeline:makeRaw')
 	if (isErr(sheet)) {
+		console.timeEnd('⏱️ sheet-pipeline:makeRaw')
 		return { extra: { timeZone: 'utc' }, columns: [], rows: [] }
 	}
 
@@ -62,6 +64,7 @@ export function makeRaw(sheet: ResultGoogleSheet) {
 
 	const timeZone = sheet.data.timeZone
 
+	console.timeEnd('⏱️ sheet-pipeline:makeRaw')
 	return { extra: { timeZone } as unknown, columns, rows }
 }
 
@@ -87,12 +90,14 @@ export function stripEmptyRows({ extra, columns, rows }: SheetDataPipe) {
 }
 
 export function adjustColumnLengths({ extra, columns, rows }: SheetDataPipe) {
+	console.time('⏱️ sheet-pipeline:adjustColumnLengths')
 	for (const row of rows) {
 		for (const [ci, cell] of row.entries()) {
 			columns[ci].lengthMax = Math.max(columns[ci].lengthMax, cell.value.length)
 			columns[ci].lengthMin = Math.min(columns[ci].lengthMin, cell.value.length)
 		}
 	}
+	console.timeEnd('⏱️ sheet-pipeline:adjustColumnLengths')
 	return { extra, columns, rows }
 }
 
@@ -119,6 +124,7 @@ export function extractColumnHeaders({ extra, columns, rows }: SheetDataPipe) {
 
 const REGEX_NUMERIC = /^[0-9-.,/: ]*$/
 export function adjustColumnTypes({ extra, columns, rows }: SheetDataPipe) {
+	console.time('⏱️ sheet-pipeline:adjustColumnTypes')
 	for (const row of rows) {
 		for (const [ci, cell] of row.entries()) {
 			if (!REGEX_NUMERIC.test(cell.value)) {
@@ -126,10 +132,12 @@ export function adjustColumnTypes({ extra, columns, rows }: SheetDataPipe) {
 			}
 		}
 	}
+	console.timeEnd('⏱️ sheet-pipeline:adjustColumnTypes')
 	return { extra, columns, rows }
 }
 
 export function padNumericRenders({ extra, columns, rows }: SheetDataPipe) {
+	console.time('⏱️ sheet-pipeline:padNumericRenders')
 	for (const row of rows) {
 		for (const [ci, cell] of row.entries()) {
 			if (cell.value && columns[ci].isNumeric && !cell.ts) {
@@ -137,10 +145,12 @@ export function padNumericRenders({ extra, columns, rows }: SheetDataPipe) {
 			}
 		}
 	}
+	console.timeEnd('⏱️ sheet-pipeline:padNumericRenders')
 	return { extra, columns, rows }
 }
 
 export function ghostLeadingZeros({ extra, columns, rows }: SheetDataPipe) {
+	console.time('⏱️ sheet-pipeline:ghostLeadingZeros')
 	for (const row of rows) {
 		for (const [ci, cell] of row.entries()) {
 			if (columns[ci].isNumeric && !cell.ts) {
@@ -148,10 +158,12 @@ export function ghostLeadingZeros({ extra, columns, rows }: SheetDataPipe) {
 			}
 		}
 	}
+	console.timeEnd('⏱️ sheet-pipeline:ghostLeadingZeros')
 	return { extra, columns, rows }
 }
 
 export function hidePhoneNumbers({ extra, columns, rows }: SheetDataPipe) {
+	console.time('⏱️ sheet-pipeline:hidePhoneNumbers')
 	for (const row of rows) {
 		for (const [ci, cell] of row.entries()) {
 			if (/(contact)|(연락)/i.test(columns[ci].title)) {
@@ -160,6 +172,7 @@ export function hidePhoneNumbers({ extra, columns, rows }: SheetDataPipe) {
 			}
 		}
 	}
+	console.timeEnd('⏱️ sheet-pipeline:hidePhoneNumbers')
 	return { extra, columns, rows }
 }
 
@@ -169,6 +182,7 @@ export function stripEmptyColumns({ extra, columns, rows }: SheetDataPipe) {
 }
 
 export function renderRelativeTimes({ extra, columns, rows }: SheetDataPipe) {
+	console.time('⏱️ sheet-pipeline:renderRelativeTimes')
 	const utcjs = dayjs.utc
 
 	for (const row of rows) {
@@ -184,6 +198,7 @@ export function renderRelativeTimes({ extra, columns, rows }: SheetDataPipe) {
 			}
 		}
 	}
+	console.timeEnd('⏱️ sheet-pipeline:renderRelativeTimes')
 	return { extra, columns, rows }
 }
 
@@ -195,6 +210,7 @@ const REGEX_DANCE_LEADER = /lead|리더|리드/i
 const REGEX_DANCE_FOLLOW = /follow|팔뤄|팔로우/i
 
 export function collectExtraDance({ extra, columns, rows }: SheetDataPipe) {
+	console.time('⏱️ sheet-pipeline:collectExtraDance')
 	const ci = {
 		role: columns.findIndex((c) => REGEX_DANCE_ROLE.test(c.title)),
 		name: columns.findIndex((c) => REGEX_DANCE_NAME.test(c.title)),
@@ -203,6 +219,7 @@ export function collectExtraDance({ extra, columns, rows }: SheetDataPipe) {
 	}
 
 	if (ci.name === -1 || ci.role === -1) {
+		console.timeEnd('⏱️ sheet-pipeline:collectExtraDance')
 		return { extra, columns, rows }
 	}
 
@@ -220,5 +237,6 @@ export function collectExtraDance({ extra, columns, rows }: SheetDataPipe) {
 
 	rows = rows.reverse()
 
+	console.timeEnd('⏱️ sheet-pipeline:collectExtraDance')
 	return { extra, columns, rows }
 }
