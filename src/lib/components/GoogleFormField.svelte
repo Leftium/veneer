@@ -75,6 +75,17 @@
 		return title?.trim()?.toLowerCase().replace(/\s+/g, '_')
 	}
 
+	// Server-side image proxy (disabled -- app should work without SSR/server)
+	// function proxyImgUrl(url?: string) {
+	// 	if (!url) return ''
+	// 	return `/api/image-proxy?url=${encodeURIComponent(url)}`
+	// }
+
+	function imgSrc(url?: string) {
+		if (!url) return ''
+		return url.replace(/=w\d+(\?|$)/i, '$1')
+	}
+
 	function handleChange(this: HTMLInputElement) {
 		const storedValues = store.get('storedValues') || { byId: {}, byTitle: {} }
 
@@ -111,7 +122,7 @@
 				</center>
 			{/if}
 			<center>
-				<img src={field.imgUrl?.replace(/=w\d+$/i, '')} alt="" />
+				<img src={imgSrc(field.imgUrl)} alt="" />
 			</center>
 		{/key}
 	{:else if field.type === 'VIDEO'}
@@ -137,6 +148,12 @@
 				</small>
 			</div>
 		</label>
+
+		{#if field.imgUrl}
+			<center class="question-image">
+				<img src={imgSrc(field.imgUrl)} alt="" />
+			</center>
+		{/if}
 
 		{#if field.type === 'PARAGRAPH_TEXT'}
 			<textarea
@@ -168,6 +185,12 @@
 			</div>
 		</label>
 
+		{#if field.imgUrl}
+			<center class="question-image">
+				<img src={imgSrc(field.imgUrl)} alt="" />
+			</center>
+		{/if}
+
 		<select
 			id="entry.{field.id}"
 			name="entry.{field.id}"
@@ -193,6 +216,12 @@
 				</small>
 			</div>
 		</label>
+
+		{#if field.imgUrl}
+			<center class="question-image">
+				<img src={imgSrc(field.imgUrl)} alt="" />
+			</center>
+		{/if}
 
 		{#each field.options as option}
 			<label>
@@ -262,6 +291,10 @@
 	label[for] {
 		font-weight: bold;
 		margin-top: 1.5em;
+	}
+
+	.question-image {
+		margin-bottom: calc(var(--pico-spacing) * 0.375);
 	}
 
 	.required-mark {

@@ -77,7 +77,7 @@ export const load = async ({ params, url }) => {
 						add(f.description)
 					} else if (f.type === 'IMAGE') {
 						add(f.title, '# ')
-						add(`![](${f.imgUrl?.replace(/=w\d+$/i, '')})`)
+						add(`![](${f.imgUrl?.replace(/=w\d+(\?|$)/i, '$1')})`)
 					}
 					return s
 				})
