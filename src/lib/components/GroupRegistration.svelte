@@ -263,8 +263,8 @@
 <div class="group-registration" bind:this={containerEl}>
 	{#if additionalMembers.length > 0 && !clearing}
 		<div class="group-header" transition:slide={{ duration: 300 }}>
-			<p class="group-count">Group of {additionalMembers.length + 1}</p>
-			<button type="button" class="clear-btn" onclick={clearGroup}>Clear group</button>
+			<p class="group-count">단체 {additionalMembers.length + 1}명</p>
+			<button type="button" class="clear-btn" onclick={clearGroup}>단체 취소</button>
 		</div>
 	{/if}
 
@@ -335,7 +335,7 @@
 							type="button"
 							class="delete-btn"
 							onclick={() => removeMember(i)}
-							aria-label="Remove member {i + 2}">✕</button
+							aria-label="신청자 {i + 2} 삭제">✕</button
 						>
 					</label>
 					<input
@@ -380,7 +380,7 @@
 
 	<!-- Actions -->
 	<div class="actions">
-		<button type="button" class="outline" onclick={addMember}>+ Add Member</button>
+		<button type="button" class="outline" onclick={addMember}>+ 신청자 추가</button>
 	</div>
 </div>
 
