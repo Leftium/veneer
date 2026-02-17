@@ -12,6 +12,7 @@ export type QuestionType =
 	| 'TITLE_AND_DESCRIPTION'
 	| 'GRID'
 	| 'FILE_UPLOAD'
+	| 'PAGE_BREAK'
 	| 'IMAGE'
 	| 'VIDEO'
 

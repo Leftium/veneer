@@ -10,6 +10,7 @@ export type QuestionType =
 	| 'TITLE_AND_DESCRIPTION'
 	| 'GRID'
 	| 'FILE_UPLOAD'
+	| 'PAGE_BREAK'
 	| 'IMAGE'
 	| 'VIDEO'
 
@@ -42,11 +43,12 @@ enum GoogleFormsFieldTypeEnum {
 	SCALE = 5,
 	TITLE_AND_DESCRIPTION = 6,
 	GRID = 7,
-	FILE_UPLOAD = 8,
+	PAGE_BREAK = 8,
 	DATE = 9,
 	TIME = 10,
 	IMAGE = 11,
 	VIDEO = 12,
+	FILE_UPLOAD = 13,
 }
 
 enum EmailCollectionRuleEnum {
