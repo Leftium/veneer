@@ -340,7 +340,7 @@
 					</label>
 					<input
 						id="extra-name-{member.key}"
-						placeholder="(optional)"
+						placeholder="(선택)"
 						bind:value={member.name}
 						oninput={handleChange}
 					/>
