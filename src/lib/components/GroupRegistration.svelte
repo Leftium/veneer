@@ -403,12 +403,24 @@
 		gap: 0;
 	}
 
+	// Alternating row shading — use a transparent overlay so it adapts to
+	// both light mode (darken with black) and dark mode (lighten with white).
 	fieldset:nth-child(odd of fieldset) {
-		background: var(--pico-card-background-color);
+		background: transparent;
 	}
 
 	fieldset:nth-child(even of fieldset) {
-		background: var(--pico-card-sectioning-background-color, var(--pico-background-color));
+		background: color-mix(in srgb, currentColor 7%, transparent);
+	}
+
+	// Inside .members-group the count restarts, so swap to continue
+	// the alternation from the primary member fieldset (which is odd/light).
+	.members-group fieldset:nth-child(odd of fieldset) {
+		background: color-mix(in srgb, currentColor 7%, transparent);
+	}
+
+	.members-group fieldset:nth-child(even of fieldset) {
+		background: transparent;
 	}
 
 	.group-header {
