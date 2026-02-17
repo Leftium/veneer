@@ -1,7 +1,7 @@
 import { paraglideVitePlugin } from '@inlang/paraglide-js'
 import devtoolsJson from 'vite-plugin-devtools-json'
 import { sveltekit } from '@sveltejs/kit/vite'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import { openInEditorPlugin } from '@leftium/gg'
 
 export default defineConfig({
@@ -18,5 +18,8 @@ export default defineConfig({
 		supported: {
 			'top-level-await': true, //browsers can handle top-level-await features
 		},
+	},
+	test: {
+		include: ['src/**/*.test.ts'],
 	},
 })

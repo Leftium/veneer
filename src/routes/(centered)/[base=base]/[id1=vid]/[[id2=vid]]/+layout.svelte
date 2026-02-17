@@ -160,10 +160,14 @@
 					slideToTab(tid)
 				}
 			})
+
+			// Re-measure slide height when group registration adds/removes members
+			swiperContainer.addEventListener('groupresize', callSwiperUpdateAutoHeight)
 		}
 	})
 
 	onDestroy(() => {
+		swiperContainer?.removeEventListener('groupresize', callSwiperUpdateAutoHeight)
 		swiperContainer?.swiper?.destroy(true, true)
 	})
 

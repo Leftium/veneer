@@ -167,9 +167,13 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 					activeHash = hash // Update internal state immediately
 				}
 			})
+
+			// Re-measure slide height when group registration adds/removes members
+			swiperContainer.addEventListener('groupresize', callSwiperUpdateAutoHeight)
 		}
 
 		return () => {
+			swiperContainer?.removeEventListener('groupresize', callSwiperUpdateAutoHeight)
 			if (swiper) {
 				swiper.off() // removes all event listeners
 				swiper.destroy(true, true) // optional: clean DOM and detach
