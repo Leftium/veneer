@@ -7,6 +7,8 @@
 		type Role,
 	} from '$lib/group-registration/serialization'
 	import { REGEX_DANCE_LEADER, REGEX_DANCE_FOLLOW } from '$lib/dance-constants'
+	import { slide } from 'svelte/transition'
+	import { flip } from 'svelte/animate'
 	import store from 'store'
 	import { browser } from '$app/environment'
 
@@ -107,14 +109,43 @@
 		notifyHeightChange()
 	}
 
+	let removedLast = $state(false)
+
 	function removeMember(index: number) {
+		removedLast = index === additionalMembers.length - 1
 		additionalMembers.splice(index, 1)
 		notifyHeightChange()
 	}
 
+	let clearing = $state(false)
+
 	function clearGroup() {
+		clearing = true
+	}
+
+	function onClearOutroEnd() {
+		clearing = false
 		additionalMembers.length = 0
 		notifyHeightChange()
+	}
+
+	/** Slide for individual fieldsets, but instant when removing the last item. */
+	function memberSlide(node: Element) {
+		if (removedLast) return { duration: 0 }
+		return slide(node, { duration: 300 })
+	}
+
+	/** Outro for the members wrapper: fade+collapse when clearing, slide-only otherwise. */
+	function fadeCollapse(node: Element) {
+		const h = node.getBoundingClientRect().height
+		const dur = clearing ? 300 : 0
+		return {
+			duration: dur,
+			css: (t: number) => {
+				const styles = `overflow: hidden; max-height: ${t * h}px;`
+				return clearing ? `opacity: ${t}; ${styles}` : styles
+			},
+		}
 	}
 
 	// --- localStorage helpers ---
@@ -230,15 +261,19 @@
 </script>
 
 <div class="group-registration" bind:this={containerEl}>
+	{#if additionalMembers.length > 0 && !clearing}
+		<div class="group-header" transition:slide={{ duration: 300 }}>
+			<p class="group-count">Group of {additionalMembers.length + 1}</p>
+			<button type="button" class="clear-btn" onclick={clearGroup}>Clear group</button>
+		</div>
+	{/if}
+
 	<!-- Member 1 (primary registrant) -->
 	<fieldset>
-		{#if additionalMembers.length > 0}
-			<div class="member-header">
+		<label for="entry.{nameField.id}" class="name-label">
+			{#if additionalMembers.length > 0 && !clearing}
 				<span class="member-number">1.</span>
-			</div>
-		{/if}
-
-		<label for="entry.{nameField.id}">
+			{/if}
 			<span class="required-mark">*</span>
 			{nameField.title}
 		</label>
@@ -280,52 +315,64 @@
 	</fieldset>
 
 	<!-- Additional members (2+) -->
-	{#each additionalMembers as member, i (member.key)}
-		<fieldset>
-			<div class="member-header">
-				<span class="member-number">{i + 2}.</span>
-				<button
-					type="button"
-					class="delete-btn"
-					onclick={() => removeMember(i)}
-					aria-label="Remove member {i + 2}">✕</button
+	{#if additionalMembers.length > 0 && !clearing}
+		<div
+			class="members-group"
+			in:slide={{ duration: 300 }}
+			out:fadeCollapse
+			onoutroend={onClearOutroEnd}
+		>
+			{#each additionalMembers as member, i (member.key)}
+				<fieldset
+					in:slide|local={{ duration: 300 }}
+					out:memberSlide|local
+					animate:flip={{ duration: 300 }}
 				>
-			</div>
+					<label for="extra-name-{member.key}" class="name-label">
+						<span class="member-number">{i + 2}.</span>
+						{nameField.title}
+						<button
+							type="button"
+							class="delete-btn"
+							onclick={() => removeMember(i)}
+							aria-label="Remove member {i + 2}">✕</button
+						>
+					</label>
+					<input
+						id="extra-name-{member.key}"
+						placeholder="(optional)"
+						bind:value={member.name}
+						oninput={handleChange}
+					/>
 
-			<label for="extra-name-{member.key}">{nameField.title}</label>
-			<input
-				id="extra-name-{member.key}"
-				placeholder="(optional)"
-				bind:value={member.name}
-				oninput={handleChange}
-			/>
-
-			<!-- svelte-ignore a11y_label_has_associated_control -->
-			<label for="">{roleField.title}</label>
-			{#each roleField.options as option (option)}
-				<label>
-					{#if isCheckboxes}
-						<input
-							type="checkbox"
-							name="extra-role-{member.key}"
-							value={option}
-							bind:group={member.selectedRoles}
-							onchange={handleChange}
-						/>
-					{:else}
-						<input
-							type="radio"
-							name="extra-role-{member.key}"
-							value={option}
-							bind:group={member.selectedRole}
-							onchange={handleChange}
-						/>
-					{/if}
-					{option}
-				</label>
+					<!-- svelte-ignore a11y_label_has_associated_control -->
+					<label for="">{roleField.title}</label>
+					{#each roleField.options as option (option)}
+						<label>
+							{#if isCheckboxes}
+								<input
+									type="checkbox"
+									name="extra-role-{member.key}"
+									value={option}
+									bind:group={member.selectedRoles}
+									onchange={handleChange}
+								/>
+							{:else}
+								<input
+									type="radio"
+									name="extra-role-{member.key}"
+									value={option}
+									bind:group={member.selectedRole}
+									onchange={handleChange}
+								/>
+							{/if}
+							{option}
+						</label>
+					{/each}
+				</fieldset>
 			{/each}
-		</fieldset>
-	{/each}
+		</div>
+	{/if}
 
 	<!-- Hidden group field for form submission -->
 	<textarea hidden id="entry.{groupField.id}" name="entry.{groupField.id}" value={serializedGroup}
@@ -334,13 +381,7 @@
 	<!-- Actions -->
 	<div class="actions">
 		<button type="button" class="outline" onclick={addMember}>+ Add Member</button>
-		{#if additionalMembers.length > 0}
-			<button type="button" class="outline secondary" onclick={clearGroup}>Clear group</button>
-		{/if}
 	</div>
-	{#if additionalMembers.length > 0}
-		<p class="group-count">Group of {additionalMembers.length + 1}</p>
-	{/if}
 </div>
 
 <style lang="scss">
@@ -351,14 +392,15 @@
 		:global(input),
 		:global(textarea),
 		:global(select) {
-			margin-bottom: $size-2;
+			margin-bottom: $size-1;
 		}
 	}
 
 	fieldset {
-		padding: $size-3;
-		margin-bottom: $size-2;
+		padding: $size-2 $size-3;
+		margin-bottom: 2px;
 		border-radius: $radius-2;
+		gap: 0;
 	}
 
 	fieldset:nth-child(odd of fieldset) {
@@ -369,11 +411,33 @@
 		background: var(--pico-card-sectioning-background-color, var(--pico-background-color));
 	}
 
-	.member-header {
+	.group-header {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		margin-bottom: $size-1;
+		padding-inline: $size-3;
+		margin-bottom: 0;
+	}
+
+	.clear-btn {
+		all: unset;
+		cursor: pointer;
+		color: var(--pico-muted-color);
+		font-size: 85%;
+		padding: $size-1 $size-2;
+		border-radius: $radius-1;
+		transition: color 0.15s;
+
+		&:hover,
+		&:focus-visible {
+			color: var(--pico-del-color, var(--pico-color));
+		}
+	}
+
+	.name-label {
+		display: flex;
+		align-items: center;
+		gap: $size-1;
 	}
 
 	.member-number {
@@ -385,6 +449,7 @@
 		// Reset Pico button styles
 		all: unset;
 		cursor: pointer;
+		margin-left: auto;
 		opacity: 0.4;
 		font-size: 120%;
 		padding: $size-1;
@@ -400,14 +465,15 @@
 
 	.actions {
 		display: flex;
-		align-items: center;
+		justify-content: center;
 		gap: $size-3;
 		flex-wrap: wrap;
 	}
 
 	.group-count {
 		color: var(--pico-muted-color);
-		font-style: italic;
+		margin: 0;
+		font-weight: 600;
 	}
 
 	.required-mark {
@@ -427,6 +493,11 @@
 	// Checkbox/radio option labels — minimal gap
 	fieldset label:has(input[type='checkbox']),
 	fieldset label:has(input[type='radio']) {
+		margin-bottom: 0;
+	}
+
+	// Remove bottom margin from last element in fieldset to avoid double-spacing
+	fieldset > :last-child {
 		margin-bottom: 0;
 	}
 </style>
