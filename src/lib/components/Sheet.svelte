@@ -22,59 +22,6 @@
 	let { data, onToggle }: Props = $props()
 
 	const { extra, columns, rows } = data
-
-	// --- Group-expand helpers for dance-event mode ---
-	// Build lookup maps from row metadata so clicking any group member
-	// toggles the primary and shows details after the last member.
-
-	/** Map from row index → primary row index (for group members) or self. */
-	const groupPrimaryOf: number[] = []
-	/** Map from row index → last row index in the same group. */
-	const groupLastOf: number[] = []
-
-	if (extra.type === 'dance-event') {
-		// First pass: find primary index for each row
-		let currentPrimary = -1
-		for (let i = 0; i < rows.length; i++) {
-			const row = rows[i] as any
-			const gIdx = row._groupIndex ?? -1
-			const isMember = row._isGroupMember === true
-
-			if (gIdx >= 0 && !isMember) {
-				// This is a group primary
-				currentPrimary = i
-			}
-			groupPrimaryOf[i] = gIdx >= 0 && isMember ? currentPrimary : i
-		}
-
-		// Second pass: find last row index for each group
-		for (let i = rows.length - 1; i >= 0; i--) {
-			const row = rows[i] as any
-			const gIdx = row._groupIndex ?? -1
-			if (gIdx < 0) {
-				groupLastOf[i] = i
-			} else {
-				// Scan forward to find last row with same groupIndex
-				let last = i
-				for (let j = i + 1; j < rows.length; j++) {
-					if ((rows[j] as any)._groupIndex === gIdx) last = j
-					else break
-				}
-				groupLastOf[i] = last
-			}
-		}
-	}
-
-	function resolveToggleIndex(clickedIndex: number): number {
-		return groupPrimaryOf[clickedIndex] ?? clickedIndex
-	}
-
-	function showDetailsAfter(rowIndex: number, detailsOpened: number): boolean {
-		if (detailsOpened < 0) return false
-		// Show details after the last row in the opened group
-		const lastInGroup = groupLastOf[detailsOpened] ?? detailsOpened
-		return rowIndex === lastInGroup
-	}
 </script>
 
 {#snippet rowDetails(row: string | any[], r: any)}
@@ -110,14 +57,7 @@
 			{/snippet}
 		</StickyHeaderGrid>
 	{:else if extra.type === 'dance-event'}
-		<StickyHeaderGrid
-			gridTemplateColumns="1fr"
-			data={{ columns, rows }}
-			{onToggle}
-			{rowDetails}
-			{resolveToggleIndex}
-			{showDetailsAfter}
-		>
+		<StickyHeaderGrid gridTemplateColumns="1fr" data={{ columns, rows }} {onToggle} {rowDetails}>
 			{#snippet header()}
 				{@const count = extra.count}
 				<gh>
