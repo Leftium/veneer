@@ -7,6 +7,8 @@
 		data: any
 		gridTemplateColumns: string
 		onToggle: (() => void) | void
+		resolveToggleIndex?: (clickedIndex: number) => number
+		showDetailsAfter?: (rowIndex: number, detailsOpened: number) => boolean
 		header: Snippet
 		rowSummary: Snippet<
 			[{ title: string; isNumeric: boolean }[], string | any[], number, (arg0: number) => void]
@@ -14,7 +16,16 @@
 		rowDetails: Snippet<[string | any[], number]>
 	}
 
-	let { data, gridTemplateColumns, onToggle, header, rowSummary, rowDetails }: Props = $props()
+	let {
+		data,
+		gridTemplateColumns,
+		onToggle,
+		resolveToggleIndex,
+		showDetailsAfter,
+		header,
+		rowSummary,
+		rowDetails,
+	}: Props = $props()
 
 	let gridTableElement = $state<HTMLElement>()
 	let headerHeight = $derived((gridTableElement?.children[0] as HTMLElement)?.offsetHeight || 0)
@@ -29,7 +40,8 @@
 			}
 
 			// ✅ Proceed with toggle
-			detailsOpened = detailsOpened === index ? -1 : index
+			const resolved = resolveToggleIndex ? resolveToggleIndex(index) : index
+			detailsOpened = detailsOpened === resolved ? -1 : resolved
 			if (onToggle) {
 				onToggle()
 			}
@@ -47,13 +59,13 @@
 	{#each data.rows as row, ri}
 		{@render rowSummary(data.columns, row, ri, makeToggleDetails)}
 
-		{#if ri === detailsOpened}
+		{#if showDetailsAfter?.(ri, detailsOpened) ?? ri === detailsOpened}
 			<grid-details
 				transition:slide={{ duration: 500, easing: expoInOut }}
 				onclick={makeToggleDetails(ri)}
 				role="none"
 			>
-				{@render rowDetails(row, ri)}
+				{@render rowDetails(data.rows[detailsOpened], detailsOpened)}
 			</grid-details>
 		{/if}
 	{/each}
