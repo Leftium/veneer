@@ -163,7 +163,8 @@ export function hidePhoneNumbers({ extra, columns, rows }: SheetDataPipe) {
 }
 
 export function stripEmptyColumns({ extra, columns, rows }: SheetDataPipe) {
-	rows = rows.map((row) => row.filter((cell, ci) => columns[ci].lengthMax))
+	rows = rows.map((row) => row.filter((cell, ci) => columns[ci].lengthMax || columns[ci].title))
+	columns = columns.filter((col) => col.lengthMax || col.title)
 	return { extra, columns, rows }
 }
 
