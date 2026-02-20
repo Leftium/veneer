@@ -23,7 +23,7 @@
 	const roleField = $derived(match.roleField)
 	const groupField = $derived(match.groupField)
 
-	const isCheckboxes = $derived(roleField.type === 'CHECKBOXES')
+	const isCheckboxes = $derived(roleField?.type === 'CHECKBOXES')
 
 	// --- Member 1 state ---
 	let member1Name = $state('')
@@ -56,10 +56,10 @@
 	function roleToOption(role: Role): string {
 		if (!role) return ''
 		if (role === 'leader' || role === 'both') {
-			return roleField.options.find((o) => REGEX_DANCE_LEADER.test(o)) ?? ''
+			return roleField?.options.find((o) => REGEX_DANCE_LEADER.test(o)) ?? ''
 		}
 		if (role === 'follower') {
-			return roleField.options.find((o) => REGEX_DANCE_FOLLOW.test(o)) ?? ''
+			return roleField?.options.find((o) => REGEX_DANCE_FOLLOW.test(o)) ?? ''
 		}
 		return ''
 	}
@@ -67,11 +67,11 @@
 	function roleToOptions(role: Role): string[] {
 		const opts: string[] = []
 		if (role === 'leader' || role === 'both') {
-			const o = roleField.options.find((opt) => REGEX_DANCE_LEADER.test(opt))
+			const o = roleField?.options.find((opt) => REGEX_DANCE_LEADER.test(opt))
 			if (o) opts.push(o)
 		}
 		if (role === 'follower' || role === 'both') {
-			const o = roleField.options.find((opt) => REGEX_DANCE_FOLLOW.test(opt))
+			const o = roleField?.options.find((opt) => REGEX_DANCE_FOLLOW.test(opt))
 			if (o) opts.push(o)
 		}
 		return opts
@@ -82,7 +82,9 @@
 	let serializedGroup = $derived.by(() => {
 		const groupMembers: GroupMember[] = additionalMembers.map((m) => ({
 			name: m.name,
-			role: deriveRole(isCheckboxes ? m.selectedRoles : [m.selectedRole].filter(Boolean)),
+			role: roleField
+				? deriveRole(isCheckboxes ? m.selectedRoles : [m.selectedRole].filter(Boolean))
+				: deriveRole([]),
 		}))
 		return serialize(groupMembers)
 	})
@@ -161,10 +163,12 @@
 		storedValues.byId[nameField.id] = member1Name
 		storedValues.byTitle[normalizeTitle(nameField.title)] = member1Name
 
-		// Member 1 role
-		const member1StoreValue = isCheckboxes ? member1RoleGroup.join(', ') : member1Role
-		storedValues.byId[roleField.id] = member1StoreValue
-		storedValues.byTitle[normalizeTitle(roleField.title)] = member1StoreValue
+		// Member 1 role (only when roleField is defined)
+		if (roleField) {
+			const member1StoreValue = isCheckboxes ? member1RoleGroup.join(', ') : member1Role
+			storedValues.byId[roleField.id] = member1StoreValue
+			storedValues.byTitle[normalizeTitle(roleField.title)] = member1StoreValue
+		}
 
 		// Group field (serialized additional members)
 		storedValues.byId[groupField.id] = serializedGroup
@@ -199,7 +203,6 @@
 		if (!browser) return
 
 		const storedValues = store.get('storedValues') || { byId: {}, byTitle: {} }
-		const checkboxMode = roleField.type === 'CHECKBOXES'
 
 		// Restore member 1 name
 		const storedName =
@@ -208,14 +211,17 @@
 			member1Name = storedName
 		}
 
-		// Restore member 1 role
-		const storedRole =
-			storedValues.byId[roleField.id] || storedValues.byTitle[normalizeTitle(roleField.title)]
-		if (storedRole) {
-			if (checkboxMode) {
-				member1RoleGroup = storedRole.split(', ').filter(Boolean)
-			} else {
-				member1Role = storedRole
+		// Restore member 1 role (only when roleField is defined)
+		if (roleField) {
+			const checkboxMode = roleField.type === 'CHECKBOXES'
+			const storedRole =
+				storedValues.byId[roleField.id] || storedValues.byTitle[normalizeTitle(roleField.title)]
+			if (storedRole) {
+				if (checkboxMode) {
+					member1RoleGroup = storedRole.split(', ').filter(Boolean)
+				} else {
+					member1Role = storedRole
+				}
 			}
 		}
 
@@ -224,36 +230,48 @@
 			storedValues.byId[groupField.id] || storedValues.byTitle[normalizeTitle(groupField.title)]
 		if (storedGroup) {
 			const parsed = parse(storedGroup)
-			const opts = roleField.options
-			additionalMembers = parsed.map((gm) => {
-				const leaderOpt = opts.find((o) => REGEX_DANCE_LEADER.test(o)) ?? ''
-				const followOpt = opts.find((o) => REGEX_DANCE_FOLLOW.test(o)) ?? ''
 
-				let selectedRole = ''
-				let selectedRoles: string[] = []
+			if (roleField) {
+				const checkboxMode = roleField.type === 'CHECKBOXES'
+				const opts = roleField.options
+				additionalMembers = parsed.map((gm) => {
+					const leaderOpt = opts.find((o) => REGEX_DANCE_LEADER.test(o)) ?? ''
+					const followOpt = opts.find((o) => REGEX_DANCE_FOLLOW.test(o)) ?? ''
 
-				if (checkboxMode) {
-					if (gm.role === 'leader' || gm.role === 'both') {
-						if (leaderOpt) selectedRoles.push(leaderOpt)
-					}
-					if (gm.role === 'follower' || gm.role === 'both') {
-						if (followOpt) selectedRoles.push(followOpt)
-					}
-				} else {
-					if (gm.role === 'leader' || gm.role === 'both') {
-						selectedRole = leaderOpt
-					} else if (gm.role === 'follower') {
-						selectedRole = followOpt
-					}
-				}
+					let selectedRole = ''
+					let selectedRoles: string[] = []
 
-				return {
+					if (checkboxMode) {
+						if (gm.role === 'leader' || gm.role === 'both') {
+							if (leaderOpt) selectedRoles.push(leaderOpt)
+						}
+						if (gm.role === 'follower' || gm.role === 'both') {
+							if (followOpt) selectedRoles.push(followOpt)
+						}
+					} else {
+						if (gm.role === 'leader' || gm.role === 'both') {
+							selectedRole = leaderOpt
+						} else if (gm.role === 'follower') {
+							selectedRole = followOpt
+						}
+					}
+
+					return {
+						key: nextKey++,
+						name: gm.name,
+						selectedRole,
+						selectedRoles,
+					}
+				})
+			} else {
+				// No roleField: restore members with empty role state
+				additionalMembers = parsed.map((gm) => ({
 					key: nextKey++,
 					name: gm.name,
-					selectedRole,
-					selectedRoles,
-				}
-			})
+					selectedRole: '',
+					selectedRoles: [],
+				}))
+			}
 		}
 	}
 
@@ -285,33 +303,37 @@
 			oninput={handleChange}
 		/>
 
-		<!-- svelte-ignore a11y_label_has_associated_control -->
-		<label for="">
-			<span class="required-mark">*</span>
-			{roleField.title}
-		</label>
-		{#each roleField.options as option (option)}
-			<label>
-				{#if isCheckboxes}
-					<input
-						type="checkbox"
-						name="entry.{roleField.id}"
-						value={option}
-						bind:group={member1RoleGroup}
-						onchange={handleChange}
-					/>
-				{:else}
-					<input
-						type="radio"
-						name="entry.{roleField.id}"
-						value={option}
-						bind:group={member1Role}
-						onchange={handleChange}
-					/>
+		{#if roleField}
+			<!-- svelte-ignore a11y_label_has_associated_control -->
+			<label for="">
+				{#if roleField.required}
+					<span class="required-mark">*</span>
 				{/if}
-				{option}
+				{roleField.title}
 			</label>
-		{/each}
+			{#each roleField.options as option (option)}
+				<label>
+					{#if isCheckboxes}
+						<input
+							type="checkbox"
+							name="entry.{roleField.id}"
+							value={option}
+							bind:group={member1RoleGroup}
+							onchange={handleChange}
+						/>
+					{:else}
+						<input
+							type="radio"
+							name="entry.{roleField.id}"
+							value={option}
+							bind:group={member1Role}
+							onchange={handleChange}
+						/>
+					{/if}
+					{option}
+				</label>
+			{/each}
+		{/if}
 	</fieldset>
 
 	<!-- Additional members (2+) -->
@@ -345,30 +367,32 @@
 						oninput={handleChange}
 					/>
 
-					<!-- svelte-ignore a11y_label_has_associated_control -->
-					<label for="">{roleField.title}</label>
-					{#each roleField.options as option (option)}
-						<label>
-							{#if isCheckboxes}
-								<input
-									type="checkbox"
-									name="extra-role-{member.key}"
-									value={option}
-									bind:group={member.selectedRoles}
-									onchange={handleChange}
-								/>
-							{:else}
-								<input
-									type="radio"
-									name="extra-role-{member.key}"
-									value={option}
-									bind:group={member.selectedRole}
-									onchange={handleChange}
-								/>
-							{/if}
-							{option}
-						</label>
-					{/each}
+					{#if roleField}
+						<!-- svelte-ignore a11y_label_has_associated_control -->
+						<label for="">{roleField.title}</label>
+						{#each roleField.options as option (option)}
+							<label>
+								{#if isCheckboxes}
+									<input
+										type="checkbox"
+										name="extra-role-{member.key}"
+										value={option}
+										bind:group={member.selectedRoles}
+										onchange={handleChange}
+									/>
+								{:else}
+									<input
+										type="radio"
+										name="extra-role-{member.key}"
+										value={option}
+										bind:group={member.selectedRole}
+										onchange={handleChange}
+									/>
+								{/if}
+								{option}
+							</label>
+						{/each}
+					{/if}
 				</fieldset>
 			{/each}
 		</div>
