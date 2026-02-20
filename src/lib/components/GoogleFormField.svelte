@@ -100,7 +100,8 @@
 		if (field.type === 'CHECKBOXES') {
 			group =
 				storedValues.byId[field.id]?.split(', ') ||
-				storedValues.byTitle[normalizeTitle(field.title)]?.split(', ')
+				storedValues.byTitle[normalizeTitle(field.title)]?.split(', ') ||
+				[]
 		} else {
 			value = storedValues.byId[field.id] || storedValues.byTitle[normalizeTitle(field.title)]
 		}
