@@ -50,7 +50,7 @@ const SITES = [
 	},
 ]
 
-const DEFAULT_REDIRECT = '/base/g.chwbD7sLmAoLe65Z8'
+const DEFAULT_REDIRECT = '/15/g.chwbD7sLmAoLe65Z8/s.1Ucjl2Ww4RGgzrHuTBI814rWVlyP8ieq8EcxcMCtux90'
 
 const SITE_MAP: Record<string, string> = Object.fromEntries(
 	SITES.flatMap(({ redirect, domains }) => domains.map((d) => [d, redirect])),
