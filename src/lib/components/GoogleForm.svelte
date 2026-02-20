@@ -28,12 +28,16 @@
 		const fields = googleForm.fields || []
 		const matches = detectGroupRegistration(fields)
 
-		// Build a set of field indices that are consumed by group registration
+		// Build a set of field indices that are consumed by group registration.
+		// A 3-field match (name + role + group) consumes 3 indices;
+		// a 2-field match (name + group, no role) consumes only 2.
 		const consumed = new Set<number>()
 		for (const match of matches) {
 			consumed.add(match.startIndex)
 			consumed.add(match.startIndex + 1)
-			consumed.add(match.startIndex + 2)
+			if (match.roleField) {
+				consumed.add(match.startIndex + 2)
+			}
 		}
 
 		const plan: RenderItem[] = []
