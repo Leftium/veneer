@@ -388,6 +388,9 @@
 	@use 'open-props-scss' as *;
 
 	.group-registration {
+		margin-top: 0;
+		margin-bottom: 0;
+
 		// Tighter spacing globally: override Pico's generous margins
 		:global(input),
 		:global(textarea),
@@ -398,9 +401,18 @@
 
 	fieldset {
 		padding: $size-2 $size-3;
+		padding-inline: 0;
 		margin-bottom: 2px;
 		border-radius: $radius-2;
 		gap: 0;
+	}
+
+	.members-group {
+		margin-inline: calc(-1 * #{$size-3});
+	}
+
+	.members-group fieldset {
+		padding-inline: $size-3;
 	}
 
 	// Alternating row shading — use a transparent overlay so it adapts to
@@ -480,6 +492,11 @@
 		justify-content: center;
 		gap: $size-3;
 		flex-wrap: wrap;
+		margin-bottom: 0;
+
+		button {
+			margin-bottom: 0;
+		}
 	}
 
 	.group-count {
