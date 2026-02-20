@@ -72,7 +72,7 @@
 				{@const isGroupMember = (row as any)._isGroupMember === true}
 				<gd
 					class={{
-						'group-alt': groupIndex >= 0 && groupIndex % 2 === 1,
+						'group-alt': groupIndex % 2 === 1,
 						'group-member': isGroupMember,
 					}}
 					onclick={makeToggleDetails(r)}

@@ -255,7 +255,7 @@ function expandGroupMembers(
 	if (ci.group === -1) return rows
 
 	const expanded: SheetDataPipe['rows'] = []
-	let groupCounter = 0
+	let entryCounter = 0
 
 	for (const row of rows) {
 		const groupText = row[ci.group]?.value || ''
@@ -264,14 +264,14 @@ function expandGroupMembers(
 		if (members.length === 0) {
 			// Solo registration — no group data
 			const taggedRow = [...row] as any
-			taggedRow._groupIndex = -1
+			taggedRow._groupIndex = entryCounter++
 			taggedRow._isGroupMember = false
 			expanded.push(taggedRow)
 			continue
 		}
 
 		// This row is a group primary
-		const gIdx = groupCounter++
+		const gIdx = entryCounter++
 		const primaryName = row[ci.name]?.value || ''
 
 		// Tag the primary row
