@@ -23,7 +23,6 @@
 	import { browser } from '$app/environment'
 
 	interface Props {
-		// Props:
 		field: Question
 	}
 
@@ -246,6 +245,15 @@
 				{/if}{option}
 			</label>
 		{/each}
+		{#if field.type === 'CHECKBOXES' && field.required}
+			<input
+				type="checkbox"
+				style="opacity:0; position:absolute; width:0; height:0; pointer-events:none"
+				tabindex="-1"
+				required={browser && group.length === 0}
+				disabled={!browser || group.length > 0}
+			/>
+		{/if}
 	{:else}
 		<div class="hidden">
 			TODO: {field.type}
