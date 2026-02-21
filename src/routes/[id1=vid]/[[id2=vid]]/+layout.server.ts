@@ -93,6 +93,7 @@ export const load = async ({ params, url }) => {
 
 	let form: ResultGoogleForm = Err({ message: `Initial form` })
 	let sheet: ResultGoogleSheet = Err({ message: `Initial sheet` })
+	let firstFormImage: string | null = null
 
 	const [document1, document2] = await Promise.all([
 		fetchWithDocumentId(params.id1),
@@ -170,6 +171,10 @@ export const load = async ({ params, url }) => {
 			}
 			return result
 		}, [] as string[])
+
+		// OG image: first IMAGE field from the form, used as fallback when no header image
+		firstFormImage =
+			form.data.fields.find((f) => f.type === 'IMAGE')?.imgUrl?.replace(/=w\d+$/i, '') ?? null
 
 		// Remove info fields before first input.
 		form.data.fields = form.data.fields.filter((f, i) => i >= form.data.firstInput)
@@ -298,5 +303,6 @@ export const load = async ({ params, url }) => {
 		accentColor,
 		accentText,
 		bgColor,
+		ogImage: headerImage || firstFormImage,
 	}
 }

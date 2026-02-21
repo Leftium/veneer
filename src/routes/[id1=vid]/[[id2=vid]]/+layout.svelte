@@ -71,7 +71,7 @@
 	let activeTab = $state(params.tid)
 	let notificationBoxHidden = $state(false)
 
-	let tid = $state(params.tid)
+	let tid = $state(params.tid || 'info')
 
 	const successParty = page.url.searchParams.has('yay')
 
@@ -140,6 +140,7 @@
 
 ${!sourceUrlForm ? '' : `Google Form\n~ ${sourceUrlForm}`}
 ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
+</div>
 `,
 	)
 
@@ -159,12 +160,13 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 		See other projects
 		~ https://github.com/Leftium?tab=repositories&type=source
-	`)
 
-	register()
+		</div>
+	`)
 
 	let hasJS = $state(false)
 	onMount(async () => {
+		register()
 		// Set JS flag, then wait for swiper-js slides to become unhidden:
 		hasJS = true
 		await tick()
@@ -487,6 +489,9 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	<meta property="og:title" content={data.title} />
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content={page.url.href} />
+	{#if data.ogImage}
+		<meta property="og:image" content={data.ogImage} />
+	{/if}
 </svelte:head>
 
 {#if false}

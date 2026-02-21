@@ -18,8 +18,8 @@
 		})
 		.use(easyTables)
 
+	import { onMount } from 'svelte'
 	import store from 'store'
-	import { browser } from '$app/environment'
 
 	interface Props {
 		// Props:
@@ -31,6 +31,7 @@
 	// Bindings:
 	let value = $state('')
 	let group: string[] = $state([])
+	let mounted = $state(false)
 
 	// String value to store in localStorage:
 	let storeValue = $derived(field.type === 'CHECKBOXES' ? group?.join(', ') : value)
@@ -94,7 +95,7 @@
 		store.set('storedValues', storedValues)
 	}
 
-	if (browser) {
+	onMount(() => {
 		const storedValues = store.get('storedValues') || { byId: {}, byTitle: {} }
 
 		if (field.type === 'CHECKBOXES') {
@@ -105,7 +106,9 @@
 		} else {
 			value = storedValues.byId[field.id] || storedValues.byTitle[normalizeTitle(field.title)]
 		}
-	}
+
+		mounted = true
+	})
 </script>
 
 <d-section class:has-input={!!field.inputIndex}>
@@ -248,8 +251,8 @@
 				type="checkbox"
 				style="opacity:0; position:absolute; width:0; height:0; pointer-events:none"
 				tabindex="-1"
-				required={browser && group.length === 0}
-				disabled={!browser || group.length > 0}
+				required={mounted && group.length === 0}
+				disabled={!mounted || group.length > 0}
 			/>
 		{/if}
 	{:else}
