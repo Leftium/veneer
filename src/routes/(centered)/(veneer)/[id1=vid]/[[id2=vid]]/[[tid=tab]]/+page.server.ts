@@ -27,6 +27,7 @@ export const actions = {
 		}
 
 		// on success
-		throw redirect(303, `/${params.base}/${params.id1}/list?yay`)
+		const docPath = params.id2 ? `/${params.id1}/${params.id2}` : `/${params.id1}`
+		throw redirect(303, `${docPath}/list?yay`)
 	},
 }

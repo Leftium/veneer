@@ -1,9 +1,11 @@
+import { dev } from '$app/environment'
 import { gg } from '@leftium/gg'
 
 import { Err, isErr, isOk, Ok } from 'wellcrafted/result'
 import * as linkify from 'linkifyjs'
 
 import { m } from '$lib/paraglide/messages.js'
+import { PRESETS, resolvePresetName } from '$lib/presets'
 
 import { getGoogleDocumentId } from '$lib/google-document-util/url-id.js'
 import { stripHidden } from '$lib/google-document-util/google-sheets.js'
@@ -11,6 +13,14 @@ import type { ResultGoogleForm, ResultGoogleSheet } from '$lib/google-document-u
 import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-with-id'
 
 export const load = async ({ params, url }) => {
+	// --- Resolve preset for tab visibility ---
+	const hostname = ((dev && url.searchParams.get('hostname')) || url.hostname).replace(/^www\./, '')
+	const presetName = url.searchParams.get('preset') || resolvePresetName(hostname) || 'base'
+	const preset = PRESETS[presetName] || PRESETS['base']
+
+	// TODO: Phase 3 — support ?tabs= override
+	const visibleTabs = new Set(preset.tabs)
+
 	// URL params that control inclusion of sheet data hidden by user:
 	const allCols = url.searchParams.has('allcols')
 	const allRows = url.searchParams.has('allrows')
@@ -18,20 +28,17 @@ export const load = async ({ params, url }) => {
 	const skipSheetIdScan = url.searchParams.has('skipsheetidscan')
 
 	// prettier-ignore
-	const TABS: Record<string, [number, string, string]> ={
-        info: [0b0001, 'ℹ️', m.info()],
-        form: [0b0010, '✍', m.form()], 
-        list: [0b0100, '📋', m.list()],
-        raw:  [0b1000, '🔧', 'RAW'], 
-        dev:  [0b1000, '🔧', m.dev()],
-    }
+	const TABS: Record<string, [string, string]> = {
+		info: ['ℹ️', m.info()],
+		form: ['✍', m.form()],
+		list: ['📋', m.list()],
+		raw:  ['🔧', 'RAW'],
+		dev:  ['🔧', m.dev()],
+	}
 
-	// @ts-expect-error: TODO
-	const flags = Number(params.flags)
+	const numTabs = visibleTabs.size
 
 	const warnings = []
-
-	const numTabs = flags.toString(2).replace(/0/g, '').length
 
 	let title = ''
 	let info = ''
@@ -118,7 +125,7 @@ export const load = async ({ params, url }) => {
 		}, [] as string[])
 
 		// Remove info fields before first input.
-		form.data.fields = form.data.fields.filter((f, i) => i >= form.data.firstInput )
+		form.data.fields = form.data.fields.filter((f, i) => i >= form.data.firstInput)
 	}
 
 	// Detect and load sheet if necessary.
@@ -165,7 +172,7 @@ export const load = async ({ params, url }) => {
 
 	type TabsKey = keyof typeof TABS
 	const navTabs = Object.entries(TABS).reduce(
-		(acc, [hash, [, icon, name]]) => {
+		(acc, [hash, [icon, name]]) => {
 			const error =
 				((hash === 'info' || hash === 'form') && isErr(form)) ||
 				(hash === 'list' && isErr(sheet)) ||
@@ -173,7 +180,7 @@ export const load = async ({ params, url }) => {
 
 			acc[hash] = {
 				name,
-				icon,
+				icon: visibleTabs.has(hash) ? icon : '',
 				error,
 			}
 			return acc

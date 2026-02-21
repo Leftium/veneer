@@ -56,6 +56,12 @@
 
 	let { params, data, children } = $props()
 
+	// Build base path from doc IDs, preserving id2 when present
+	const docPath = params.id2 ? `/${params.id1}/${params.id2}` : `/${params.id1}`
+
+	// Preserve search params (e.g. ?hostname=) for dev navigation
+	const search = page.url.search
+
 	let swiperContainer = $state<SwiperContainer>()
 	let activeTab = $state(params.tid)
 	let notificationBoxHidden = $state(false)
@@ -106,7 +112,7 @@
 
 		// after sliding, update URL *only* on user-driven calls
 		if (updateHistory) {
-			goto(`/${params.base}/${params.id1}/${tid}`, {
+			goto(`${docPath}/${tid}${search}`, {
 				replaceState: false,
 				noScroll: true,
 				keepFocus: true,
@@ -229,7 +235,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		const out: string[] = []
 		let i = 0
 
-		const basepath = page.url.pathname.split('/')[1] || 'base'
+		// TODO: internalizeLinks() still has hardcoded doc IDs — refactor in Phase 3
 
 		while (i < lines.length) {
 			const line = lines[i++]
@@ -244,14 +250,14 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 					const prefix = documentId.length > 20 ? 'f' : 'g'
 					const id = `${prefix}.${documentId}`
 
-					let internalLink = `/${basepath}/${id}`
+					// TODO: Remove hardcoded doc IDs — refactor in Phase 3
+					let internalLink = `/${id}`
 
-					// TODO: Remove hardcoded rules:
 					if (/home/i.test(line)) {
-						internalLink = `/base/${id}`
+						internalLink = `/${id}`
 					}
 					if (/오시는 길|수칙/i.test(line)) {
-						internalLink = `/base/${id}`
+						internalLink = `/${id}`
 					}
 
 					if (/신청/.test(line)) {
@@ -260,7 +266,8 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 							isOk(data.form) &&
 							[data.form.data.documentId, data.form.data.veneerId].includes(id)
 						) {
-							internalLink = '/base/g.chwbD7sLmAoLe65Z8/form'
+							// TODO: Remove hardcoded doc ID
+							internalLink = '/g.chwbD7sLmAoLe65Z8/form'
 						}
 						//@ts-expect-error: TODO
 						const count = finalData.extra.count
@@ -281,12 +288,12 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				if (matches) {
 					const id = `s.${matches.groups?.id || ''}`
 
-					let internalLink = `/${basepath}/${id}`
+					let internalLink = `/${id}`
 
 					if (/확인/.test(line)) {
 						if (isOk(data.form) && isOk(data.sheet) && data.sheet.data.documentId === id) {
-							//internalLink = './list'
-							internalLink = '/base/g.chwbD7sLmAoLe65Z8/list'
+							// TODO: Remove hardcoded doc ID
+							internalLink = '/g.chwbD7sLmAoLe65Z8/list'
 						}
 						const button = `<a href="${internalLink}" role=button class=outline>Check who's going 👀</a>`
 						out.push(button)
@@ -333,7 +340,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 								e.preventDefault()
 								slideToTab(tid)
 							}}
-							href={`/${params.base}/${params.id1}/${tid}`}
+							href={`${docPath}/${tid}${search}`}
 						>
 							{icon}
 							{name}{error ? ' ⚠️' : ''}

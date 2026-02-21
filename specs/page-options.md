@@ -105,8 +105,7 @@ export interface Preset {
 export const PRESETS: Record<string, Preset> = {
 	base: {
 		tabs: ['info', 'form', 'list'],
-		defaultFormId: import.meta.env.VITE_DEFAULT_FORM_ID,
-		defaultSheetId: import.meta.env.VITE_DEFAULT_SHEET_ID,
+		// No default doc IDs — unknown domains render the launcher page.
 		headerImage: '/dance_night.gif',
 		headerColor: '#0b4474',
 		headerHeight: '100px',
@@ -115,7 +114,7 @@ export const PRESETS: Record<string, Preset> = {
 	btango: {
 		tabs: ['info', 'form', 'list'],
 		defaultFormId: 'g.4EKt4Vyzgq1E5eHC8',
-		defaultSheetId: 's.1jwmd...',
+		defaultSheetId: 's.1jwmdTf0fArizqA8IM6EavaTYDKn_uXMKj_VF3K1gw40',
 		headerImage: '/dance_night.gif',
 		headerColor: '#0b4474',
 		headerHeight: '100px',
@@ -124,7 +123,16 @@ export const PRESETS: Record<string, Preset> = {
 	'btango-class': {
 		tabs: ['info', 'form', 'list'],
 		defaultFormId: 'g.rzQZWr3o17Doj3Nq5',
-		defaultSheetId: 's.1bYcz...',
+		defaultSheetId: 's.1bYczvgFwW0t5A858xTIESlhulGP1cBtBlaDBwOHus30',
+		headerImage: '/dance_night.gif',
+		headerColor: '#0b4474',
+		headerHeight: '100px',
+		headerTextColor: 'white',
+	},
+	'btango-dj': {
+		tabs: ['form', 'list'],
+		defaultFormId: 'g.H9nD4tKrkp1m8ESC9',
+		defaultSheetId: 's.16AtRFdLdYfnJRcXTf5N3fcLvZMMu48eECHXpxLHv7VU',
 		headerImage: '/dance_night.gif',
 		headerColor: '#0b4474',
 		headerHeight: '100px',
@@ -133,7 +141,7 @@ export const PRESETS: Record<string, Preset> = {
 	vivianblues: {
 		tabs: ['info', 'form', 'list'],
 		defaultFormId: 'g.r6eRUz2U9uf5oVFn6',
-		defaultSheetId: 's.13E_w...',
+		defaultSheetId: 's.13E_wsbrKLEsuV-eDaTKl0a967EdpYgcZrXH0Gq_KK3g',
 		headerImage: '/dance_night.gif',
 		headerColor: '#0b4474',
 		headerHeight: '100px',
@@ -479,36 +487,39 @@ Priority: 1. Query param → 2. Form headerImageUrl → 3. Preset value
 
 ## Environment-Based Defaults
 
-Use environment variables for preset fallback doc IDs:
+Environment variables are not currently used for preset doc IDs. The `base` preset has no default doc IDs — unknown domains render the launcher page instead. Site-specific presets define their own doc IDs directly.
 
-```bash
-# .env.development
-VITE_DEFAULT_FORM_ID=g.testFormId
-VITE_DEFAULT_SHEET_ID=s.testSheetId
+If env-var defaults are needed in the future (e.g., for a dev-only quick-test preset), use SvelteKit's `PUBLIC_` prefix for client-exposed vars, not `VITE_`.
 
-# .env.production
-VITE_DEFAULT_FORM_ID=g.prodFormId
-VITE_DEFAULT_SHEET_ID=s.prodSheetId
-```
+## Implementation Progress
 
-The `base` preset references these env vars. Site-specific presets (btango, vivianblues) define their own doc IDs directly.
+### Phase 1: Domain-Preset System + Route Restructure — DONE
 
-## Recommended Implementation
+Implemented:
 
-### Phase 1: Domain-Preset System + Route Restructure
+1. Created `src/lib/presets.ts` with `DOMAIN_PRESETS`, `PRESETS`, `Preset` interface, `resolvePresetName()`
+2. Restructured routes: renamed `[base=base]/` to `(veneer)/` (invisible route group)
+3. Removed `src/params/base.ts`
+4. Rewrote `src/hooks.ts` with domain lookup, `deLocalizeUrl`, tab-name detection, veneer ID passthrough
+5. Created `src/routes/+page.svelte` launcher stub with `?hostname=` links to all presets
+6. Tab visibility driven by preset's `tabs` array in `+layout.server.ts` (pulled forward from Phase 3)
+7. `?preset=` query param override wired in `+layout.server.ts` (pulled forward from Phase 3)
+8. Tab navigation preserves both doc IDs (`id1` + `id2`) and search params
+9. Deleted legacy `[base=base]` route and `src/params/base.ts`
 
-1. Create `src/lib/presets.ts` with `DOMAIN_PRESETS`, `PRESETS`, and helper functions
-2. Restructure routes: rename `[base=base]/` to `(veneer)/`
-3. Remove `src/params/base.ts` (no longer needed)
-4. Update `src/hooks.ts` with new `reroute` logic (domain lookup, preset resolution, path normalization)
-5. Create `src/routes/+page.svelte` launcher page (stub — renders for unknown domains, minimal content)
+Notable decisions during implementation:
+
+- **No env var fallbacks** — `base` preset has no default doc IDs; launcher page renders instead
+- **btango-dj uses `tabs: ['form', 'list']`** — info content renders inline above the form (existing conditional in `+layout.svelte` handles this)
+- **`vivimil.com`** is the primary domain for the vivianblues preset (supersedes `vivianblues.com`)
+- **Legacy `[flags]/` route left in place** for reference; doesn't conflict with new routing
 
 ### Phase 2: Launcher Page (MVP)
 
 Useful immediately for development and testing without configured domains.
 
 1. List all defined presets with descriptions
-2. Link to preset domains (btango.com, vivianblues.com, etc.)
+2. Link to preset domains (btango.com, vivimil.com, etc.)
 3. Basic URL builder: paste a Google Form/Sheet URL → generate a veneer URL
 4. `?hostname=` helper for local dev (quick links to simulate different domains)
 
@@ -520,9 +531,13 @@ Later enhancements (no dedicated phase — added incrementally as other features
 
 ### Phase 3: Search Param Overrides
 
-1. Parse override params: `tabs`, `preset`, `headerImage`, `headerColor`, etc.
-2. Merge with resolved preset values in `+layout.server.ts`
-3. Pass merged config to layout/page components
+Partially done — `?preset=` and tab visibility already resolved in `+layout.server.ts`.
+
+Remaining:
+
+1. `?tabs=` override (including `?tabs=*` wildcard)
+2. `?headerImage=`, `?headerColor=`, `?headerHeight=`, `?headerTextColor=` overrides
+3. Pass merged config to layout/page components for header styling
 
 ### Phase 4: Dynamic Header Image
 
@@ -587,35 +602,33 @@ veneer.leftium.com/demo                # Demo page
 veneer.leftium.com/api/final-url       # API endpoint
 ```
 
-## Files to Modify
+## Files Modified (Phase 1)
 
-1. `src/lib/presets.ts` **(new)** — `DOMAIN_PRESETS`, `PRESETS`, `Preset` interface, helper functions
-2. `src/hooks.ts` — New `reroute` logic with domain lookup and path normalization
-3. `src/routes/(centered)/(veneer)/` **(rename from `[base=base]/`)** — Route group restructure
-4. `src/routes/(centered)/(veneer)/.../+layout.server.ts` — Preset resolution and config merging
-5. `src/routes/(centered)/(veneer)/.../+layout.svelte` — Use resolved config for styling
-6. `src/routes/+page.svelte` **(new)** — Launcher page
-7. `src/params/base.ts` **(delete)** — No longer needed
-8. `.env.development` **(new)** — Dev environment defaults
-9. `.env.production` **(new)** — Production environment defaults
-10. `.env.example` — Document `PUBLIC_HOSTNAME` and default doc ID vars
+1. `src/lib/presets.ts` **(new)** — `DOMAIN_PRESETS`, `PRESETS`, `Preset` interface, `resolvePresetName()`
+2. `src/hooks.ts` — Rewritten: domain lookup, `deLocalizeUrl`, path normalization
+3. `src/routes/(centered)/(veneer)/` **(renamed from `[base=base]/`)** — Invisible route group
+4. `src/routes/(centered)/(veneer)/.../+layout.server.ts` — Preset resolution, tab visibility filtering
+5. `src/routes/(centered)/(veneer)/.../+layout.svelte` — Removed `params.base`, preserved `id2` + search params on navigation
+6. `src/routes/(centered)/(veneer)/.../[[tid=tab]]/+page.server.ts` — Preserved `id2` in post-submit redirect
+7. `src/routes/+page.svelte` **(new)** — Launcher stub with preset links
+8. `src/params/base.ts` **(deleted)**
 
 ## Complete Options Summary
 
-| Category      | Option           | Source                           | Priority (highest first)                              |
-| ------------- | ---------------- | -------------------------------- | ----------------------------------------------------- |
-| **Preset**    | Preset name      | `?preset=` / Domain / Fallback   | 1. `?preset=` param, 2. Domain mapping, 3. `'base'`   |
-| **Documents** | Form ID          | URL path / Preset                | 1. URL, 2. Preset default, 3. Env var                 |
-|               | Sheet ID         | URL path / Preset                | 1. URL, 2. Auto-detect, 3. Preset default, 4. Env var |
-| **Tabs**      | Visible tabs     | Preset + query param             | 1. Query param, 2. Preset                             |
-| **Header**    | Image            | Form data + preset + query param | 1. Query param, 2. Form `headerImageUrl`, 3. Preset   |
-|               | Color            | Preset + query param             | 1. Query param, 2. Preset                             |
-|               | Height           | Preset + query param             | 1. Query param, 2. Preset                             |
-|               | Text color       | Preset + query param             | 1. Query param, 2. Preset                             |
-| **Data**      | Show hidden cols | Query param                      | `?allcols`                                            |
-|               | Show hidden rows | Query param                      | `?allrows`                                            |
-|               | Skip sheet scan  | Query param                      | `?skipsheetidscan`                                    |
-| **Locale**    | Language         | URL prefix                       | Paraglide handles this                                |
+| Category      | Option           | Source                           | Priority (highest first)                            |
+| ------------- | ---------------- | -------------------------------- | --------------------------------------------------- |
+| **Preset**    | Preset name      | `?preset=` / Domain / Fallback   | 1. `?preset=` param, 2. Domain mapping, 3. `'base'` |
+| **Documents** | Form ID          | URL path / Preset                | 1. URL, 2. Preset default                           |
+|               | Sheet ID         | URL path / Preset                | 1. URL, 2. Auto-detect, 3. Preset default           |
+| **Tabs**      | Visible tabs     | Preset + query param             | 1. Query param, 2. Preset                           |
+| **Header**    | Image            | Form data + preset + query param | 1. Query param, 2. Form `headerImageUrl`, 3. Preset |
+|               | Color            | Preset + query param             | 1. Query param, 2. Preset                           |
+|               | Height           | Preset + query param             | 1. Query param, 2. Preset                           |
+|               | Text color       | Preset + query param             | 1. Query param, 2. Preset                           |
+| **Data**      | Show hidden cols | Query param                      | `?allcols`                                          |
+|               | Show hidden rows | Query param                      | `?allrows`                                          |
+|               | Skip sheet scan  | Query param                      | `?skipsheetidscan`                                  |
+| **Locale**    | Language         | URL prefix                       | Paraglide handles this                              |
 
 ## Design Decisions
 
