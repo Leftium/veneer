@@ -2,13 +2,46 @@
 
 ## Overview
 
-This spec documents all options that affect page rendering and explores methods for passing these options.
+This spec documents all options that affect page rendering, the domain-based preset system, URL routing architecture, and methods for passing configuration.
 
-## Current State
+## Architecture Summary
+
+```
+Browser URL                    reroute hook                    File-system route
+─────────────                  ────────────                    ─────────────────
+btango.com/                 → /g.rzQ.../s.1bY...            → (veneer)/[id1=vid]/[[id2=vid]]/[[tid=tab]]
+btango.com/form             → /g.rzQ.../s.1bY.../form       → (veneer)/[id1=vid]/[[id2=vid]]/[[tid=tab]]
+btango.com/g.abc123/info    → /g.abc123/info                 → (veneer)/[id1=vid]/[[tid=tab]]
+btango.com/?preset=kiosk    → /g.rzQ.../s.1bY...            → (veneer)/... (kiosk preset applied)
+veneer.leftium.com/         → / (no reroute)                 → +page.svelte (launcher)
+veneer.leftium.com/demo     → /demo (no reroute)             → demo/+page.svelte
+```
+
+Key principles:
+
+- **Domain determines default preset** — hostname maps to a preset name, which provides default doc IDs, tab visibility, header styling, etc.
+- **Query param overrides preset** — `?preset=kiosk` overrides the domain default; no preset names in URL path segments.
+- **No prefix segment in URLs** — the `base` segment is removed. First URL segment is either a doc ID or tab name.
+- **`(veneer)` route group** — veneer routes live in an invisible route group; `reroute` normalizes paths before route matching.
+- **Launcher page for unknown domains** — domains without a preset show a directory/configuration page at `/`.
+
+## Current State (Legacy)
+
+### temp-domain-redirect branch: Domain-based routing
+
+Maps hostnames directly to redirect paths with hardcoded flags + doc IDs:
+
+```typescript
+const SITES = [
+	{ redirect: '/7/g.rzQZWr3o.../s.1bYcz...', hostnames: ['tangoclass.btango.com'] },
+	{ redirect: '/7/g.4EKt4Vyz.../s.1jwmd...', hostnames: ['btango.com'] },
+	{ redirect: '/7/g.r6eRUz2U.../s.13E_w...', hostnames: ['vivianblues.com', 'vivibl.com'] },
+]
+```
+
+**Limitations:** Conflates "which documents" with "how to display" (flags). No reusable presets. One config per domain.
 
 ### temp branch: Bitfield in URL path
-
-The temp branch uses a numeric bitfield in the URL path to control which tabs are visible:
 
 ```
 URL: /7/g.docId/s.sheetId
@@ -16,65 +49,345 @@ URL: /7/g.docId/s.sheetId
       flags (binary: 0111 = info + form + list)
 ```
 
-```typescript
-// Tab visibility controlled by bitfield
-const TABS: Record<string, [number, string, string]> = {
-	info: [0b0001, 'ℹ️', m.info()], // bit 0
-	form: [0b0010, '✍', m.form()], // bit 1
-	list: [0b0100, '📋', m.list()], // bit 2
-	raw: [0b1000, '🔧', 'RAW'], // bit 3
-	dev: [0b1000, '🔧', m.dev()], // bit 3 (same as raw)
-}
-
-const flags = Number(params.flags) // e.g., 7 = 0b0111
-
-// Tab shown if (flags & bit) > 0
-icon: (flags & bit) > 0 ? icon : ''
-```
+**Limitations:** Not human-readable. Hard to extend beyond tab visibility.
 
 ### main branch: Named base param (not fully implemented)
-
-The main branch uses a named `base` param but doesn't fully implement options yet:
 
 ```
 URL: /base/g.docId/info
       ^^^^
-      base param (currently only matches "base")
+      base param (currently only matches literal "base")
 ```
 
+**Limitations:** Extra URL segment. `flags` code still exists but `params.flags` is undefined.
+
+## Domain-Preset System
+
+### Domain-to-Preset Mapping
+
+Hostnames map to a **preset name**, not directly to configuration. Multiple domains can share a preset. Domains without a mapping show the launcher page.
+
 ```typescript
-// src/params/base.ts
-export function match(value) {
-	return ['base'].includes(value)
+// src/lib/presets.ts
+
+export const DOMAIN_PRESETS: Record<string, string | null> = {
+	// Dance community sites
+	'btango.com': 'btango',
+	'tangoclass.btango.com': 'btango-class',
+	'tangodj.btango.com': 'btango-dj',
+	'vivianblues.com': 'vivianblues',
+	'vivibl.com': 'vivianblues', // alias → same preset
+	'vivimil.com': 'vivianblues', // alias → same preset
+	'xn--pg3bl5ba.com': 'vivianblues', // IDN alias
+
+	// Veneer home — no preset, shows launcher
+	'veneer.leftium.com': null,
 }
 ```
 
-The `flags` code still exists but `params.flags` is undefined (marked with `@ts-expect-error`).
+### Preset Definitions
+
+Each preset defines default doc IDs, tab visibility, and header styling:
+
+```typescript
+// src/lib/presets.ts
+
+export interface Preset {
+	tabs: string[]
+	defaultFormId?: string
+	defaultSheetId?: string
+	headerImage: string | null
+	headerColor: string
+	headerHeight: string
+	headerTextColor: string
+}
+
+export const PRESETS: Record<string, Preset> = {
+	base: {
+		tabs: ['info', 'form', 'list'],
+		defaultFormId: import.meta.env.VITE_DEFAULT_FORM_ID,
+		defaultSheetId: import.meta.env.VITE_DEFAULT_SHEET_ID,
+		headerImage: '/dance_night.gif',
+		headerColor: '#0b4474',
+		headerHeight: '100px',
+		headerTextColor: 'white',
+	},
+	btango: {
+		tabs: ['info', 'form', 'list'],
+		defaultFormId: 'g.4EKt4Vyzgq1E5eHC8',
+		defaultSheetId: 's.1jwmd...',
+		headerImage: '/dance_night.gif',
+		headerColor: '#0b4474',
+		headerHeight: '100px',
+		headerTextColor: 'white',
+	},
+	'btango-class': {
+		tabs: ['info', 'form', 'list'],
+		defaultFormId: 'g.rzQZWr3o17Doj3Nq5',
+		defaultSheetId: 's.1bYcz...',
+		headerImage: '/dance_night.gif',
+		headerColor: '#0b4474',
+		headerHeight: '100px',
+		headerTextColor: 'white',
+	},
+	vivianblues: {
+		tabs: ['info', 'form', 'list'],
+		defaultFormId: 'g.r6eRUz2U9uf5oVFn6',
+		defaultSheetId: 's.13E_w...',
+		headerImage: '/dance_night.gif',
+		headerColor: '#0b4474',
+		headerHeight: '100px',
+		headerTextColor: 'white',
+	},
+	minimal: {
+		tabs: ['info'],
+		headerImage: null,
+		headerColor: '#333',
+		headerHeight: '0',
+		headerTextColor: 'white',
+	},
+	kiosk: {
+		tabs: ['form'],
+		headerImage: null,
+		headerColor: '#333',
+		headerHeight: '40px',
+		headerTextColor: 'white',
+	},
+}
+```
+
+### Preset Resolution Priority
+
+When determining which preset to use:
+
+1. **`?preset=` query param** — explicit override (e.g., `?preset=kiosk`)
+2. **Domain default** — looked up from `DOMAIN_PRESETS` by hostname
+3. **Fallback** — `'base'` preset
+
+```typescript
+function resolvePreset(hostname: string, url: URL): string {
+	// 1. Query param override
+	const paramPreset = url.searchParams.get('preset')
+	if (paramPreset && paramPreset in PRESETS) return paramPreset
+
+	// 2. Domain default
+	const domainPreset = DOMAIN_PRESETS[hostname.replace(/^www\./, '')]
+	if (domainPreset) return domainPreset
+
+	// 3. Fallback
+	return 'base'
+}
+```
+
+Preset resolution happens in `+layout.server.ts` (not in `reroute`), since `reroute` only handles path normalization and doesn't have access to pass preset context to the page.
+
+## URL Routing Architecture
+
+### No Prefix Segment
+
+The `base` (or `[base=base]`) segment is removed from URLs. The first URL segment is one of:
+
+| First segment    | Example          | Meaning                                       |
+| ---------------- | ---------------- | --------------------------------------------- |
+| _(empty — root)_ | `/`              | Use domain preset defaults (or show launcher) |
+| Tab name         | `/info`, `/form` | Tab on domain's default docs                  |
+| Doc ID           | `/g.abc123`      | Specific document, domain preset styling      |
+
+Preset overrides are handled via query param (`?preset=kiosk`), not URL path segments.
+
+### `(veneer)` Route Group
+
+Veneer routes use an invisible SvelteKit route group that never appears in URLs:
+
+```
+src/routes/
+├── +page.svelte                              ← launcher page (unknown domains)
+├── (centered)/
+│   ├── +layout.svelte
+│   ├── (veneer)/                             ← invisible route group
+│   │   └── [id1=vid]/
+│   │       └── [[id2=vid]]/
+│   │           ├── +layout.server.ts         ← data loading, preset resolution
+│   │           ├── +layout.svelte            ← main UI: tabs, header, footer
+│   │           └── [[tid=tab]]/
+│   │               ├── +page.server.ts       ← form submission action
+│   │               └── +page.svelte
+│   ├── test-links/
+│   └── [flags]/                              ← legacy (to be removed)
+│       └── ...
+├── api/
+├── demo/
+```
+
+**Why this works:** The `vid` param matcher is strict (`^[sfgbh]\.\w+$`), so it won't match static routes (`api`, `demo`, `test-links`), random paths (`favicon.ico`), or tab names (`info`, `form`). The `reroute` hook ensures paths always start with a valid doc ID by the time route matching occurs.
+
+### `reroute` Hook Logic
+
+The `reroute` hook normalizes browser URLs into paths the `(veneer)` route group can match. It only handles path normalization — preset resolution happens downstream in `+layout.server.ts`.
+
+**Locale prefix handling:** The hook calls `deLocalizeUrl()` first, which strips the Paraglide locale prefix (e.g., `/ko/`) before any other processing. This means the locale layer is transparent to the rest of the reroute logic:
+
+```
+/ko/form  →  deLocalizeUrl  →  /form  →  reroute logic  →  /g.xxx/s.yyy/form
+/ko/      →  deLocalizeUrl  →  /      →  reroute logic  →  /g.xxx/s.yyy
+/form     →  deLocalizeUrl  →  /form  →  reroute logic  →  /g.xxx/s.yyy/form
+```
+
+The actual rendered language is determined by the `PARAGLIDE_LOCALE` cookie (set via `setLocale()`), not the URL prefix. The `/ko/` prefix is primarily for shareable links — a user with a `ko` cookie sees Korean content regardless of whether `/ko/` is in the URL.
+
+```typescript
+// src/hooks.ts
+
+const TAB_NAMES = new Set(['info', 'form', 'list', 'raw', 'dev'])
+
+function isVeneerId(segment: string): boolean {
+	return /^[sfgbh]\.[a-zA-Z0-9_-]+$/.test(segment)
+}
+
+export const reroute: Reroute = ({ url }) => {
+	const hostname = url.hostname.replace(/^www\./, '')
+	const path = deLocalizeUrl(url).pathname // strips /ko/ prefix if present
+	const segments = path.split('/').filter(Boolean)
+	const first = segments[0]
+
+	// --- Resolve default docs from domain ---
+	const domainPresetName = DOMAIN_PRESETS[hostname]
+	const preset = PRESETS[domainPresetName || '']
+
+	// No domain mapping, no path → launcher page
+	if (!domainPresetName && !first) {
+		return path
+	}
+
+	// Domain maps to null (e.g., veneer.leftium.com) → launcher page
+	if (domainPresetName === null && !first) {
+		return path
+	}
+
+	// --- Build normalized path ---
+	if (!first || TAB_NAMES.has(first)) {
+		// Root or tab-only: prepend default doc IDs from domain preset
+		const docs = [preset?.defaultFormId, preset?.defaultSheetId].filter(Boolean).join('/')
+		if (!docs) return path // no default docs → fall through (404 or launcher)
+		const tab = first ? `/${first}` : ''
+		return `/${docs}${tab}`
+	}
+
+	if (isVeneerId(first)) {
+		// Doc ID(s) provided in URL — pass through
+		return path
+	}
+
+	// Not a veneer path — pass through to static routes (api, demo, etc.)
+	return path
+}
+```
+
+**Note:** The `reroute` hook does not read `?preset=` — it only uses the domain's default preset to find default doc IDs for path normalization. The `?preset=` param is read later in `+layout.server.ts` to determine styling, tab visibility, etc.
+
+### URL Behavior by Domain Type
+
+**Domains with a preset (e.g., `btango.com`):**
+
+| Browser URL              | Rerouted to               | Result                                                     |
+| ------------------------ | ------------------------- | ---------------------------------------------------------- |
+| `/`                      | `/g.rzQ.../s.1bY...`      | Default docs, default tab (first in preset's `tabs` array) |
+| `/info`                  | `/g.rzQ.../s.1bY.../info` | Default docs, info tab                                     |
+| `/form`                  | `/g.rzQ.../s.1bY.../form` | Default docs, form tab                                     |
+| `/g.abc123`              | `/g.abc123`               | Custom doc, default tab                                    |
+| `/g.abc123/info`         | `/g.abc123/info`          | Custom doc, info tab                                       |
+| `/?preset=kiosk`         | `/g.rzQ.../s.1bY...`      | Default docs, kiosk styling                                |
+| `/g.abc123?preset=kiosk` | `/g.abc123`               | Custom doc, kiosk styling                                  |
+
+**Domains without a preset (e.g., `veneer.leftium.com`):**
+
+| Browser URL              | Rerouted to               | Result                    |
+| ------------------------ | ------------------------- | ------------------------- |
+| `/`                      | `/` (no reroute)          | Launcher page             |
+| `/info`                  | `/info` (no default docs) | 404 (expected)            |
+| `/g.abc123/info`         | `/g.abc123/info`          | Custom doc, info tab      |
+| `/g.abc123?preset=kiosk` | `/g.abc123`               | Custom doc, kiosk styling |
+| `/demo`                  | `/demo` (no reroute)      | Demo page                 |
+
+### Dev/Testing Support
+
+For local development, hostname simulation is supported via:
+
+1. **`?hostname=` query param** — per-request override
+2. **`PUBLIC_HOSTNAME` env var** — session-level override in `.env`
+
+```typescript
+// In reroute hook
+const hostname =
+	(dev && url.searchParams.get('hostname')) ||
+	(dev && PUBLIC_HOSTNAME) ||
+	url.hostname.replace(/^www\./, '')
+```
+
+## Launcher Page
+
+When a domain has no preset mapping (or maps to `null`), the root `/` renders a launcher page instead of rerouting to default docs.
+
+**Purpose:**
+
+- Lists all known presets with descriptions and live links
+- Provides a form to paste Google Form/Sheet URLs and generate a veneer URL
+- Links to preset domains (btango.com, vivianblues.com, etc.)
+- Serves as the "home page" for `veneer.leftium.com`
+
+**Route:** `src/routes/+page.svelte`
 
 ## Rendering Options Inventory
 
-### 1. Tab Visibility
+### 1. Tab Visibility and Default Tab
 
-| Option        | Description                  | Current Implementation |
-| ------------- | ---------------------------- | ---------------------- |
-| Show Info tab | Display info/description tab | Bitfield bit 0         |
-| Show Form tab | Display form input tab       | Bitfield bit 1         |
-| Show List tab | Display responses list tab   | Bitfield bit 2         |
-| Show Dev tab  | Display raw/debug tabs       | Bitfield bit 3         |
+| Option        | Description                  | Source |
+| ------------- | ---------------------------- | ------ |
+| Show Info tab | Display info/description tab | Preset |
+| Show Form tab | Display form input tab       | Preset |
+| Show List tab | Display responses list tab   | Preset |
+| Show Dev tab  | Display raw/debug tabs       | Preset |
+
+**Default tab:** When no `[[tid=tab]]` segment is in the URL (e.g., `btango.com/` or `/g.abc123`), the first tab in the preset's `tabs` array is shown. For the `btango` preset (`tabs: ['info', 'form', 'list']`), this means `info`.
+
+**Explicit default tab in URL:** Visiting `btango.com/info` works — `reroute` maps it to `/g.xxx/s.yyy/info` and the info tab is shown. The URL bar stays as `btango.com/info` (no normalization redirect to `/`). Both `/` and `/info` render identically; `/` is the canonical short form.
+
+**Tab link URLs:** When viewing the domain's default docs, tab links use short URLs. The default tab (first in array) links to `/` (clean, no tab segment); other tabs link to `/form`, `/list`, etc. For non-default docs, the default tab links to `/g.abc123` and others to `/g.abc123/form`, `/g.abc123/list`, etc.
+
+**`?tabs=` query param override:** Overrides the preset's tab list, controlling both visibility and order. The first tab in `?tabs=` becomes the default tab.
+
+```
+btango.com/?tabs=form,info        # Visible: form, info. Default: form. No list tab.
+btango.com/?tabs=info,form,list   # Same as btango preset default.
+btango.com/g.abc123?tabs=dev      # Only dev tab visible.
+btango.com/?tabs=*                # All available tabs (info, form, list, dev). Useful for dev.
+```
+
+**Implementation in `+layout.server.ts`:**
+
+```typescript
+const ALL_TABS = ['info', 'form', 'list', 'dev']
+
+const preset = resolvePreset(hostname, url)
+const tabsParam = url.searchParams.get('tabs')
+const tabs = tabsParam === '*' ? ALL_TABS : tabsParam?.split(',') || preset.tabs
+```
+
+**Edge case — tab segment not in visible set:** If the URL specifies a tab that isn't in the resolved tab list (e.g., `btango.com/list?tabs=info,form`), the requested tab is ignored and the default tab (first in `?tabs=` list) is shown instead. The `list` tab doesn't exist in the visible set, so it gracefully falls back.
 
 ### 2. Header Styling
 
-| Option            | Description                 | Current Implementation               |
+| Option            | Description                 | Source                               |
 | ----------------- | --------------------------- | ------------------------------------ |
-| Header image      | Background image for header | **Hardcoded** (`/dance_night.gif`)   |
-| Header color      | Fallback background color   | **Hardcoded** (`#0b4474`)            |
-| Header height     | Height of header spacer     | **Hardcoded** (`100px` or `$size-2`) |
-| Header text color | Color of title/nav text     | **Hardcoded** (`white`)              |
+| Header image      | Background image for header | Preset / Form metadata / Query param |
+| Header color      | Fallback background color   | Preset / Query param                 |
+| Header height     | Height of header spacer     | Preset / Query param                 |
+| Header text color | Color of title/nav text     | Preset / Query param                 |
 
-**Note:** `headerImageUrl` IS parsed from Google Form data but NOT used:
+**Note:** `headerImageUrl` IS parsed from Google Form data but NOT yet used:
 
 ```typescript
-// In google-form.ts - this data is available but unused
+// In google-form.ts — this data is available but unused
 const matches = html.match(/background-image: url\(([^)]*)/)
 if (matches?.length && matches[1]) {
 	form.headerImageUrl = matches[1]
@@ -83,28 +396,37 @@ if (matches?.length && matches[1]) {
 
 ### 3. Data Display Options
 
-| Option            | Description                    | Current Implementation |
-| ----------------- | ------------------------------ | ---------------------- |
-| `allcols`         | Show hidden columns in sheet   | URL search param       |
-| `allrows`         | Show hidden rows in sheet      | URL search param       |
-| `skipsheetidscan` | Don't auto-detect linked sheet | URL search param       |
+| Option            | Description                    | Source           |
+| ----------------- | ------------------------------ | ---------------- |
+| `allcols`         | Show hidden columns in sheet   | URL search param |
+| `allrows`         | Show hidden rows in sheet      | URL search param |
+| `skipsheetidscan` | Don't auto-detect linked sheet | URL search param |
 
 ### 4. Locale/i18n
 
-| Option   | Description         | Current Implementation               |
-| -------- | ------------------- | ------------------------------------ |
-| Language | UI language (en/ko) | Paraglide URL prefix or `baseLocale` |
+| Option   | Description         | Source                                            |
+| -------- | ------------------- | ------------------------------------------------- |
+| Language | UI language (en/ko) | `PARAGLIDE_LOCALE` cookie / `baseLocale` fallback |
+
+Paraglide supports two locales: `en` (base, no URL prefix) and `ko` (Korean, `/ko/` prefix). The URL prefix is stripped by `deLocalizeUrl()` in the `reroute` hook before any other routing logic runs. The rendered language is determined by the `PARAGLIDE_LOCALE` cookie, not the URL prefix — see `reroute` Hook Logic section for details.
+
+| URL                           | Locale prefix   | De-localized path |
+| ----------------------------- | --------------- | ----------------- |
+| `btango.com/form`             | (none, English) | `/form`           |
+| `btango.com/ko/form`          | `/ko/` stripped | `/form`           |
+| `btango.com/ko/g.abc123/info` | `/ko/` stripped | `/g.abc123/info`  |
+| `veneer.leftium.com/ko/`      | `/ko/` stripped | `/`               |
 
 ### 5. Document IDs
 
 The page can display data from up to two Google documents: a Form and/or a Sheet.
 
-| Option           | Description                        | Current Implementation          |
+| Option           | Description                        | Source                          |
 | ---------------- | ---------------------------------- | ------------------------------- |
 | Form ID          | Google Form document ID            | URL path param (`id1` or `id2`) |
 | Sheet ID         | Google Sheet document ID           | URL path param (`id1` or `id2`) |
-| Default Form ID  | Fallback form when no ID provided  | **Hardcoded** in `hooks.ts`     |
-| Default Sheet ID | Fallback sheet when no ID provided | **Hardcoded** in `hooks.ts`     |
+| Default Form ID  | Fallback form when no ID provided  | Preset / Env var                |
+| Default Sheet ID | Fallback sheet when no ID provided | Preset / Env var                |
 
 **Document ID Prefixes:**
 
@@ -113,15 +435,8 @@ The page can display data from up to two Google documents: a Form and/or a Sheet
 | `g.`   | Google Forms short link (forms.gle) | `g.abc123`            |
 | `f.`   | Google Forms full ID                | `f.1FAIpQL...`        |
 | `s.`   | Google Sheets ID                    | `s.13E_wsbrKLEsuV...` |
-
-**Current URL patterns:**
-
-```
-/base/g.formId                  # Form only
-/base/s.sheetId                 # Sheet only
-/base/g.formId/s.sheetId        # Form + Sheet
-/base/g.formId/s.sheetId/form   # Form + Sheet, form tab active
-```
+| `b.`   | Bitly shortened URL                 | `b.abc123`            |
+| `h.`   | ShortUrl shortened URL              | `h.abc123`            |
 
 **Auto-detection:** If only a form is provided, the system scans links in the form description to auto-detect a linked sheet (unless `?skipsheetidscan` is set).
 
@@ -133,11 +448,38 @@ The page can display data from up to two Google documents: a Form and/or a Sheet
 | Logo           | Custom logo in header           | Branding            |
 | Footer content | Custom footer links             | Site customization  |
 
+## Configuration Passing Methods
+
+### Presets (Primary)
+
+Named presets define a complete configuration bundle. Applied via domain default or `?preset=` query param override.
+
+```
+btango.com/                    # domain → 'btango' preset
+btango.com/?preset=kiosk       # query param → 'kiosk' preset (overrides domain)
+/g.abc123?preset=minimal       # query param → 'minimal' preset (any domain)
+```
+
+### Search Param Overrides
+
+Query parameters override individual preset values:
+
+```
+btango.com/?tabs=info,form              # override tabs from preset
+btango.com/g.abc123?headerImage=none    # override header from preset
+```
+
+### Google Form/Sheet Metadata
+
+Header image URL is parsed from Google Form data and can override preset values:
+
+```
+Priority: 1. Query param → 2. Form headerImageUrl → 3. Preset value
+```
+
 ## Environment-Based Defaults
 
-### Dev Mode with Test Documents
-
-Use environment variables to set default document IDs, allowing different defaults for development vs production:
+Use environment variables for preset fallback doc IDs:
 
 ```bash
 # .env.development
@@ -149,206 +491,23 @@ VITE_DEFAULT_FORM_ID=g.prodFormId
 VITE_DEFAULT_SHEET_ID=s.prodSheetId
 ```
 
-**Implementation in `hooks.ts`:**
-
-```typescript
-import { dev } from '$app/environment'
-import { VITE_DEFAULT_FORM_ID, VITE_DEFAULT_SHEET_ID } from '$env/static/public'
-
-const DEFAULT_FORM = VITE_DEFAULT_FORM_ID || 'g.chwbD7sLmAoLe65Z8'
-const DEFAULT_SHEET = VITE_DEFAULT_SHEET_ID || ''
-
-export const reroute = ({ url }) => {
-	if (url.pathname === '/') {
-		const docs = [DEFAULT_FORM, DEFAULT_SHEET].filter(Boolean).join('/')
-		return `/base/${docs}`
-	}
-	return deLocalizeUrl(url).pathname
-}
-```
-
-**Benefits:**
-
-- Dev environment uses test forms that can be freely modified
-- Production uses real forms
-- No hardcoded IDs in source code
-- Easy to switch between document sets
-- CI/CD can inject appropriate values
-
-**Preset-specific defaults:**
-
-Presets could also define their own default documents:
-
-```typescript
-// src/lib/presets.ts
-export const PRESETS = {
-	base: {
-		tabs: ['info', 'form', 'list'],
-		defaultFormId: import.meta.env.VITE_DEFAULT_FORM_ID,
-		defaultSheetId: import.meta.env.VITE_DEFAULT_SHEET_ID,
-		// ...
-	},
-	demo: {
-		tabs: ['info', 'form', 'list'],
-		defaultFormId: 'g.demoFormId', // Always use demo form
-		defaultSheetId: 's.demoSheetId',
-		// ...
-	},
-}
-```
-
-## Options for Passing Configuration
-
-### Option A: URL Path Segment (Current temp approach)
-
-```
-/7/g.docId          # flags = 7 (binary 0111)
-/15/g.docId         # flags = 15 (all tabs)
-```
-
-**Pros:**
-
-- Compact URLs
-- Easy to share specific configurations
-- Cacheable by path
-
-**Cons:**
-
-- Not human-readable
-- Limited to numeric values
-- Hard to extend with new options
-
-### Option B: Named Path Segment
-
-```
-/base/g.docId           # default config
-/minimal/g.docId        # info only
-/full/g.docId           # all tabs
-/kiosk/g.docId          # form only, no nav
-```
-
-**Pros:**
-
-- Human-readable
-- Semantic meaning
-- Easy to remember
-
-**Cons:**
-
-- Limited presets
-- Can't combine arbitrarily
-- Requires predefined configurations
-
-### Option C: URL Search Params
-
-```
-/base/g.docId?tabs=info,form&header=none
-/base/g.docId?theme=dark&color=red
-```
-
-**Pros:**
-
-- Flexible key-value pairs
-- Easy to add new options
-- Can combine any options
-
-**Cons:**
-
-- Longer URLs
-- Less cacheable
-- Can look messy
-
-### Option D: Hybrid Approach (Recommended)
-
-Combine named presets with search param overrides:
-
-```
-/base/g.docId                           # default preset
-/base/g.docId?tabs=info,form            # override tabs
-/kiosk/g.docId                          # kiosk preset (form only)
-/kiosk/g.docId?header=custom            # kiosk with custom header
-```
-
-**Implementation:**
-
-```typescript
-// src/lib/presets.ts
-export const PRESETS = {
-	base: {
-		tabs: ['info', 'form', 'list'],
-		headerImage: '/dance_night.gif',
-		headerColor: '#0b4474',
-		headerHeight: '100px',
-	},
-	minimal: {
-		tabs: ['info'],
-		headerImage: null,
-		headerColor: '#333',
-		headerHeight: '0',
-	},
-	kiosk: {
-		tabs: ['form'],
-		headerImage: null,
-		headerColor: '#333',
-		headerHeight: '40px',
-	},
-	full: {
-		tabs: ['info', 'form', 'list', 'dev'],
-		headerImage: '/dance_night.gif',
-		headerColor: '#0b4474',
-		headerHeight: '100px',
-	},
-}
-
-// src/params/base.ts
-export function match(value) {
-	return Object.keys(PRESETS).includes(value)
-}
-```
-
-```typescript
-// In +layout.server.ts
-const preset = PRESETS[params.base] || PRESETS.base
-
-// Override with search params
-const tabs = url.searchParams.get('tabs')?.split(',') || preset.tabs
-const headerImage = url.searchParams.get('headerImage') || preset.headerImage
-// ... etc
-```
-
-### Option E: Google Form/Sheet Metadata
-
-Store configuration in the Google Form/Sheet itself:
-
-- Use a special field or sheet tab for config
-- Parse config from form description
-- Use custom properties if available
-
-**Pros:**
-
-- Config travels with the document
-- No URL changes needed
-- Owner controls appearance
-
-**Cons:**
-
-- Requires parsing/convention
-- Can't override per-link
-- More complex implementation
+The `base` and `full` presets reference these env vars. Site-specific presets (btango, vivianblues) define their own doc IDs directly.
 
 ## Recommended Implementation
 
-### Phase 1: Named Presets
+### Phase 1: Domain-Preset System + Route Restructure
 
-1. Define preset configurations in `src/lib/presets.ts`
-2. Update `src/params/base.ts` to match preset names
-3. Apply preset values in `+layout.server.ts`
+1. Create `src/lib/presets.ts` with `DOMAIN_PRESETS`, `PRESETS`, and helper functions
+2. Restructure routes: rename `[base=base]/` to `(veneer)/`
+3. Remove `src/params/base.ts` (no longer needed)
+4. Update `src/hooks.ts` with new `reroute` logic (domain lookup, preset resolution, path normalization)
+5. Create `src/routes/+page.svelte` launcher page (basic version)
 
 ### Phase 2: Search Param Overrides
 
 1. Parse override params: `tabs`, `headerImage`, `headerColor`, etc.
-2. Merge with preset values
-3. Pass merged config to page
+2. Merge with resolved preset values in `+layout.server.ts`
+3. Pass merged config to layout/page components
 
 ### Phase 3: Dynamic Header Image
 
@@ -366,55 +525,124 @@ Store configuration in the Google Form/Sheet itself:
 2. Allow color overrides via params
 3. Consider light/dark mode support
 
+### Phase 5: Full Launcher Page
+
+1. List presets with live previews/links
+2. URL builder form (paste Google Form/Sheet URLs)
+3. Preset configurator for advanced users
+
 ## Migration Path
 
-| Current       | New                                                        |
-| ------------- | ---------------------------------------------------------- |
-| `/7/g.docId`  | `/base/g.docId` (default shows info+form+list)             |
-| `/15/g.docId` | `/full/g.docId` or `/base/g.docId?tabs=info,form,list,dev` |
-| `/1/g.docId`  | `/minimal/g.docId` or `/base/g.docId?tabs=info`            |
-| `/2/g.docId`  | `/base/g.docId?tabs=form`                                  |
+| Current                          | New                                                     |
+| -------------------------------- | ------------------------------------------------------- |
+| `/7/g.docId`                     | `btango.com/` (domain preset) or `/g.docId` (direct)    |
+| `/15/g.docId`                    | `/g.docId?tabs=*` or `/g.docId?tabs=info,form,list,dev` |
+| `/1/g.docId`                     | `/g.docId?preset=minimal` or `/g.docId?tabs=info`       |
+| `/2/g.docId`                     | `/g.docId?tabs=form`                                    |
+| `/base/g.docId`                  | `/g.docId`                                              |
+| `/base/g.docId/info`             | `/g.docId/info`                                         |
+| Per-site git branches            | Single branch + `DOMAIN_PRESETS` mapping                |
+| Hardcoded redirects in `SITES[]` | Preset definitions in `PRESETS`                         |
 
 ## URL Examples
 
 ```
-# Presets
-/base/g.abc123                    # Default: info, form, list tabs
-/base/g.abc123/form               # Default preset, form tab active
-/minimal/g.abc123                 # Info only
-/kiosk/g.abc123                   # Form only, minimal header
-/full/g.abc123                    # All tabs including dev
+# Domain with preset (btango.com → 'btango' preset)
+btango.com/                            # Default docs, default tab
+btango.com/info                        # Default docs, info tab active
+btango.com/form                        # Default docs, form tab active
 
-# With overrides
-/base/g.abc123?tabs=info,form     # Only info and form
-/base/g.abc123?headerImage=none   # No header image
-/base/g.abc123?headerColor=red    # Red header background
+# Direct doc IDs (any domain)
+veneer.leftium.com/g.abc123            # Specific form, base preset
+veneer.leftium.com/g.abc123/info       # Specific form, info tab
+veneer.leftium.com/g.abc123/s.xyz789   # Form + sheet
+veneer.leftium.com/g.abc123/s.xyz789/form  # Form + sheet, form tab
 
-# Combined
-/kiosk/g.abc123?headerImage=/custom.png&headerColor=%23ff0000
+# Preset override via query param
+btango.com/?preset=kiosk               # Domain docs, kiosk styling
+veneer.leftium.com/g.abc123?preset=minimal  # Specific form, minimal styling
+veneer.leftium.com/g.abc123?preset=full     # Specific form, all tabs
+
+# Individual overrides via query param
+btango.com/?tabs=info,form             # Override tabs from domain preset
+btango.com/g.abc123?headerColor=red    # Override header color
+
+# Combined preset + overrides
+btango.com/?preset=kiosk&headerColor=red  # Kiosk preset with red header
+
+# Launcher (unknown domain or veneer.leftium.com)
+veneer.leftium.com/                    # Launcher/directory page
+
+# Static routes (unaffected)
+veneer.leftium.com/demo                # Demo page
+veneer.leftium.com/api/final-url       # API endpoint
 ```
 
 ## Files to Modify
 
-1. `src/lib/presets.ts` (new) - Preset definitions
-2. `src/params/base.ts` - Match preset names
-3. `src/routes/(centered)/[base=base]/.../+layout.server.ts` - Apply config
-4. `src/routes/(centered)/[base=base]/.../+layout.svelte` - Use config for styling
-5. `src/hooks.ts` - Use env vars for default document IDs
-6. `.env.development` (new) - Dev environment defaults
-7. `.env.production` (new) - Production environment defaults
+1. `src/lib/presets.ts` **(new)** — `DOMAIN_PRESETS`, `PRESETS`, `Preset` interface, helper functions
+2. `src/hooks.ts` — New `reroute` logic with domain lookup and path normalization
+3. `src/routes/(centered)/(veneer)/` **(rename from `[base=base]/`)** — Route group restructure
+4. `src/routes/(centered)/(veneer)/.../+layout.server.ts` — Preset resolution and config merging
+5. `src/routes/(centered)/(veneer)/.../+layout.svelte` — Use resolved config for styling
+6. `src/routes/+page.svelte` **(new)** — Launcher page
+7. `src/params/base.ts` **(delete)** — No longer needed
+8. `.env.development` **(new)** — Dev environment defaults
+9. `.env.production` **(new)** — Production environment defaults
+10. `.env.example` — Document `PUBLIC_HOSTNAME` and default doc ID vars
 
 ## Complete Options Summary
 
-| Category      | Option           | Source               | Priority (highest first)                              |
-| ------------- | ---------------- | -------------------- | ----------------------------------------------------- |
-| **Documents** | Form ID          | URL path             | 1. URL, 2. Preset default, 3. Env var                 |
-|               | Sheet ID         | URL path             | 1. URL, 2. Auto-detect, 3. Preset default, 4. Env var |
-| **Tabs**      | Visible tabs     | Preset + query param | 1. Query param, 2. Preset                             |
-| **Header**    | Image            | Form data + preset   | 1. Query param, 2. Form `headerImageUrl`, 3. Preset   |
-|               | Color            | Preset + query param | 1. Query param, 2. Preset                             |
-|               | Height           | Preset               | 1. Query param, 2. Preset                             |
-| **Data**      | Show hidden cols | Query param          | `?allcols`                                            |
-|               | Show hidden rows | Query param          | `?allrows`                                            |
-|               | Skip sheet scan  | Query param          | `?skipsheetidscan`                                    |
-| **Locale**    | Language         | URL prefix           | Paraglide handles this                                |
+| Category      | Option           | Source                           | Priority (highest first)                              |
+| ------------- | ---------------- | -------------------------------- | ----------------------------------------------------- |
+| **Preset**    | Preset name      | `?preset=` / Domain / Fallback   | 1. `?preset=` param, 2. Domain mapping, 3. `'base'`   |
+| **Documents** | Form ID          | URL path / Preset                | 1. URL, 2. Preset default, 3. Env var                 |
+|               | Sheet ID         | URL path / Preset                | 1. URL, 2. Auto-detect, 3. Preset default, 4. Env var |
+| **Tabs**      | Visible tabs     | Preset + query param             | 1. Query param, 2. Preset                             |
+| **Header**    | Image            | Form data + preset + query param | 1. Query param, 2. Form `headerImageUrl`, 3. Preset   |
+|               | Color            | Preset + query param             | 1. Query param, 2. Preset                             |
+|               | Height           | Preset + query param             | 1. Query param, 2. Preset                             |
+|               | Text color       | Preset + query param             | 1. Query param, 2. Preset                             |
+| **Data**      | Show hidden cols | Query param                      | `?allcols`                                            |
+|               | Show hidden rows | Query param                      | `?allrows`                                            |
+|               | Skip sheet scan  | Query param                      | `?skipsheetidscan`                                    |
+| **Locale**    | Language         | URL prefix                       | Paraglide handles this                                |
+
+## Design Decisions
+
+### Why `(veneer)` route group instead of a URL prefix?
+
+- Cleanest possible URLs — no `/base/` or `/v/` segment
+- `reroute` hook already handles path normalization
+- The `vid` param matcher (`^[sfgbh]\.\w+$`) is strict enough to avoid collisions with static routes
+- Static routes (`api/`, `demo/`, etc.) always take priority in SvelteKit's route resolution
+
+### Why domain maps to preset _name_ instead of preset _definition_?
+
+- Multiple domains can share one preset (aliases)
+- `?preset=` param can override domain default (same preset names used in both contexts)
+- Separation of concerns: mapping is a lookup table, preset is a configuration bundle
+
+### Why `?preset=` query param instead of URL path segment?
+
+- Simplifies the `reroute` hook — it only needs to handle doc IDs and tab names, not preset names
+- No ambiguity about whether a first path segment is a preset name or something else
+- No reserved-word conflicts between preset names and future route names
+- Consistent with other overrides (`?tabs=`, `?headerColor=`) — all use query params
+- Preset override is a power-user/debugging feature, not something end users typically share
+
+### Why launcher page instead of a default redirect?
+
+- Discoverable — new users can explore available presets
+- Self-service — users can paste their own Google Form/Sheet URLs
+- No assumptions — unknown domains don't silently redirect to someone else's form
+
+### Reserved words
+
+Tab names (`info`, `form`, `list`, `raw`, `dev`) are reserved — they are interpreted by `reroute` as tabs on the domain's default docs (for domains with a preset). They cannot be used as top-level static route names under `(centered)/`. Since preset names are no longer in the URL path, they don't create reserved-word conflicts.
+
+If a new static route is needed with a name that collides with a tab name, either:
+
+- Choose a name that doesn't collide (preferred)
+- Place it outside `(centered)/`
+- Add it to an explicit check in `reroute` before veneer path resolution

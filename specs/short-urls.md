@@ -1,5 +1,7 @@
 # Short URL Support for Default Document
 
+> **SUPERSEDED** by [page-options.md](./page-options.md) — the domain-preset system and `(veneer)` route group architecture cover all short URL concerns (tab-only URLs, default doc rerouting, env-based defaults). One implementation detail to carry forward: tab button links should use short URLs (`/form`) when viewing the domain's default docs.
+
 ## Goal
 
 Support shorter URLs when viewing the default document, similar to how the `temp-vivianblues-com` branch handles hash-based navigation.
