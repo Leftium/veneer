@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { Question } from '$lib'
 	import MarkdownIt from 'markdown-it'
-	//import emoji from 'markdown-it-emoji'
 	import easyTables from 'markdown-it-easy-tables'
 	import sup from 'markdown-it-sup'
 	import sub from 'markdown-it-sub'

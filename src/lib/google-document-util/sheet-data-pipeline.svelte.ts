@@ -9,21 +9,6 @@ dayjs.extend(relativeTime)
 dayjs.extend(isBetween)
 dayjs.extend(utc)
 
-function indexToExcelColumn(index: number): string {
-	if (index < 0) throw new Error('Index must be non-negative')
-
-	let column = ''
-	let n = index + 1 // Excel columns are 1-based
-
-	while (n > 0) {
-		const remainder = (n - 1) % 26
-		column = String.fromCharCode(65 + remainder) + column
-		n = Math.floor((n - 1) / 26)
-	}
-
-	return column
-}
-
 const DEFAULT_COLUMN = {
 	title: '',
 	isNumeric: true,
@@ -73,14 +58,6 @@ type SheetDataPipe = ReturnType<typeof makeRaw>
 export function addIndex({ extra, columns, rows }: SheetDataPipe) {
 	columns = [makeColumn({ title: '#' }), ...columns]
 	rows = rows.map((row, ri) => [makeCell({ value: `${ri + 1}` }), ...row])
-	return { extra, columns, rows }
-}
-
-export function appendColumnLabel({ extra, columns, rows }: SheetDataPipe) {
-	columns = columns.map((column, ci) => ({
-		...column,
-		title: `${column.title ? column.title + ':' : ''}${indexToExcelColumn(ci)}`,
-	}))
 	return { extra, columns, rows }
 }
 
@@ -146,19 +123,6 @@ export function padNumericRenders({ extra, columns, rows }: SheetDataPipe) {
 		}
 	}
 	console.timeEnd('⏱️ sheet-pipeline:padNumericRenders')
-	return { extra, columns, rows }
-}
-
-export function ghostLeadingZeros({ extra, columns, rows }: SheetDataPipe) {
-	console.time('⏱️ sheet-pipeline:ghostLeadingZeros')
-	for (const row of rows) {
-		for (const [ci, cell] of row.entries()) {
-			if (columns[ci].isNumeric && !cell.ts) {
-				cell.render = cell.render.replace(/^0*/, '<gz>$&</gz>')
-			}
-		}
-	}
-	console.timeEnd('⏱️ sheet-pipeline:ghostLeadingZeros')
 	return { extra, columns, rows }
 }
 

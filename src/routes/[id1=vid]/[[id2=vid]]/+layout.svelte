@@ -87,8 +87,6 @@
 		stripEmptyColumns,
 		hidePhoneNumbers,
 		padNumericRenders,
-		//ghostLeadingZeros,
-		//appendColumnLabel,
 		renderRelativeTimes,
 		collectExtraDance,
 	)
