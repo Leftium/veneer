@@ -254,8 +254,6 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		const out: string[] = []
 		let i = 0
 
-		// TODO: internalizeLinks() still has hardcoded doc IDs — refactor in Phase 3
-
 		while (i < lines.length) {
 			const line = lines[i++]
 
@@ -269,7 +267,6 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 					const prefix = documentId.length > 20 ? 'f' : 'g'
 					const id = `${prefix}.${documentId}`
 
-					// TODO: Remove hardcoded doc IDs — refactor in Phase 3
 					let internalLink = `/${id}`
 
 					if (/home/i.test(line)) {
@@ -280,14 +277,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 					}
 
 					if (/신청/.test(line)) {
-						internalLink += '/form'
-						if (
-							isOk(data.form) &&
-							[data.form.data.documentId, data.form.data.veneerId].includes(id)
-						) {
-							// TODO: Remove hardcoded doc ID
-							internalLink = '/g.chwbD7sLmAoLe65Z8/form'
-						}
+						internalLink = `${docPath}/form${search}`
 						//@ts-expect-error: TODO
 						const count = finalData.extra.count
 						const callout = !count
@@ -310,10 +300,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 					let internalLink = `/${id}`
 
 					if (/확인/.test(line)) {
-						if (isOk(data.form) && isOk(data.sheet) && data.sheet.data.documentId === id) {
-							// TODO: Remove hardcoded doc ID
-							internalLink = '/g.chwbD7sLmAoLe65Z8/list'
-						}
+						internalLink = `${docPath}/list${search}`
 						const button = `<a href="${internalLink}" role=button class=outline>Check who's going 👀</a>`
 						out.push(button)
 						continue
