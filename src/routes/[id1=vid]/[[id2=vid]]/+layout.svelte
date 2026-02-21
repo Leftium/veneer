@@ -623,6 +623,10 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		padding-inline: $size-7;
 	}
 
+	footer content {
+		padding-inline: 0;
+	}
+
 	.markdown {
 		margin-top: $size-2;
 		:global {

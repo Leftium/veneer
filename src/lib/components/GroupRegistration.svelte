@@ -289,10 +289,10 @@
 	<!-- Member 1 (primary registrant) -->
 	<fieldset>
 		<label for="entry.{nameField.id}" class="name-label">
+			<span class="required-mark">*</span>
 			{#if additionalMembers.length > 0 && !clearing}
 				<span class="member-number">1.</span>
 			{/if}
-			<span class="required-mark">*</span>
 			{nameField.title}
 		</label>
 		<input
@@ -308,6 +308,8 @@
 			<label for="">
 				{#if roleField.required}
 					<span class="required-mark">*</span>
+				{:else}
+					<span class="required-mark" aria-hidden="true" style="visibility:hidden">*</span>
 				{/if}
 				{roleField.title}
 			</label>
@@ -351,6 +353,7 @@
 					animate:flip={{ duration: 300 }}
 				>
 					<label for="extra-name-{member.key}" class="name-label">
+						<span class="required-mark" aria-hidden="true" style="visibility:hidden">*</span>
 						<span class="member-number">{i + 2}.</span>
 						{nameField.title}
 						<button
@@ -369,7 +372,10 @@
 
 					{#if roleField}
 						<!-- svelte-ignore a11y_label_has_associated_control -->
-						<label for="">{roleField.title}</label>
+						<label for=""
+							><span class="required-mark" aria-hidden="true" style="visibility:hidden">*</span>
+							{roleField.title}</label
+						>
 						{#each roleField.options as option (option)}
 							<label>
 								{#if isCheckboxes}
@@ -426,36 +432,25 @@
 	fieldset {
 		padding: $size-2 $size-3;
 		padding-inline: 0;
-		margin-bottom: 2px;
+		margin-bottom: 0;
 		gap: 0;
 	}
 
 	.members-group {
-		margin-inline: calc(-1 * #{$size-3});
+		margin-top: $size-2;
 	}
 
+	// Left border accent for all members when in group mode
+	.group-header + fieldset,
 	.members-group fieldset {
-		padding-inline: $size-3;
+		border-left: 3px solid var(--app-border-color);
+		padding-left: $size-3;
+		margin-left: $size-1;
+		margin-bottom: $size-2;
 	}
 
-	// Alternating row shading — use a transparent overlay so it adapts to
-	// both light mode (darken with black) and dark mode (lighten with white).
-	fieldset:nth-child(odd of fieldset) {
-		background: transparent;
-	}
-
-	fieldset:nth-child(even of fieldset) {
-		background: color-mix(in srgb, currentColor 7%, transparent);
-	}
-
-	// Inside .members-group the count restarts, so swap to continue
-	// the alternation from the primary member fieldset (which is odd/light).
-	.members-group fieldset:nth-child(odd of fieldset) {
-		background: color-mix(in srgb, currentColor 7%, transparent);
-	}
-
-	.members-group fieldset:nth-child(even of fieldset) {
-		background: transparent;
+	.members-group fieldset:last-child {
+		margin-bottom: 0;
 	}
 
 	.group-header {
@@ -535,6 +530,7 @@
 	fieldset label[for] {
 		margin-top: $size-1;
 		margin-bottom: 0;
+		font-weight: bold;
 	}
 
 	fieldset label[for]:first-of-type {

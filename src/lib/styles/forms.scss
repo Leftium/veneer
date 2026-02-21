@@ -109,6 +109,7 @@ label:has(input[type='checkbox']),
 label:has(input[type='radio']) {
 	display: flex;
 	align-items: center;
+	margin-top: calc($size-3 / 2);
 	font-weight: normal;
 	cursor: pointer;
 }
