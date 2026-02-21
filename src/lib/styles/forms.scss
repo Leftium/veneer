@@ -167,26 +167,3 @@ button,
 		border-color: color-mix(in srgb, var(--app-accent-color, #{$blue-8}) 70%, black);
 	}
 }
-
-// Dark mode form overrides
-@media (prefers-color-scheme: dark) {
-	input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='range']):not(
-			[type='hidden']
-		):not([type='submit']),
-	textarea,
-	select {
-		&:focus {
-			border-color: #{$blue-4};
-			box-shadow: 0 0 0 3px #{$blue-9};
-		}
-	}
-
-	input[type='submit'],
-	button[type='submit'] {
-		background-color: var(--app-accent-color, #{$blue-5});
-
-		&:hover {
-			background-color: color-mix(in srgb, var(--app-accent-color, #{$blue-4}) 85%, white);
-		}
-	}
-}

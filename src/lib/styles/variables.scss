@@ -25,22 +25,3 @@
 	// Semantic colors
 	--app-del-color: #{$red-6};
 }
-
-@media (prefers-color-scheme: dark) {
-	:root {
-		// Colors
-		--app-color: #{$gray-1};
-		--app-background-color: #{$gray-9};
-		--app-muted-color: #7b8495;
-
-		// Borders
-		--app-border-color: #{$gray-6};
-		--app-muted-border-color: #202632;
-
-		// Surfaces
-		--app-card-section-bg: rgb(26, 30.5, 40.25);
-
-		// Semantic colors
-		--app-del-color: #{$red-4};
-	}
-}

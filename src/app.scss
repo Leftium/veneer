@@ -39,13 +39,6 @@ blockquote {
 	font-style: italic;
 }
 
-@media (prefers-color-scheme: dark) {
-	blockquote {
-		border-inline-start-color: $gray-7;
-		color: $gray-5;
-	}
-}
-
 // Base styles
 html {
 	scrollbar-gutter: stable;
@@ -75,20 +68,4 @@ body {
 		0.2085rem 0.417rem 2.502rem rgba(129, 145, 181, 0.043),
 		0.5rem 1rem 6rem rgba(129, 145, 181, 0.06),
 		0 0 0 0.0625rem rgba(129, 145, 181, 0.015);
-}
-
-@media (prefers-color-scheme: dark) {
-	html {
-		background-color: $gray-11;
-	}
-
-	body {
-		color: $gray-1;
-	}
-
-	.content-bg {
-		background-color: $gray-9;
-		box-shadow: none;
-		border-inline: 1px solid $gray-8;
-	}
 }
