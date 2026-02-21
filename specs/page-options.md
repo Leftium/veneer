@@ -365,23 +365,26 @@ When a domain has no preset mapping (or maps to `null`), the root `/` renders a 
 **`?tabs=` query param override:** Overrides the preset's tab list, controlling both visibility and order. The first tab in `?tabs=` becomes the default tab.
 
 ```
-btango.com/?tabs=form,info        # Visible: form, info. Default: form. No list tab.
-btango.com/?tabs=info,form,list   # Same as btango preset default.
+btango.com/?tabs=form.info        # Visible: form, info. Default: form. No list tab.
+btango.com/?tabs=info.form.list   # Same as btango preset default.
 btango.com/g.abc123?tabs=dev      # Only dev tab visible.
-btango.com/?tabs=*                # All available tabs (info, form, list, dev). Useful for dev.
+btango.com/?tabs=*                # Redirects to ?tabs=info.form.list.raw.dev (editable in URL bar).
 ```
 
 **Implementation in `+layout.server.ts`:**
 
 ```typescript
-const ALL_TABS = ['info', 'form', 'list', 'dev']
+const ALL_TABS = ['info', 'form', 'list', 'raw', 'dev']
 
 const preset = resolvePreset(hostname, url)
 const tabsParam = url.searchParams.get('tabs')
-const tabs = tabsParam === '*' ? ALL_TABS : tabsParam?.split(',') || preset.tabs
+const tabs =
+	tabsParam === '*'
+		? ALL_TABS
+		: tabsParam?.split(',').filter((t) => ALL_TABS.includes(t)) || preset.tabs
 ```
 
-**Edge case — tab segment not in visible set:** If the URL specifies a tab that isn't in the resolved tab list (e.g., `btango.com/list?tabs=info,form`), the requested tab is ignored and the default tab (first in `?tabs=` list) is shown instead. The `list` tab doesn't exist in the visible set, so it gracefully falls back.
+**Edge case — tab segment not in visible set:** If the URL specifies a tab that isn't in the resolved tab list (e.g., `btango.com/list?tabs=info.form`), the requested tab is ignored and the default tab (first in `?tabs=` list) is shown instead. The `list` tab doesn't exist in the visible set, so it gracefully falls back.
 
 ### 2. Header Styling
 
@@ -473,7 +476,7 @@ btango.com/?preset=kiosk       # query param → 'kiosk' preset (overrides domai
 Query parameters override individual preset values:
 
 ```
-btango.com/?tabs=info,form              # override tabs from preset
+btango.com/?tabs=info.form              # override tabs from preset
 btango.com/g.abc123?headerImage=none    # override header from preset
 ```
 
@@ -514,30 +517,86 @@ Notable decisions during implementation:
 - **`vivimil.com`** is the primary domain for the `vivimil` preset (supersedes `vivianblues.com`)
 - **Legacy `[flags]/` route left in place** for reference; doesn't conflict with new routing
 
-### Phase 2: Launcher Page (MVP)
+### Phase 2: Launcher Page (MVP) — DONE
 
-Useful immediately for development and testing without configured domains.
+Implemented:
 
-1. List all defined presets with descriptions
-2. Link to preset domains (btango.com, vivimil.com, etc.)
-3. Basic URL builder: paste a Google Form/Sheet URL → generate a veneer URL
-4. `?hostname=` helper for local dev (quick links to simulate different domains)
+1. Rewrote `src/routes/+page.svelte` from stub to full launcher page
+2. URL builder: paste Google Form/Sheet URL (or text containing one), `linkifyjs` extracts first URL, `DOCUMENT_URL_REGEX` identifies doc type and generates veneer path
+3. When a form-type URL is detected (prefix `f` or `g`), optional second input appears for a Google Sheet URL
+4. Preset directory: 4 domain presets shown with name, domain, visible tabs, and link (dev: `?hostname=` preview link; prod: actual domain link)
+5. Demo link: `/g.chwbD7sLmAoLe65Z8` (no preset)
+6. Dev helpers section (dev only): `?hostname=` quick links for all `DOMAIN_PRESETS` entries
+7. All links open in new tab (`target="_blank"`)
+8. URL inputs select-all on focus for easy replacement
+9. Exported `googleDocumentIdFromUrl()` from `url-id.ts` (was private)
+10. Renamed `vivianblues` preset to `vivimil` throughout (`presets.ts`, launcher, spec)
+
+Notable decisions during implementation:
+
+- **No descriptions in `Preset` interface** — preset labels/descriptions hardcoded in launcher only for now
+- **No shortened URL resolution** — `forms.gle/xxx` generates `g.xxx` veneer ID (works fine; veneer resolves server-side at page load)
+- **No preset selector in URL builder** — kept simple; preset override is a separate concern (`?preset=`)
+- **Client-side only** — no server load function; `ssr = false` globally
 
 Later enhancements (no dedicated phase — added incrementally as other features land):
 
 - Live previews of presets
 - Preset configurator for advanced users
 - Searchable/filterable preset list
+- Shortened URL resolution in URL builder (follow redirects via `/api/final-url`)
 
-### Phase 3: Search Param Overrides
+### Phase 3a: `?tabs=` and `?showErrors` Overrides — DONE
 
-Partially done — `?preset=` and tab visibility already resolved in `+layout.server.ts`.
+Implemented `?tabs=` and `?showErrors` in `+layout.server.ts`. Also unlinked `raw` and `dev` tab slides in `+layout.svelte` (each gated by its own `navTabs` icon).
 
-Remaining:
+```typescript
+const ALL_TABS = ['info', 'form', 'list', 'raw', 'dev']
 
-1. `?tabs=` override (including `?tabs=*` wildcard)
-2. `?headerImage=`, `?headerColor=`, `?headerHeight=`, `?headerTextColor=` overrides
-3. Pass merged config to layout/page components for header styling
+const tabsParam = url.searchParams.get('tabs')
+if (tabsParam === '*') {
+	// Expand wildcard to editable list and redirect
+	redirect(307, `${url.pathname}?tabs=${ALL_TABS.join('.')}`)
+}
+const tabs = tabsParam ? tabsParam.split('.').filter((t) => ALL_TABS.includes(t)) : preset.tabs
+const visibleTabs = new Set(tabs)
+```
+
+Edge cases:
+
+- Unknown tab names in `?tabs=` silently ignored (filter handles it)
+- URL `tid` not in resolved `tabs` → show first tab in resolved list
+- `?tabs=*` redirects to `?tabs=info.form.list.raw.dev` (dot-separated, unencoded — editable in URL bar)
+
+`?showErrors` controls errored-tab visibility:
+
+| Environment | No param                | `?showErrors` or `?showErrors=true` | `?showErrors=false`     |
+| ----------- | ----------------------- | ----------------------------------- | ----------------------- |
+| **dev**     | errored tabs **shown**  | errored tabs **shown**              | errored tabs **hidden** |
+| **prod**    | errored tabs **hidden** | errored tabs **shown**              | errored tabs **hidden** |
+
+A tab whose document fails to load (network error, 404, parse error, etc.) is an **errored tab**. In dev, errored tabs default to visible (showing error state for debugging). In prod, errored tabs default to hidden. The `?showErrors` param overrides the default in either direction.
+
+`?tabs=*` interaction: The wildcard redirects to all 5 tabs expanded; errored-tab visibility still follows `?showErrors` / env default after the redirect.
+
+`numTabs` is computed after `navTabs` is built (post error-hiding) rather than from `visibleTabs.size`, so the tab nav bar correctly hides when only one tab is effectively visible.
+
+Notable decisions:
+
+- **Dot separator for `?tabs=`** — commas encode as `%2C` in the URL bar making manual editing hard; `.` is not encoded
+- **`raw` and `dev` unlinked** — each slide independently gated by its own `navTabs` icon; `?tabs=raw` and `?tabs=dev` now work independently
+
+Files modified:
+
+1. `src/routes/(centered)/(veneer)/[id1=vid]/[[id2=vid]]/+layout.server.ts` — `?tabs=`, wildcard redirect, `?showErrors`, `numTabs` fix
+2. `src/routes/(centered)/(veneer)/[id1=vid]/[[id2=vid]]/+layout.svelte` — unlink raw/dev slides
+
+### Phase 3b: Header Param Overrides — TODO (after remove-picocss)
+
+Deferred until after `specs/remove-picocss.md` is implemented, since header markup/CSS will be restructured:
+
+1. `?headerImage=`, `?headerColor=`, `?headerHeight=`, `?headerTextColor=` overrides
+2. Pass merged config to layout/page components for header styling
 
 ### Phase 4: Dynamic Header Image
 
@@ -557,16 +616,16 @@ Remaining:
 
 ## Migration Path
 
-| Current                          | New                                                     |
-| -------------------------------- | ------------------------------------------------------- |
-| `/7/g.docId`                     | `btango.com/` (domain preset) or `/g.docId` (direct)    |
-| `/15/g.docId`                    | `/g.docId?tabs=*` or `/g.docId?tabs=info,form,list,dev` |
-| `/1/g.docId`                     | `/g.docId?preset=minimal` or `/g.docId?tabs=info`       |
-| `/2/g.docId`                     | `/g.docId?tabs=form`                                    |
-| `/base/g.docId`                  | `/g.docId`                                              |
-| `/base/g.docId/info`             | `/g.docId/info`                                         |
-| Per-site git branches            | Single branch + `DOMAIN_PRESETS` mapping                |
-| Hardcoded redirects in `SITES[]` | Preset definitions in `PRESETS`                         |
+| Current                          | New                                                         |
+| -------------------------------- | ----------------------------------------------------------- |
+| `/7/g.docId`                     | `btango.com/` (domain preset) or `/g.docId` (direct)        |
+| `/15/g.docId`                    | `/g.docId?tabs=*` or `/g.docId?tabs=info.form.list.raw.dev` |
+| `/1/g.docId`                     | `/g.docId?preset=minimal` or `/g.docId?tabs=info`           |
+| `/2/g.docId`                     | `/g.docId?tabs=form`                                        |
+| `/base/g.docId`                  | `/g.docId`                                                  |
+| `/base/g.docId/info`             | `/g.docId/info`                                             |
+| Per-site git branches            | Single branch + `DOMAIN_PRESETS` mapping                    |
+| Hardcoded redirects in `SITES[]` | Preset definitions in `PRESETS`                             |
 
 ## URL Examples
 
@@ -588,7 +647,7 @@ veneer.leftium.com/g.abc123?preset=minimal  # Specific form, minimal styling
 veneer.leftium.com/g.abc123?preset=full     # Specific form, all tabs
 
 # Individual overrides via query param
-btango.com/?tabs=info,form             # Override tabs from domain preset
+btango.com/?tabs=info.form             # Override tabs from domain preset
 btango.com/g.abc123?headerColor=red    # Override header color
 
 # Combined preset + overrides
@@ -602,7 +661,9 @@ veneer.leftium.com/demo                # Demo page
 veneer.leftium.com/api/final-url       # API endpoint
 ```
 
-## Files Modified (Phase 1)
+## Files Modified
+
+### Phase 1
 
 1. `src/lib/presets.ts` **(new)** — `DOMAIN_PRESETS`, `PRESETS`, `Preset` interface, `resolvePresetName()`
 2. `src/hooks.ts` — Rewritten: domain lookup, `deLocalizeUrl`, path normalization
@@ -613,6 +674,17 @@ veneer.leftium.com/api/final-url       # API endpoint
 7. `src/routes/+page.svelte` **(new)** — Launcher stub with preset links
 8. `src/params/base.ts` **(deleted)**
 
+### Phase 2
+
+1. `src/routes/+page.svelte` — Rewritten from stub: URL builder, preset directory, demo link, dev helpers
+2. `src/lib/google-document-util/url-id.ts` — Exported `googleDocumentIdFromUrl()` (was private)
+3. `src/lib/presets.ts` — Renamed `vivianblues` preset to `vivimil`
+
+### Phase 3a
+
+1. `src/routes/(centered)/(veneer)/[id1=vid]/[[id2=vid]]/+layout.server.ts` — `?tabs=` override, `?tabs=*` redirect, `?showErrors`, `numTabs` fix
+2. `src/routes/(centered)/(veneer)/[id1=vid]/[[id2=vid]]/+layout.svelte` — Unlinked `raw` and `dev` slides (each gated by own `navTabs` icon)
+
 ## Complete Options Summary
 
 | Category      | Option           | Source                           | Priority (highest first)                            |
@@ -620,7 +692,8 @@ veneer.leftium.com/api/final-url       # API endpoint
 | **Preset**    | Preset name      | `?preset=` / Domain / Fallback   | 1. `?preset=` param, 2. Domain mapping, 3. `'base'` |
 | **Documents** | Form ID          | URL path / Preset                | 1. URL, 2. Preset default                           |
 |               | Sheet ID         | URL path / Preset                | 1. URL, 2. Auto-detect, 3. Preset default           |
-| **Tabs**      | Visible tabs     | Preset + query param             | 1. Query param, 2. Preset                           |
+| **Tabs**      | Visible tabs     | Preset + query param             | 1. `?tabs=` param, 2. Preset                        |
+|               | Show errors      | `?showErrors` / Environment      | 1. `?showErrors` param, 2. dev=true / prod=false    |
 | **Header**    | Image            | Form data + preset + query param | 1. Query param, 2. Form `headerImageUrl`, 3. Preset |
 |               | Color            | Preset + query param             | 1. Query param, 2. Preset                           |
 |               | Height           | Preset + query param             | 1. Query param, 2. Preset                           |

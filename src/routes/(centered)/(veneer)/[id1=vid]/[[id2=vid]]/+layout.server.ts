@@ -1,4 +1,5 @@
 import { dev } from '$app/environment'
+import { redirect } from '@sveltejs/kit'
 import { gg } from '@leftium/gg'
 
 import { Err, isErr, isOk, Ok } from 'wellcrafted/result'
@@ -12,14 +13,30 @@ import { stripHidden } from '$lib/google-document-util/google-sheets.js'
 import type { ResultGoogleForm, ResultGoogleSheet } from '$lib/google-document-util/types'
 import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-with-id'
 
+const ALL_TABS = ['info', 'form', 'list', 'raw', 'dev']
+
 export const load = async ({ params, url }) => {
 	// --- Resolve preset for tab visibility ---
 	const hostname = ((dev && url.searchParams.get('hostname')) || url.hostname).replace(/^www\./, '')
 	const presetName = url.searchParams.get('preset') || resolvePresetName(hostname) || 'base'
 	const preset = PRESETS[presetName] || PRESETS['base']
 
-	// TODO: Phase 3 — support ?tabs= override
-	const visibleTabs = new Set(preset.tabs)
+	// Phase 3a: ?tabs= override — expand wildcard to editable list via redirect
+	const tabsParam = url.searchParams.get('tabs')
+	if (tabsParam === '*') {
+		const expandedUrl = new URL(url)
+		expandedUrl.searchParams.set('tabs', ALL_TABS.join('.'))
+		redirect(307, expandedUrl.pathname + expandedUrl.search)
+	}
+
+	const tabs = tabsParam
+		? tabsParam.split('.').filter((t: string) => ALL_TABS.includes(t))
+		: preset.tabs
+	const visibleTabs = new Set(tabs)
+
+	// Phase 3a: ?showErrors — defaults to true in dev, false in prod
+	const showErrorsParam = url.searchParams.get('showErrors')
+	const showErrors = showErrorsParam !== null ? showErrorsParam !== 'false' : dev
 
 	// URL params that control inclusion of sheet data hidden by user:
 	const allCols = url.searchParams.has('allcols')
@@ -36,7 +53,7 @@ export const load = async ({ params, url }) => {
 		dev:  ['🔧', m.dev()],
 	}
 
-	const numTabs = visibleTabs.size
+	// numTabs computed after navTabs (error-hidden tabs reduce the count)
 
 	const warnings = []
 
@@ -178,15 +195,20 @@ export const load = async ({ params, url }) => {
 				(hash === 'list' && isErr(sheet)) ||
 				(hash === 'dev' && !!warnings.length)
 
+			// Hide tab if: not in visible set, OR errored and showErrors is off
+			const visible = visibleTabs.has(hash) && (!error || showErrors)
+
 			acc[hash] = {
 				name,
-				icon: visibleTabs.has(hash) ? icon : '',
+				icon: visible ? icon : '',
 				error,
 			}
 			return acc
 		},
 		{} as Record<TabsKey, { name: string; icon: string; error: boolean }>,
 	)
+
+	const numTabs = Object.values(navTabs).filter((tab) => tab.icon).length
 
 	return {
 		document1,

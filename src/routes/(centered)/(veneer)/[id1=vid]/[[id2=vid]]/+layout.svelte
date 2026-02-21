@@ -432,14 +432,16 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				</swiper-slide>
 			{/if}
 
-			{#if data.navTabs.dev.icon}
+			{#if data.navTabs.raw.icon}
 				<swiper-slide data-tid="raw" hidden={!hasJS && tid !== 'raw'}>
 					{#if isOk(data.sheet)}
 						<Sheet data={raw} onToggle={callSwiperUpdateAutoHeight}></Sheet>
 					{/if}
 					<pre hidden>{stringify(raw)}</pre>
 				</swiper-slide>
+			{/if}
 
+			{#if data.navTabs.dev.icon}
 				<swiper-slide data-tid="dev" hidden={!hasJS && tid !== 'dev'}>
 					<pre>params: {stringify(params)}</pre>
 					<pre>finalData: {stringify(finalData)}</pre>
