@@ -343,13 +343,13 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	}
 </script>
 
-<article
+<d-article
 	class="content-bg"
 	style:--app-accent-color={data.accentColor}
 	style:--app-accent-text={data.accentText}
 	style:background-color={data.bgColor}
 >
-	<header
+	<d-header
 		style:background-image={data.header.image ? `url(${data.header.image})` : 'none'}
 		style:background-color={data.header.color}
 		style:background-size={data.header.imageFit}
@@ -380,9 +380,9 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				{/each}
 			</nav-buttons>
 		{/if}
-	</header>
+	</d-header>
 
-	<main>
+	<d-main>
 		{#if (page.form || successParty) && !notificationBoxHidden}
 			{@const form = page.form}
 			{@const level = successParty ? 'success' : 'warning'}
@@ -481,18 +481,18 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				</swiper-slide>
 			{/if}
 		</swiper-container>
-	</main>
-	<footer>
+	</d-main>
+	<d-footer>
 		<content>
 			{#each data.footers as footer}
-				<section>{@html md`${internalizeLinks(linkListifyDefinitionList(footer))}`}</section>
+				<d-section>{@html md`${internalizeLinks(linkListifyDefinitionList(footer))}`}</d-section>
 			{/each}
 
-			<section>{@html md`${linkListifyDefinitionList(footerSources)}`}</section>
-			<section>{@html md`${linkListifyDefinitionList(standardFooter)}`}</section>
+			<d-section>{@html md`${linkListifyDefinitionList(footerSources)}`}</d-section>
+			<d-section>{@html md`${linkListifyDefinitionList(standardFooter)}`}</d-section>
 		</content>
-	</footer>
-</article>
+	</d-footer>
+</d-article>
 
 {#if false}
 	<hr />
@@ -508,7 +508,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 <style lang="scss">
 	@use 'open-props-scss' as *;
 
-	article {
+	d-article {
 		max-width: $size-content-3;
 		margin-inline: auto;
 		padding: 0;
@@ -519,16 +519,16 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 			text-align: center;
 		}
 
-		footer,
-		header {
+		d-footer,
+		d-header {
 			margin: 0;
 		}
 
-		header {
+		d-header {
 			border-bottom: none;
 		}
 
-		footer {
+		d-footer {
 			min-height: $size-13;
 			padding-block: $size-3;
 			padding-inline: $size-5;
@@ -634,7 +634,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		isolation: isolate;
 	}
 
-	main {
+	d-main {
 		// Notification box sits outside swiper, needs its own padding
 		& > div {
 			padding-inline: $size-5;
@@ -678,7 +678,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		padding-inline: $size-7;
 	}
 
-	footer content {
+	d-footer content {
 		padding-inline: 0;
 	}
 
@@ -746,7 +746,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		}
 	}
 
-	header {
+	d-header {
 		position: relative;
 		display: flex;
 		flex-direction: column;
@@ -778,7 +778,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		}
 	}
 
-	footer {
+	d-footer {
 		content {
 			display: grid;
 			grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -787,14 +787,14 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		}
 
 		:global {
-			section {
+			d-section {
 				grid-row: span 2;
 				display: grid;
 				grid-template-rows: subgrid;
 			}
 			--app-muted-color: color-mix(in srgb, var(--app-color) 30%, transparent);
 
-			:where(article, address, blockquote, dl, figure, form, ol, p, pre, table, ul)
+			:where(d-article, address, blockquote, dl, figure, form, ol, p, pre, table, ul)
 				~ :is(h1, h2, h3, h4, h5, h6) {
 				margin-top: $size-4;
 			}

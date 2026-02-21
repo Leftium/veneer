@@ -4,6 +4,17 @@
 
 // sanitize.css is imported in +layout.svelte (CSS files via JS import)
 
+// Custom semantic elements — block display (browsers default custom elements to inline)
+// These replace standard <article>, <header>, etc. to prevent iOS Safari Reader mode
+// from auto-activating on interactive form pages.
+d-article,
+d-header,
+d-main,
+d-footer,
+d-section {
+	display: block;
+}
+
 // Supplement sanitize.css: responsive images
 img {
 	max-width: 100%;

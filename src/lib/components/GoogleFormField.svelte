@@ -109,7 +109,7 @@
 	}
 </script>
 
-<section class:has-input={!!field.inputIndex}>
+<d-section class:has-input={!!field.inputIndex}>
 	{#if field.type === 'TITLE_AND_DESCRIPTION'}
 		<center>
 			<h3>{@html parseMarkdown(field.title)}</h3>
@@ -260,7 +260,7 @@
 		</div>
 	{/if}
 	<pre hidden>{JSON.stringify({ value, group, storeValue }, null, 4)}</pre>
-</section>
+</d-section>
 
 <style lang="scss">
 	@use 'open-props-scss' as *;
@@ -279,12 +279,12 @@
 		height: 100%;
 	}
 
-	section {
+	d-section {
 		margin-top: 2em;
 		margin-bottom: 2em;
 	}
 
-	section:first-of-type,
+	d-section:first-of-type,
 	.has-input {
 		margin-bottom: 0;
 		margin-top: 0;

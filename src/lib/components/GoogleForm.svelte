@@ -59,14 +59,14 @@
 
 <div>
 	{#if oldForm?.success || oldForm?.status}
-		<article>
+		<d-article>
 			{#if oldForm?.success}
 				<div class="success">Successfully signed up! 신청 성공!</div>
 			{:else if oldForm?.status}
 				<div class="error">Sorry! There was an error. 오류:</div>
 				{oldForm.status}: {oldForm.statusText}
 			{/if}
-		</article>
+		</d-article>
 	{/if}
 
 	<form method="POST">
