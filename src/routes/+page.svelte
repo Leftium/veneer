@@ -261,10 +261,24 @@
 						<a href={veneerPath} target="_blank">Open</a> this veneer in a new tab, or
 						<button
 							class:copied={copiedUrl && copiedUrl === window.location.origin + veneerPath}
-							onclick={() => {
+							onclick={async () => {
 								const full = window.location.origin + veneerPath
-								navigator.clipboard.writeText(full)
-								copiedUrl = full
+								try {
+									if (navigator.clipboard) {
+										await navigator.clipboard.writeText(full)
+									} else {
+										// Fallback for non-secure contexts
+										const el = document.createElement('input')
+										el.value = full
+										document.body.appendChild(el)
+										el.select()
+										document.execCommand('copy')
+										document.body.removeChild(el)
+									}
+									copiedUrl = full
+								} catch {
+									// copy failed silently
+								}
 							}}
 						>
 							{copiedUrl && copiedUrl === window.location.origin + veneerPath
