@@ -208,23 +208,22 @@ export const load = async ({ params, url }) => {
 	title = isOk(form) ? form.data.title : isOk(sheet) ? sheet.data.title : ''
 
 	// Phase 3b: resolve headerImage after form is loaded
+	// absent param defaults to 'form' (use the Google Form's own header image)
 	const headerImage =
 		headerImageParam === 'none'
 			? null
-			: headerImageParam === 'form'
-				? isOk(form)
-					? form.data.headerImageUrl
-					: null
+			: headerImageParam === 'form' || headerImageParam == null
+				? ((isOk(form) ? form.data.headerImageUrl : null) ?? preset.headerImage)
 				: (headerImageParam ?? preset.headerImage)
 
-	// Phase 5: resolve accentColor/bgColor — 'form' sentinel uses parsed form value
+	// Phase 5: resolve accentColor/bgColor — 'form' sentinel (now also the default) uses parsed form value
 	const accentColor =
-		accentColorParam === 'form'
+		accentColorParam === 'form' || accentColorParam == null
 			? ((isOk(form) ? form.data.accentColor : null) ?? preset.accentColor ?? null)
 			: (accentColorParam ?? preset.accentColor ?? null)
 
 	const bgColor =
-		bgColorParam === 'form'
+		bgColorParam === 'form' || bgColorParam == null
 			? ((isOk(form) ? form.data.bgColor : null) ?? preset.bgColor ?? null)
 			: (bgColorParam ?? preset.bgColor ?? null)
 

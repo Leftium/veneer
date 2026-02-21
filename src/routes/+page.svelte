@@ -154,23 +154,16 @@
 		if (tabs) params.set('tabs', tabs)
 		// Resolve header image param:
 		// - explicit mode → emit that value
-		// - '(not set)' + preset has no image + form has image → auto-emit 'form'
-		// - '(not set)' + preset has image → omit param (server uses preset image)
-		const imgVal =
-			headerImageMode === 'custom'
-				? headerImageCustom
-				: headerImageMode || (!selectedPreset.headerImage && formMeta?.headerImageUrl ? 'form' : '')
+		// - '(not set)' → omit param (server defaults to 'form' behavior)
+		const imgVal = headerImageMode === 'custom' ? headerImageCustom : headerImageMode || ''
 		if (imgVal) params.set('headerImage', imgVal)
 		if (headerColor) params.set('headerColor', headerColor)
 		if (headerHeight) params.set('headerHeight', headerHeight)
 		if (headerTextColor) params.set('headerTextColor', headerTextColor)
 		if (headerImageFit) params.set('headerImageFit', headerImageFit)
-		// Auto-emit 'form' for accent/bg when user hasn't set them but form has colors
-		const accentVal =
-			accentColor || (!selectedPreset.accentColor && formMeta?.accentColor ? 'form' : '')
-		const bgVal = bgColor || (!selectedPreset.bgColor && formMeta?.bgColor ? 'form' : '')
-		if (accentVal) params.set('accentColor', accentVal)
-		if (bgVal) params.set('bgColor', bgVal)
+		// Only emit accentColor/bgColor when explicitly set (server defaults to 'form' behavior)
+		if (accentColor) params.set('accentColor', accentColor)
+		if (bgColor) params.set('bgColor', bgColor)
 
 		const qs = params.toString()
 		return qs ? `${base}?${qs}` : base
