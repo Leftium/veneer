@@ -2,7 +2,7 @@
 
 ## Overview
 
-Remove PicoCSS dependency and replace with minimal custom styles using Open Props. This simplifies the CSS architecture while maintaining form element styling.
+Remove PicoCSS dependency and replace with minimal custom styles using Open Props. This simplifies the CSS architecture while maintaining form element styling. Also flatten the route structure by removing the `(centered)` and `(fluid)` layout groups, applying global centering instead.
 
 ## Current PicoCSS Usage
 
@@ -25,18 +25,55 @@ Remove PicoCSS dependency and replace with minimal custom styles using Open Prop
 4. **Semantic elements** - `<article>`, `role="group"`, `role="button"`
 5. **Spacing** - `--pico-spacing`
 
+## Route Structure Flattening
+
+### Current Structure
+
+```
+src/routes/
+  +layout.svelte              # Root (imports app.scss)
+  +page.svelte                # Homepage (has its own <main class="container">)
+  (centered)/
+    +layout.svelte            # Wraps children in <main class="container">
+    (veneer)/[id1=vid]/...    # Main veneer layout
+    [flags]/[id1]/...         # Older veneer page
+    test-links/+page.svelte
+  (fluid)/
+    fluid/+page.svelte        # Test page (h1-h5 only)
+```
+
+### New Structure (flattened)
+
+```
+src/routes/
+  +layout.svelte              # Root (imports app.scss, global centering applied via body)
+  +page.svelte                # Homepage (remove <main class="container">)
+  (veneer)/[id1=vid]/...      # Main veneer layout
+  [flags]/[id1]/...           # Older veneer page
+  test-links/+page.svelte
+```
+
+### Changes
+
+1. **Delete** `src/routes/(centered)/+layout.svelte` (the `.container` wrapper)
+2. **Move** contents of `(centered)/` up one level: `(veneer)/`, `[flags]/`, `test-links/`
+3. **Delete** `src/routes/(fluid)/` entirely (test page not needed)
+4. **Remove** `<main class="container">` from `+page.svelte` (homepage)
+5. **Remove** `<main class="container">` from `GoogleForm.svelte`
+6. **Apply centering globally** in `app.scss` on `body` (see Phase 3 below)
+
+> **Note:** The veneer layout's inner `<content>` element (`max-width: $size-content-2`) stays as-is — it's component-level content narrowing, not layout centering.
+
 ## New Layout Strategy
 
-### Container Approach
+### Global Centering (replaces `.container` class and layout group)
 
-- Single centered container using Open Props `$size-content-3` (max-width)
-- No breakpoints except optional phone breakpoint
-- Table/data views allowed to overflow horizontally
+Centering is applied once on `body` in `app.scss` — every route is centered by default:
 
 ```scss
 @use 'open-props-scss' as *;
 
-.container {
+body {
 	max-width: $size-content-3;
 	margin-inline: auto;
 	padding-inline: $size-3;
@@ -215,8 +252,7 @@ Replace PicoCSS variables with Open Props equivalents:
 ### Phase 1: Create Custom Styles
 
 1. Create `src/lib/styles/forms.scss` with form element styles
-2. Create `src/lib/styles/layout.scss` with container styles
-3. Create `src/lib/styles/variables.scss` with custom CSS variables for theming
+2. Create `src/lib/styles/variables.scss` with custom CSS variables for theming
 
 ### Phase 2: Update Components
 
@@ -226,9 +262,10 @@ Update each component to use new variables:
 2. `NotificationBox.svelte` - Replace pico vars
 3. `Sheet.svelte` - Replace pico vars
 4. `StickyHeaderSummaryDetailsGrid.svelte` - Replace pico vars
-5. `+layout.svelte` - Replace pico vars, remove `role="group"` reliance
+5. Veneer `+layout.svelte` - Replace pico vars, remove `role="group"` from `<nav-buttons>`
+6. `[flags]` `+page.svelte` - Replace pico vars, remove `role="group"` from `<nav-buttons>`
 
-### Phase 3: Update app.scss
+### Phase 3: Update app.scss + Global Centering
 
 ```scss
 // Remove this:
@@ -238,7 +275,6 @@ Update each component to use new variables:
 @use 'open-props-scss' as *;
 @use '$lib/styles/variables';
 @use '$lib/styles/forms';
-@use '$lib/styles/layout';
 
 // Base styles
 html {
@@ -247,6 +283,10 @@ html {
 }
 
 body {
+	max-width: $size-content-3;
+	margin-inline: auto;
+	padding-inline: $size-3;
+
 	font-family: $font-sans;
 	line-height: $font-lineheight-3;
 	color: $gray-9;
@@ -261,11 +301,23 @@ body {
 }
 ```
 
-### Phase 4: Remove PicoCSS
+### Phase 4: Flatten Route Structure
+
+1. Delete `src/routes/(centered)/+layout.svelte`
+2. Move `src/routes/(centered)/(veneer)/` to `src/routes/(veneer)/`
+3. Move `src/routes/(centered)/[flags]/` to `src/routes/[flags]/`
+4. Move `src/routes/(centered)/test-links/` to `src/routes/test-links/`
+5. Delete `src/routes/(centered)/` (now empty)
+6. Delete `src/routes/(fluid)/` entirely
+7. Remove `<main class="container">` from `src/routes/+page.svelte`
+8. Remove `<main class="container">` from `src/lib/components/GoogleForm.svelte`
+
+### Phase 5: Remove PicoCSS
 
 1. Remove `@picocss/pico` from `package.json`
 2. Run `pnpm install`
-3. Test all form elements and layouts
+3. Remove Swiper a11y disable hack (was only to prevent `role="group"` conflict with PicoCSS)
+4. Test all form elements and layouts
 
 ## Tab Button Fix (Related)
 
@@ -306,6 +358,8 @@ nav-buttons {
 3. **Simpler debugging** - Explicit styles, no framework magic
 4. **Consistent with Open Props** - Single design token source
 5. **Tab button issue resolved** - No more `<button>` vs `<a>` style conflicts
+6. **Simpler route structure** - No layout groups needed; centering is global
+7. **Swiper a11y hack removed** - No more `role="group"` conflict to work around
 
 ## Risks
 
@@ -323,6 +377,9 @@ nav-buttons {
 - [ ] Checkbox and radio alignment
 - [ ] Select dropdown arrow
 - [ ] Textarea resize behavior
-- [ ] Layout containers centered correctly
+- [ ] Body centered correctly (global centering via `body`)
 - [ ] Tables overflow horizontally on mobile
 - [ ] Tab buttons styled consistently
+- [ ] All routes still resolve correctly after flattening
+- [ ] Homepage renders without `<main class="container">`
+- [ ] GoogleForm renders without `<main class="container">`
