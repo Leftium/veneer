@@ -328,6 +328,7 @@
 							type="radio"
 							name="entry.{roleField.id}"
 							value={option}
+							required={roleField.required}
 							bind:group={member1Role}
 							onchange={handleChange}
 						/>
@@ -335,6 +336,15 @@
 					{option}
 				</label>
 			{/each}
+			{#if isCheckboxes && roleField.required}
+				<input
+					type="checkbox"
+					style="opacity:0; position:absolute; margin-top:-1.5em; pointer-events:none"
+					tabindex="-1"
+					required={browser && member1RoleGroup.length === 0}
+					disabled={!browser || member1RoleGroup.length > 0}
+				/>
+			{/if}
 		{/if}
 	</fieldset>
 

@@ -99,10 +99,11 @@
 		const storedValues = store.get('storedValues') || { byId: {}, byTitle: {} }
 
 		if (field.type === 'CHECKBOXES') {
-			group =
+			group = (
 				storedValues.byId[field.id]?.split(', ') ||
 				storedValues.byTitle[normalizeTitle(field.title)]?.split(', ') ||
 				[]
+			).filter(Boolean)
 		} else {
 			value = storedValues.byId[field.id] || storedValues.byTitle[normalizeTitle(field.title)]
 		}
@@ -249,7 +250,7 @@
 		{#if field.type === 'CHECKBOXES' && field.required}
 			<input
 				type="checkbox"
-				style="opacity:0; position:absolute; width:0; height:0; pointer-events:none"
+				style="opacity:0; position:absolute; margin-top:-1.5em; pointer-events:none"
 				tabindex="-1"
 				required={mounted && group.length === 0}
 				disabled={!mounted || group.length > 0}
