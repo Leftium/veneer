@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { dev } from '$app/environment'
+	import { browser, dev } from '$app/environment'
 	import * as linkify from 'linkifyjs'
 	import { DOCUMENT_URL_REGEX } from '$lib/google-document-util/url-id'
 	import { DOMAIN_PRESETS, PRESETS } from '$lib/presets'
@@ -43,6 +43,18 @@
 	let headerHeight = $state('')
 	let headerTextColor = $state('')
 	let headerImageFit = $state('')
+
+	// Tracks the URL that was last copied; resets when veneerPath changes
+	let copiedUrl = $state('')
+
+	// Pre-populate inputs from URL params (for sharing launcher links)
+	if (browser) {
+		const params = new URLSearchParams(window.location.search)
+		const urlParam = params.get('url')
+		const sheetParam = params.get('sheet')
+		if (urlParam) urlInput = urlParam
+		if (sheetParam) sheetInput = sheetParam
+	}
 
 	// Form metadata from /api/form-meta (Phase 4)
 	let formMeta = $state<{ title: string; headerImageUrl: string | null } | null>(null)
@@ -197,51 +209,8 @@
 </script>
 
 <main class="content-bg">
-	<!-- Header -->
-	<header>
-		<hgroup>
-			<h1>Veneer</h1>
-			<p>A customizable front-end for Google Forms &amp; Sheets</p>
-		</hgroup>
-	</header>
-
-	<!-- URL Builder -->
-	<section>
-		<h2>URL Builder</h2>
-		<label>
-			Paste a Google Form or Sheet URL
-			<input
-				type="url"
-				placeholder="https://docs.google.com/forms/d/e/... or https://forms.gle/..."
-				bind:value={urlInput}
-				onfocus={(e) => e.currentTarget.select()}
-			/>
-		</label>
-
-		{#if formResult}
-			<p><mark>{typeLabel(formResult.prefix)}</mark></p>
-
-			{#if isFormType}
-				<label>
-					Optional: paste a Google Sheet URL (for response data)
-					<input
-						type="url"
-						placeholder="https://docs.google.com/spreadsheets/d/..."
-						bind:value={sheetInput}
-						onfocus={(e) => e.currentTarget.select()}
-					/>
-				</label>
-				{#if sheetInput && !sheetResult}
-					<small>No valid Google Sheet URL detected in input.</small>
-				{/if}
-			{/if}
-
-			{#if veneerPath}
-				<p>
-					Generated link: <a href={veneerPath} target="_blank">{veneerPath}</a>
-				</p>
-			{/if}
-
+	{#if formResult}
+		<div class="sticky-preview">
 			<div
 				class="header-preview"
 				style:background-image={previewBgImage}
@@ -269,6 +238,67 @@
 					</nav-buttons>
 				{/if}
 			</div>
+			<div class="preview-bar">
+				{#if veneerPath}
+					<input
+						class="veneer-url"
+						type="text"
+						readonly
+						value={window.location.origin + veneerPath}
+						onfocus={(e) => e.currentTarget.select()}
+					/>
+					<p class="preview-actions-prose">
+						<a href={veneerPath} target="_blank">Open</a> this veneer in a new tab, or
+						<button
+							class:copied={copiedUrl && copiedUrl === window.location.origin + veneerPath}
+							onclick={() => {
+								const full = window.location.origin + veneerPath
+								navigator.clipboard.writeText(full)
+								copiedUrl = full
+							}}
+						>
+							{copiedUrl && copiedUrl === window.location.origin + veneerPath
+								? 'Copied!'
+								: 'Copy URL'}</button
+						>
+						to share.
+					</p>
+				{/if}
+			</div>
+		</div>
+	{/if}
+
+	<!-- URL Builder -->
+	<section>
+		<h2>Veneer Builder</h2>
+		<label>
+			Paste a Google Form or Sheet URL
+			{#if formResult}
+				<span class="detected">{typeLabel(formResult.prefix)}</span>
+			{/if}
+			<input
+				type="url"
+				placeholder="https://docs.google.com/forms/d/e/... or https://forms.gle/..."
+				bind:value={urlInput}
+				onfocus={(e) => e.currentTarget.select()}
+			/>
+		</label>
+
+		{#if formResult}
+			{#if isFormType}
+				<label>
+					Optional: paste a Google Sheet URL (for response data)
+					<input
+						type="url"
+						placeholder="https://docs.google.com/spreadsheets/d/..."
+						bind:value={sheetInput}
+						onfocus={(e) => e.currentTarget.select()}
+					/>
+				</label>
+				{#if sheetInput && !sheetResult}
+					<small>No valid Google Sheet URL detected in input.</small>
+				{/if}
+			{/if}
 
 			<details open>
 				<summary>Advanced options</summary>
@@ -313,38 +343,47 @@
 					<label for="opt-header-color">Header color</label>
 					<div class="color-field">
 						<input
-							type="color"
-							value={toHex(headerColor || selectedPreset.headerColor)}
-							oninput={(e) => (headerColor = e.currentTarget.value)}
-						/>
-						<input
 							id="opt-header-color"
 							type="text"
 							placeholder={selectedPreset.headerColor}
 							bind:value={headerColor}
 						/>
+						<input
+							type="color"
+							value={toHex(headerColor || selectedPreset.headerColor)}
+							oninput={(e) => (headerColor = e.currentTarget.value)}
+						/>
 					</div>
 
-					<label for="opt-header-height">Header height</label>
-					<input
-						id="opt-header-height"
-						type="text"
-						placeholder={selectedPreset.headerHeight}
-						bind:value={headerHeight}
-					/>
+					<label for="opt-header-height">Extra height</label>
+					<div class="slider-field">
+						<input
+							id="opt-header-height"
+							type="text"
+							placeholder={selectedPreset.headerHeight}
+							bind:value={headerHeight}
+						/>
+						<input
+							type="range"
+							min="0"
+							max="200"
+							value={parseInt(headerHeight || selectedPreset.headerHeight) || 0}
+							oninput={(e) => (headerHeight = e.currentTarget.value + 'px')}
+						/>
+					</div>
 
 					<label for="opt-text-color">Text color</label>
 					<div class="color-field">
-						<input
-							type="color"
-							value={toHex(headerTextColor || selectedPreset.headerTextColor)}
-							oninput={(e) => (headerTextColor = e.currentTarget.value)}
-						/>
 						<input
 							id="opt-text-color"
 							type="text"
 							placeholder={selectedPreset.headerTextColor}
 							bind:value={headerTextColor}
+						/>
+						<input
+							type="color"
+							value={toHex(headerTextColor || selectedPreset.headerTextColor)}
+							oninput={(e) => (headerTextColor = e.currentTarget.value)}
 						/>
 					</div>
 				</div>
@@ -413,7 +452,7 @@
 	<!-- Footer -->
 	<footer>
 		<small>
-			Powered by <strong>Veneer</strong> &mdash;
+			<strong>Veneer</strong> &mdash; a thin layer over Google Forms &amp; Sheets &mdash;
 			<a href="https://github.com/Leftium/veneer" target="_blank" rel="noopener noreferrer">
 				GitHub
 			</a>
@@ -429,6 +468,59 @@
 		margin-inline: auto;
 		padding-inline: $size-5;
 		padding-block: $size-5;
+	}
+
+	.preview-bar {
+		padding: $size-1 $size-3 $size-2;
+	}
+
+	input.veneer-url {
+		width: 100%;
+		font-family: monospace;
+		font-size: $font-size-0;
+		color: var(--app-muted-color, #666);
+		padding: $size-1 $size-2;
+		margin: 0;
+	}
+
+	.preview-actions-prose {
+		margin-top: $size-1;
+		margin-bottom: 0;
+		text-align: center;
+		font-size: $font-size-0;
+		color: var(--app-muted-color, #666);
+
+		button,
+		a {
+			display: inline;
+			padding: $size-1 $size-2;
+			font-size: inherit;
+			border: 1px solid var(--app-border-color, #ccc);
+			border-radius: var(--app-border-radius, 4px);
+			background: var(--app-surface-color, #f5f5f5);
+			color: var(--app-color, inherit);
+			cursor: pointer;
+			text-decoration: none;
+			font-weight: $font-weight-6;
+
+			&:hover {
+				background: var(--app-border-color, #ddd);
+			}
+		}
+
+		button.copied {
+			color: #3a7d44;
+			border-color: #3a7d44;
+			background: transparent;
+			cursor: default;
+		}
+	}
+
+	.detected {
+		color: #3a7d44;
+		font-size: $font-size-0;
+		font-weight: $font-weight-4;
+		margin-left: $size-2;
 	}
 
 	details {
@@ -468,10 +560,19 @@
 		gap: $size-1;
 	}
 
+	// Shared fixed width for the text input in color + slider rows
+	$secondary-input-width: 7em;
+
 	.color-field {
 		display: flex;
 		gap: $size-1;
 		align-items: center;
+
+		input[type='text'] {
+			flex: 0 0 $secondary-input-width;
+			width: $secondary-input-width;
+			min-width: 0;
+		}
 
 		input[type='color'] {
 			flex: 0 0 2.5em;
@@ -499,19 +600,63 @@
 				border-radius: 2px;
 			}
 		}
+	}
+
+	.slider-field {
+		display: flex;
+		gap: $size-1;
+		align-items: center;
 
 		input[type='text'] {
-			flex: 1 1 0;
-			width: 0; // override the grid's width: 100% so flex can control sizing
-			min-width: 0;
+			flex: 0 0 $secondary-input-width;
+			width: $secondary-input-width;
 		}
+
+		input[type='range'] {
+			flex: 1 1 0;
+			min-width: 0;
+			padding: 0;
+			margin: 0;
+			-webkit-appearance: none;
+			appearance: none;
+			height: 6px;
+			background: var(--app-border-color, #ccc);
+			border-radius: 3px;
+			outline: none;
+
+			&::-webkit-slider-thumb {
+				-webkit-appearance: none;
+				appearance: none;
+				width: 16px;
+				height: 16px;
+				border-radius: 50%;
+				background: var(--app-accent-color, #0b4474);
+				cursor: pointer;
+			}
+
+			&::-moz-range-thumb {
+				width: 16px;
+				height: 16px;
+				border: none;
+				border-radius: 50%;
+				background: var(--app-accent-color, #0b4474);
+				cursor: pointer;
+			}
+		}
+	}
+
+	.sticky-preview {
+		position: sticky;
+		top: 0;
+		z-index: 10;
+		margin-top: calc(-1 * $size-5);
+		margin-inline: calc(-1 * $size-5);
+		background: var(--app-background-color, white);
 	}
 
 	.header-preview {
 		position: relative;
 		border-radius: 0;
-		margin-block: $size-3;
-		margin-inline: calc(-1 * $size-5);
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-end;
