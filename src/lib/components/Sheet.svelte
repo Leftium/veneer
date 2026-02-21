@@ -132,8 +132,8 @@
 		position: sticky;
 		z-index: 100;
 		// At most 2 lines of header will become sticky:
-		top: calc(min(0px, 2 * 1.5em + var(--pico-spacing) / 2 - var(--header-height)));
-		background-color: var(--pico-card-sectioning-background-color);
+		top: calc(min(0px, 2 * 1.5em + var(--app-spacing) / 2 - var(--header-height)));
+		background-color: var(--app-card-section-bg);
 
 		// Align items to bottom
 		display: flex;
@@ -143,7 +143,7 @@
 
 		font-weight: $font-weight-7;
 
-		border: 2px solid var(--pico-muted-border-color);
+		border: 2px solid var(--app-muted-border-color);
 		border-inline: none;
 	}
 
@@ -153,7 +153,7 @@
 		overflow: clip;
 		text-overflow: ellipsis;
 
-		border-top: 1px solid var(--pico-muted-border-color);
+		border-top: 1px solid var(--app-muted-border-color);
 	}
 
 	dl {

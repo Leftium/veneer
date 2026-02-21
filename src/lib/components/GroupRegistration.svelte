@@ -470,7 +470,7 @@
 	.clear-btn {
 		all: unset;
 		cursor: pointer;
-		color: var(--pico-muted-color);
+		color: var(--app-muted-color);
 		font-size: 85%;
 		padding: $size-1 $size-2;
 		border-radius: $radius-1;
@@ -478,7 +478,7 @@
 
 		&:hover,
 		&:focus-visible {
-			color: var(--pico-del-color, var(--pico-color));
+			color: var(--app-del-color, var(--app-color));
 		}
 	}
 
@@ -494,7 +494,6 @@
 	}
 
 	.delete-btn {
-		// Reset Pico button styles
 		all: unset;
 		cursor: pointer;
 		margin-left: auto;
@@ -524,7 +523,7 @@
 	}
 
 	.group-count {
-		color: var(--pico-muted-color);
+		color: var(--app-muted-color);
 		margin: 0;
 		font-weight: 600;
 	}

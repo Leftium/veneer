@@ -91,7 +91,7 @@
 		margin: op.$size-1;
 		padding: 0;
 
-		background-color: var(--pico-card-sectioning-background-color);
+		background-color: var(--app-card-section-bg);
 
 		border: 1px solid var(--border-color);
 		border-radius: op.$size-1;
@@ -138,7 +138,7 @@
 		padding-inline: op.$size-1;
 
 		font-size: $subject-font-size;
-		color: var(--pico-background-color);
+		color: var(--app-background-color);
 		background-color: var(--border-color);
 	}
 

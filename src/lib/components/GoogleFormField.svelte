@@ -301,7 +301,7 @@
 	}
 
 	.question-image {
-		margin-bottom: calc(var(--pico-spacing) * 0.375);
+		margin-bottom: calc(var(--app-spacing) * 0.375);
 	}
 
 	.required-mark {

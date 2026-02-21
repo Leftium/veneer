@@ -1,0 +1,184 @@
+// Form element styles replacing PicoCSS form defaults.
+// References --app-* custom properties from variables.scss.
+
+@use 'open-props-scss' as *;
+
+// Respect hidden attribute on all elements
+[hidden] {
+	display: none !important;
+}
+
+// Fieldset reset (replaces PicoCSS fieldset normalization)
+fieldset {
+	width: 100%;
+	margin: 0;
+	margin-bottom: var(--app-spacing);
+	padding: 0;
+	border: 0;
+}
+
+fieldset legend {
+	margin-bottom: calc(var(--app-spacing) * 0.5);
+}
+
+// Base form element styles
+input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='submit']),
+textarea,
+select {
+	display: block;
+	width: 100%;
+	padding: $size-2 $size-3;
+	margin-block: $size-2;
+
+	font-family: inherit;
+	font-size: inherit;
+	line-height: $font-lineheight-3;
+
+	color: var(--app-color);
+	background-color: var(--app-background-color);
+	border: var(--app-border-width) solid var(--app-border-color);
+	border-radius: var(--app-border-radius);
+
+	transition: border-color 0.2s ease;
+
+	&:focus {
+		outline: none;
+		border-color: #{$blue-6};
+		box-shadow: 0 0 0 3px #{$blue-2};
+	}
+
+	&::placeholder {
+		color: var(--app-muted-color);
+	}
+}
+
+textarea {
+	min-height: 6em;
+	resize: vertical;
+}
+
+// Checkbox and radio
+input[type='checkbox'],
+input[type='radio'] {
+	display: inline-block;
+	width: auto;
+	margin-right: $size-2;
+	accent-color: #{$blue-6};
+}
+
+// Submit button
+input[type='submit'],
+button[type='submit'] {
+	display: block;
+	width: 100%;
+	padding: $size-3 $size-4;
+	margin-top: $size-4;
+
+	font-size: $font-size-2;
+	font-weight: $font-weight-6;
+	color: white;
+
+	background-color: #{$blue-6};
+	border: none;
+	border-radius: var(--app-border-radius);
+	cursor: pointer;
+
+	transition: background-color 0.2s ease;
+
+	&:hover {
+		background-color: #{$blue-7};
+	}
+
+	&:active {
+		background-color: #{$blue-8};
+	}
+}
+
+// Labels
+label {
+	display: block;
+	margin-top: $size-3;
+	font-weight: $font-weight-5;
+}
+
+// Inline label (for checkbox/radio)
+label:has(input[type='checkbox']),
+label:has(input[type='radio']) {
+	display: flex;
+	align-items: center;
+	font-weight: normal;
+	cursor: pointer;
+}
+
+// Button-styled elements (replaces PicoCSS [role="button"] and button styling)
+button,
+[role='button'] {
+	display: inline-block;
+	padding: $size-2 $size-3;
+	border: var(--app-border-width) solid #{$blue-6};
+	border-radius: var(--app-border-radius);
+	background-color: #{$blue-6};
+	color: white;
+	font-family: inherit;
+	font-size: inherit;
+	font-weight: $font-weight-6;
+	line-height: $font-lineheight-3;
+	text-align: center;
+	text-decoration: none;
+	cursor: pointer;
+	user-select: none;
+	transition:
+		background-color 0.2s ease,
+		border-color 0.2s ease,
+		color 0.2s ease;
+
+	&:hover {
+		background-color: #{$blue-7};
+		border-color: #{$blue-7};
+	}
+
+	&:active {
+		background-color: #{$blue-8};
+		border-color: #{$blue-8};
+	}
+}
+
+// Outline variant (transparent background, colored border+text)
+:is(button, [role='button']).outline {
+	background-color: transparent;
+	color: #{$blue-6};
+	border-color: #{$blue-6};
+
+	&:hover {
+		background-color: transparent;
+		color: #{$blue-7};
+		border-color: #{$blue-7};
+	}
+
+	&:active {
+		background-color: transparent;
+		color: #{$blue-8};
+		border-color: #{$blue-8};
+	}
+}
+
+// Dark mode form overrides
+@media (prefers-color-scheme: dark) {
+	input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='submit']),
+	textarea,
+	select {
+		&:focus {
+			border-color: #{$blue-4};
+			box-shadow: 0 0 0 3px #{$blue-9};
+		}
+	}
+
+	input[type='submit'],
+	button[type='submit'] {
+		background-color: #{$blue-5};
+
+		&:hover {
+			background-color: #{$blue-4};
+		}
+	}
+}

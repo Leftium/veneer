@@ -66,14 +66,14 @@
 		display: grid;
 		// grid-template-columns: as inline style
 
-		border-bottom: 2px solid var(--pico-muted-border-color);
+		border-bottom: 2px solid var(--app-muted-border-color);
 	}
 
 	grid-details {
 		z-index: 10;
 		grid-column: 1 / -1;
 
-		background-color: var(--pico-card-sectioning-background-color);
+		background-color: var(--app-card-section-bg);
 
 		display: flex;
 		justify-content: center;

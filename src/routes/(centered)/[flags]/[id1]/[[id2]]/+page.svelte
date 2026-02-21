@@ -131,10 +131,6 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		const swiperParams = {
 			spaceBetween: 4,
 			autoHeight: true,
-			// Prevent role=group attributes interfering with PicoCSS.
-			a11y: {
-				enabled: false,
-			},
 			// ✅ Allow touch swipe on mobile
 			simulateTouch: window.matchMedia('(pointer: coarse)').matches,
 
@@ -164,7 +160,12 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 			})
 		}
 
+		// Listen for GroupRegistration height changes to update swiper slide height
+		const handleGroupResize = () => callSwiperUpdateAutoHeight()
+		document.addEventListener('groupresize', handleGroupResize)
+
 		return () => {
+			document.removeEventListener('groupresize', handleGroupResize)
 			if (swiper) {
 				swiper.destroy(true, true) // optional: clean DOM and detach
 			}
@@ -288,7 +289,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		<h1 class="title">{data.title}</h1>
 
 		{#if data.numTabs > 1}
-			<nav-buttons role="group">
+			<nav-buttons>
 				{#each Object.entries(data.navTabs) as [hash, { name, icon, error }]}
 					{#if icon}
 						<button
@@ -459,6 +460,9 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 		footer {
 			min-height: $size-13;
+			padding-block: $size-3;
+			background-color: var(--app-card-section-bg);
+			border-top: 1px solid var(--app-muted-border-color);
 		}
 	}
 
@@ -569,9 +573,6 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 	content {
 		display: block;
-		margin: auto;
-
-		max-width: $size-content-2;
 	}
 
 	.markdown {
@@ -665,7 +666,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 			display: grid;
 			grid-template-columns: repeat(
 				auto-fit,
-				minmax(calc(($size-content-2 - 2 * $size-3) / 3), 1fr)
+				minmax(calc(($size-content-3 - 2 * $size-3) / 3), 1fr)
 			);
 			grid-template-rows: repeat(20, auto);
 			column-gap: $size-3;
@@ -677,7 +678,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				display: grid;
 				grid-template-rows: subgrid;
 			}
-			--pico-muted-color: color-mix(in srgb, var(--pico-color) 30%, transparent);
+			--app-muted-color: color-mix(in srgb, var(--app-color) 30%, transparent);
 
 			:where(article, address, blockquote, dl, figure, form, ol, p, pre, table, ul)
 				~ :is(h1, h2, h3, h4, h5, h6) {
@@ -689,7 +690,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				align-self: end;
 				margin-bottom: $size-1;
 
-				color: var(--pico-muted-color);
+				color: var(--app-muted-color);
 				font-size: $font-size-1;
 			}
 
@@ -705,7 +706,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 					a {
 						text-decoration: none; /* Removes underline */
-						color: var(--pico-muted-color);
+						color: var(--app-muted-color);
 
 						&:hover {
 							text-decoration: underline; /* Adds underline on hover */
@@ -738,8 +739,8 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 			--p: 50%; /* triangle position (0%:left 100%:right) */
 			--r: #{$size-2}; /* the radius */
 			--b: 2px; /* border width  */
-			--c1: color-mix(in srgb, var(--pico-color) 60%, transparent);
-			--c2: var(--pico-card-sectioning-background-color);
+			--c1: color-mix(in srgb, var(--app-color) 60%, transparent);
+			--c2: var(--app-card-section-bg);
 
 			padding: $size-1 $size-3;
 			border-radius: var(--r) var(--r) min(var(--r), 100% - var(--p) - var(--h) * tan(var(--a) / 2))

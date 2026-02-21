@@ -79,10 +79,10 @@
 	grow-wrap {
 		display: block;
 
-		background: var(--pico-background-color);
+		background: var(--app-background-color);
 
-		border: var(--pico-border-width) solid var(--pico-form-element-border-color);
-		border-radius: var(--pico-border-radius);
+		border: var(--app-border-width) solid var(--app-border-color);
+		border-radius: var(--app-border-radius);
 
 		&.fullscreen {
 			display: flex;

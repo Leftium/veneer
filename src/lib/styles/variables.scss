@@ -1,0 +1,46 @@
+// CSS custom properties replacing PicoCSS --pico-* variables.
+// Uses Open Props SCSS values as the source of truth.
+// Components reference var(--app-*) instead of var(--pico-*).
+
+@use 'open-props-scss' as *;
+
+:root {
+	// Colors
+	--app-color: #{$gray-9};
+	--app-background-color: #{$gray-0};
+	--app-muted-color: #{$gray-5};
+
+	// Borders
+	--app-border-width: 1px;
+	--app-border-radius: #{$radius-2};
+	--app-border-color: #{$gray-4};
+	--app-muted-border-color: #{$gray-3};
+
+	// Surfaces
+	--app-card-section-bg: #{$gray-1};
+
+	// Spacing
+	--app-spacing: #{$size-3};
+
+	// Semantic colors
+	--app-del-color: #{$red-6};
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		// Colors
+		--app-color: #{$gray-1};
+		--app-background-color: #{$gray-9};
+		--app-muted-color: #{$gray-5};
+
+		// Borders
+		--app-border-color: #{$gray-6};
+		--app-muted-border-color: #{$gray-7};
+
+		// Surfaces
+		--app-card-section-bg: #{$gray-8};
+
+		// Semantic colors
+		--app-del-color: #{$red-4};
+	}
+}

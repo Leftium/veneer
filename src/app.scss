@@ -1,48 +1,40 @@
-@use '@picocss/pico/scss/pico' with (
-	$theme-color: 'blue'
-);
-
 @use 'open-props-scss' as *;
+@use '$lib/styles/variables';
+@use '$lib/styles/forms';
 
+// sanitize.css is imported in +layout.svelte (CSS files via JS import)
+
+// Supplement sanitize.css: responsive images
+img {
+	max-width: 100%;
+	height: auto;
+}
+
+// Base styles
 html {
 	scrollbar-gutter: stable;
+	font-size: 115%;
+	// Outside background (visible on wide screens flanking the content)
+	background-color: $gray-1;
 }
 
-:root {
-	--pico-font-size: 115%;
+body {
+	min-height: 100dvh;
+
+	font-family: $font-sans;
+	line-height: $font-lineheight-3;
+	color: $gray-9;
+	// Content area background
+	background-color: $gray-0;
 }
 
-@media (min-width: 576px) {
-	:root {
-		--pico-font-size: 115%;
-		/* Original: 106.25% */
+@media (prefers-color-scheme: dark) {
+	html {
+		background-color: $gray-10;
 	}
-}
 
-@media (min-width: 768px) {
-	:root {
-		--pico-font-size: 115%;
-		/* Original: 112.5% */
-	}
-}
-
-@media (min-width: 1024px) {
-	:root {
-		--pico-font-size: 115%;
-		/* Original: 118.75% */
-	}
-}
-
-@media (min-width: 1280px) {
-	:root {
-		--pico-font-size: 115%;
-		/* Original: 150% */
-	}
-}
-
-@media (min-width: 1536px) {
-	:root {
-		--pico-font-size: 115%;
-		/* Original: 131.25% */
+	body {
+		color: $gray-1;
+		background-color: $gray-9;
 	}
 }
