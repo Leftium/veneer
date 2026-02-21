@@ -2,7 +2,7 @@
 
 > **Status**: Reverse-engineered, undocumented by Google. Subject to change without notice.
 >
-> **Last updated**: 2026-02-17
+> **Last updated**: 2026-02-22
 
 Google Forms embeds a JavaScript variable `FB_PUBLIC_LOAD_DATA_` in the HTML of every published form. This contains the complete form structure as a nested JSON array. Veneer parses this to render forms.
 
@@ -19,12 +19,12 @@ FB_PUBLIC_LOAD_DATA_ = [
   [4]  null,
   [5]  null,
   [6]  null,
-  [7]  "",                      // Possibly theme ID
+  [7]  "",                      // Empty string (not theme-related)
   [8]  null,
   [9]  0,                       // Unknown flag
   [10] 0,                       // Unknown flag
   [11] null,
-  [12] "",                      // Possibly custom theme CSS
+  [12] "",                      // Form owner/organization name (e.g. "Leftium.com")
   [13] 0,                       // Unknown flag
   [14] "e/1FAIpQLSd4l...",      // Published form ID path
   [15] 0,                       // Unknown flag
@@ -52,12 +52,13 @@ FB_PUBLIC_LOAD_DATA_ = [
        0                          // [2][4] Unknown
      ]
 [3]  null
-[4]  null
+[4]  <ThemeColors> | null       // Custom theme color overrides (null when using default theme)
+                                // See "Theme Colors" section below
 [5]  null
 [6]  null
 [7]  null
 [8]  "Form Display Title"       // Form title shown to respondents
-[9]  73                         // Unknown (possibly theme/color code)
+[9]  73                         // Theme/template preset ID (e.g. 48, 66, 73)
 [10] [                          // Form settings
        null,                      // [10][0]
        null,                      // [10][1]
@@ -90,7 +91,67 @@ FB_PUBLIC_LOAD_DATA_ = [
 
 **Parsed by Veneer**: `[0]` (description), `[1]` (fields), `[8]` (title), `[10][6]` (email collection rule).
 
-**Available but unused**: `[2][0]` (confirmation message), `[24]`/`[25]` (rich text HTML for title/description).
+**Available but unused**: `[2][0]` (confirmation message), `[4]` (theme colors), `[24]`/`[25]` (rich text HTML for title/description).
+
+---
+
+## Theme Colors: `jArray[1][4]`
+
+When a form uses only a built-in Google theme (identified by `[1][9]`), `[1][4]` is `null`.
+When the user sets **custom** accent or background colors in the Theme panel, `[1][4]` is populated:
+
+```
+[1][4] = [
+  [0]  null,
+  [1]  null,
+  [2]  null,
+  [3]  null,
+  [4]  null,
+  [5]  [                           // Color definitions
+         [0]  null,
+         [1]  null,
+         [2]  null,
+         [3]  [R, G, B, null, F],  // Accent/primary color (buttons, checkboxes, progress bar)
+         [4]  [R, G, B, null, F],  // Background color (page background behind form card)
+       ]
+]
+```
+
+Each color tuple is `[red, green, blue, null, flag]` where:
+
+- `R`, `G`, `B` are integers 0–255
+- The 4th element is always `null`
+- `F` is a flag (observed values: `1` and `2`) — purpose unclear, possibly encodes
+  light/dark classification or color-role type
+
+### Observed examples
+
+| Form                             | `[5][3]` (accent)                  | `[5][4]` (background)              | Theme `[9]` |
+| -------------------------------- | ---------------------------------- | ---------------------------------- | ----------- |
+| 비비밀 첫파티 (Indigo/Medium)    | `[63,81,181,null,2]` → `#3f51b5`   | `[217,220,240,null,1]` → `#d9dcf0` | 73          |
+| 9월 14일 소셜 DEV (warm beige)   | `[210,197,169,null,1]` → `#d2c5a9` | `[246,243,238,null,1]` → `#f6f3ee` | 73          |
+| 일욜 수업 (default purple theme) | _null — no custom colors_          | _null_                             | 73          |
+| Sample questionnaire (default)   | _null_                             | _null_                             | 48          |
+| Test Form (default)              | _null_                             | _null_                             | 66          |
+
+### Extraction logic
+
+```typescript
+const colorArray = jArray[1]?.[4]?.[5]
+const accentRgb = colorArray?.[3] // [R, G, B, null, flag] or undefined
+const bgRgb = colorArray?.[4] // [R, G, B, null, flag] or undefined
+
+// Convert to hex:
+const toHex = (rgb: number[]) =>
+	'#' +
+	rgb
+		.slice(0, 3)
+		.map((n) => n.toString(16).padStart(2, '0'))
+		.join('')
+
+const accentColor = accentRgb ? toHex(accentRgb) : null // e.g. "#3f51b5"
+const bgColor = bgRgb ? toHex(bgRgb) : null // e.g. "#d9dcf0"
+```
 
 ---
 
