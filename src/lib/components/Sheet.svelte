@@ -61,14 +61,23 @@
 			{#snippet header()}
 				{@const count = extra.count}
 				<gh>
-					<span>{count.total} signups!</span>
+					<span>{count.total}명 신청</span>
 					<span>💃{count.follows} 🕺{count.leaders}</span>
 				</gh>
 			{/snippet}
 
 			{#snippet rowSummary(columns, row, r, makeToggleDetails)}
 				{@const ci = extra.ci}
-				<gd onclick={makeToggleDetails(r)} role="none">
+				{@const groupIndex = (row as any)._groupIndex ?? -1}
+				{@const isGroupMember = (row as any)._isGroupMember === true}
+				<gd
+					class={{
+						'group-alt': groupIndex % 2 === 1,
+						'group-member': isGroupMember,
+					}}
+					onclick={makeToggleDetails(r)}
+					role="none"
+				>
 					<content>
 						<fi-index>
 							<div>{@html row[0].render.replace(/^0*/, '<gz>$&</gz>')}.</div>
@@ -83,7 +92,9 @@
 						</fi-role>
 						<fi-info>
 							<h4>{row[ci.name]?.render}</h4>
-							<div>{row[ci.wish]?.render}</div>
+							{#if !isGroupMember}
+								<div>{row[ci.wish]?.render}</div>
+							{/if}
 						</fi-info>
 					</content>
 				</gd>
@@ -175,6 +186,14 @@
 
 		gd {
 			grid-column: 1 / -1;
+
+			&.group-alt {
+				background-color: rgba(128, 128, 128, 0.06);
+			}
+
+			&.group-member {
+				border-top-color: transparent;
+			}
 
 			content {
 				display: flex;

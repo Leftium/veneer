@@ -208,9 +208,12 @@ import {
 	REGEX_DANCE_NAME,
 	REGEX_DANCE_WISH,
 	REGEX_DANCE_PAID,
+	REGEX_DANCE_GROUP,
 	REGEX_DANCE_LEADER,
 	REGEX_DANCE_FOLLOW,
 } from '$lib/dance-constants'
+
+import { parse as parseGroupMembers } from '$lib/group-registration/serialization'
 
 export function collectExtraDance({ extra, columns, rows }: SheetDataPipe) {
 	console.time('⏱️ sheet-pipeline:collectExtraDance')
@@ -219,12 +222,19 @@ export function collectExtraDance({ extra, columns, rows }: SheetDataPipe) {
 		name: columns.findIndex((c) => REGEX_DANCE_NAME.test(c.title)),
 		paid: columns.findIndex((c) => REGEX_DANCE_PAID.test(c.title)),
 		wish: columns.findIndex((c) => REGEX_DANCE_WISH.test(c.title)),
+		group: columns.findIndex((c) => REGEX_DANCE_GROUP.test(c.title)),
 	}
 
 	if (ci.name === -1 || ci.role === -1) {
 		console.timeEnd('⏱️ sheet-pipeline:collectExtraDance')
 		return { extra, columns, rows }
 	}
+
+	// Reverse rows so newest registrations appear first
+	rows = rows.reverse()
+
+	// Expand group members into additional rows
+	rows = expandGroupMembers(rows, ci)
 
 	const count = {
 		total: rows.length,
@@ -238,8 +248,103 @@ export function collectExtraDance({ extra, columns, rows }: SheetDataPipe) {
 		ci,
 	}
 
-	rows = rows.reverse()
-
 	console.timeEnd('⏱️ sheet-pipeline:collectExtraDance')
 	return { extra, columns, rows }
+}
+
+/**
+ * Role value mapping for injecting parsed roles into synthetic row cells.
+ */
+const ROLE_DISPLAY: Record<string, string> = {
+	leader: 'Leader',
+	follower: 'Follower',
+	both: 'Leader, Follower',
+}
+
+/**
+ * Expand rows that contain group registration data into additional rows
+ * for each group member. Each expanded row is a shallow copy of the parent
+ * row with overwritten name and role cells, plus metadata for UI grouping.
+ *
+ * Rows are tagged with `_groupIndex` (0-based group counter, -1 for solo)
+ * and `_isGroupMember` (true for expanded child rows).
+ */
+function expandGroupMembers(
+	rows: SheetDataPipe['rows'],
+	ci: { name: number; role: number; group: number },
+): SheetDataPipe['rows'] {
+	if (ci.group === -1) return rows
+
+	const expanded: SheetDataPipe['rows'] = []
+	let entryCounter = 0
+
+	for (const row of rows) {
+		const groupText = row[ci.group]?.value || ''
+		const members = groupText ? parseGroupMembers(groupText) : []
+
+		if (members.length === 0) {
+			// Solo registration — no group data
+			const taggedRow = [...row] as any
+			taggedRow._groupIndex = entryCounter++
+			taggedRow._isGroupMember = false
+			expanded.push(taggedRow)
+			continue
+		}
+
+		// This row is a group primary
+		const gIdx = entryCounter++
+		const primaryName = row[ci.name]?.value || ''
+
+		// Tag the primary row
+		const taggedPrimary = [...row] as any
+		taggedPrimary._groupIndex = gIdx
+		taggedPrimary._isGroupMember = false
+		expanded.push(taggedPrimary)
+
+		// Re-index: primary keeps its original index number,
+		// children will get new index numbers assigned later.
+		let childNum = 0
+		for (const member of members) {
+			childNum++
+			const childRow = row.map((cell) => ({ ...cell })) as any
+
+			// Derive name for unnamed members from primary
+			const displayName = member.name || `${primaryName} +${childNum}`
+
+			// Overwrite name cell
+			childRow[ci.name] = {
+				value: displayName,
+				ts: null,
+				render: displayName,
+			}
+
+			// Overwrite role cell with parsed role
+			if (member.role) {
+				const roleDisplay = ROLE_DISPLAY[member.role] || ''
+				childRow[ci.role] = {
+					value: roleDisplay,
+					ts: null,
+					render: roleDisplay,
+				}
+			}
+
+			// Clear the group cell on children (they don't have their own group data)
+			childRow[ci.group] = { value: '', ts: null, render: '' }
+
+			// Tag as group member
+			childRow._groupIndex = gIdx
+			childRow._isGroupMember = true
+
+			expanded.push(childRow)
+		}
+	}
+
+	// Re-assign index numbers (column 0 = '#'), zero-padded for alignment
+	const maxLen = String(expanded.length).length
+	for (let i = 0; i < expanded.length; i++) {
+		const indexStr = `${i + 1}`
+		expanded[i][0] = { value: indexStr, ts: null, render: indexStr.padStart(maxLen, '0') }
+	}
+
+	return expanded
 }

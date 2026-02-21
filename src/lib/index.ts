@@ -11,6 +11,7 @@ export type QuestionType =
 	| 'SCALE'
 	| 'TITLE_AND_DESCRIPTION'
 	| 'GRID'
+	| 'PAGE_BREAK'
 	| 'FILE_UPLOAD'
 	| 'IMAGE'
 	| 'VIDEO'
