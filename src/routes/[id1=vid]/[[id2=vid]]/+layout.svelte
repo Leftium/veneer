@@ -25,6 +25,7 @@
 	} from '$lib/google-document-util/sheet-data-pipeline.svelte.js'
 	import { onDestroy, onMount, tick } from 'svelte'
 	import { afterNavigate, goto } from '$app/navigation'
+	import { browser } from '$app/environment'
 	import { gg } from '@leftium/gg'
 	import { linkifyRelative, makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
 
@@ -215,7 +216,9 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	const handleGroupResize = () => callSwiperUpdateAutoHeight()
 
 	onDestroy(() => {
-		document.removeEventListener('groupresize', handleGroupResize)
+		if (browser) {
+			document.removeEventListener('groupresize', handleGroupResize)
+		}
 		swiperContainer?.swiper?.destroy(true, true)
 	})
 
