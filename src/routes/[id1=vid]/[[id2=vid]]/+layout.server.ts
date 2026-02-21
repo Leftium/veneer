@@ -228,6 +228,13 @@ export const load = async ({ params, url }) => {
 
 	const numTabs = Object.values(navTabs).filter((tab) => tab.icon).length
 
+	// Phase 3c: detect whether current doc IDs match the preset's defaults
+	const usingDefaultDocs =
+		!!preset.defaultFormId &&
+		params.id1 === preset.defaultFormId &&
+		(params.id2 === preset.defaultSheetId || (!params.id2 && !preset.defaultSheetId))
+	const defaultTab = tabs[0] || 'info'
+
 	return {
 		document1,
 		document2,
@@ -247,5 +254,7 @@ export const load = async ({ params, url }) => {
 			textColor: headerTextColor,
 			imageFit: headerImageFit,
 		},
+		usingDefaultDocs,
+		defaultTab,
 	}
 }

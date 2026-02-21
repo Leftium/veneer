@@ -56,8 +56,12 @@
 
 	let { params, data, children } = $props()
 
-	// Build base path from doc IDs, preserving id2 when present
-	const docPath = params.id2 ? `/${params.id1}/${params.id2}` : `/${params.id1}`
+	// Phase 3c: short URLs when viewing domain's default docs
+	const docPath = data.usingDefaultDocs
+		? ''
+		: params.id2
+			? `/${params.id1}/${params.id2}`
+			: `/${params.id1}`
 
 	// Preserve search params (e.g. ?hostname=) for dev navigation
 	const search = page.url.search
@@ -112,7 +116,8 @@
 
 		// after sliding, update URL *only* on user-driven calls
 		if (updateHistory) {
-			goto(`${docPath}/${tid}${search}`, {
+			const tabPath = tid === data.defaultTab ? docPath || '/' : `${docPath}/${tid}`
+			goto(`${tabPath}${search}`, {
 				replaceState: false,
 				noScroll: true,
 				keepFocus: true,
@@ -225,10 +230,12 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		if (type !== 'link' && type !== 'goto' && type !== 'popstate') return
 
 		// 3) extract the tab ID and slide WITHOUT touching history
-		const tid = to?.url.pathname.split('/').pop()
-		if (tid && ['info', 'form', 'list', 'raw', 'dev'].includes(tid)) {
-			slideToTab(tid, { updateHistory: false })
-		}
+		const lastSegment = to?.url.pathname.split('/').pop()
+		const tid =
+			lastSegment && ['info', 'form', 'list', 'raw', 'dev'].includes(lastSegment)
+				? lastSegment
+				: data.defaultTab
+		slideToTab(tid, { updateHistory: false })
 	})
 
 	function internalizeLinks(markdown: string): string {
@@ -346,7 +353,9 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 								e.preventDefault()
 								slideToTab(tid)
 							}}
-							href={`${docPath}/${tid}${search}`}
+							href={tid === data.defaultTab
+								? `${docPath || '/'}${search}`
+								: `${docPath}/${tid}${search}`}
 						>
 							{icon}
 							{name}{error ? ' ⚠️' : ''}

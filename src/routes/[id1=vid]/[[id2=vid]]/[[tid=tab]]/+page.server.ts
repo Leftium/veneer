@@ -1,7 +1,9 @@
+import { dev } from '$app/environment'
 import { fail, redirect } from '@sveltejs/kit'
+import { PRESETS, resolvePresetName } from '$lib/presets'
 
 export const actions = {
-	default: async ({ params, request }) => {
+	default: async ({ params, request, url }) => {
 		const formData = await request.formData()
 
 		const documentId = formData.get('documentId')?.toString()
@@ -26,8 +28,26 @@ export const actions = {
 			})
 		}
 
-		// on success
-		const docPath = params.id2 ? `/${params.id1}/${params.id2}` : `/${params.id1}`
-		throw redirect(303, `${docPath}/list?yay`)
+		// on success — use short URLs when on domain's default docs
+		const hostname = ((dev && url.searchParams.get('hostname')) || url.hostname).replace(
+			/^www\./,
+			'',
+		)
+		const presetName = url.searchParams.get('preset') || resolvePresetName(hostname) || 'base'
+		const preset = PRESETS[presetName] || PRESETS['base']
+		const usingDefaultDocs =
+			!!preset.defaultFormId &&
+			params.id1 === preset.defaultFormId &&
+			(params.id2 === preset.defaultSheetId || (!params.id2 && !preset.defaultSheetId))
+		const docPath = usingDefaultDocs
+			? ''
+			: params.id2
+				? `/${params.id1}/${params.id2}`
+				: `/${params.id1}`
+		// Preserve search params (e.g. ?hostname=, ?preset=) and add ?yay
+		const redirectParams = new URLSearchParams(url.search)
+		redirectParams.delete('yay')
+		const extra = redirectParams.toString()
+		throw redirect(303, `${docPath}/list?yay${extra ? `&${extra}` : ''}`)
 	},
 }
