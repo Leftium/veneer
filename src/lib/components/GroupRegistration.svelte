@@ -440,12 +440,16 @@
 		margin-top: $size-2;
 	}
 
-	// Left border accent — always present to avoid resize when toggling group mode
+	// Left border accent — pulled into parent padding so inputs align with non-grouped fields.
+	// Global forms.scss sets fieldset { width: 100% }, so negative margin shifts the box
+	// without growing it. We override width to compensate.
+	// Net content shift: -margin + border + padding = 0.
 	.group-registration > fieldset,
 	.members-group fieldset {
 		border-left: 3px solid var(--app-border-color);
-		padding-left: $size-3;
-		margin-left: $size-1;
+		margin-left: calc(-1 * ($size-2 + 3px));
+		padding-left: $size-2;
+		width: calc(100% + $size-2 + 3px);
 		margin-bottom: $size-2;
 	}
 
