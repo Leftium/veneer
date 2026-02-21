@@ -136,7 +136,9 @@ export function parseGoogleForm(html: string) {
 		const answerOptionsList: string[] = []
 		const answerOptionsListValue = field[4]?.[0]?.[1] ?? []
 
-		const mediaMetadata = field[6]
+		// IMAGE/VIDEO types store media at field[6]; submittable types with
+		// an attached image wrap it in an extra array at field[9][0].
+		const mediaMetadata = field[6] ?? field[9]?.[0]
 
 		const imageId = mediaMetadata?.[0]
 		const youtubeId = mediaMetadata?.[3]
@@ -197,12 +199,33 @@ export function parseGoogleForm(html: string) {
 		html.match(/<img[^>]*src="(https:\/\/lh[^"]*googleusercontent\.com\/formsz\/[^"]*)"/g) || []
 	const imgUrls = imgMatches.map((m) => m.match(/src="([^"]*)"/)?.[1]).filter(Boolean)
 
-	// Assign to questions with imageId by index
+	// Assign image URLs to questions that have an imageId.
+	// Try matching by mediaWidth first (comparing against the =w{N} suffix in the URL),
+	// then fall back to sequential index matching for any unmatched questions.
+	const usedUrls = new Set<number>()
+
+	// Pass 1: match by width
+	for (const question of form.questions) {
+		if (!question.imageId || !question.mediaWidth) continue
+		const matchIndex = imgUrls.findIndex(
+			(url, i) => !usedUrls.has(i) && url?.includes(`=w${question.mediaWidth}`),
+		)
+		if (matchIndex !== -1) {
+			question.imgUrl = imgUrls[matchIndex]
+			usedUrls.add(matchIndex)
+		}
+	}
+
+	// Pass 2: sequential fallback for any remaining
 	let imgIndex = 0
 	for (const question of form.questions) {
-		if (question.imageId && imgUrls[imgIndex]) {
-			question.imgUrl = imgUrls[imgIndex]
-			imgIndex++
+		if (question.imageId && !question.imgUrl) {
+			while (imgIndex < imgUrls.length && usedUrls.has(imgIndex)) imgIndex++
+			if (imgUrls[imgIndex]) {
+				question.imgUrl = imgUrls[imgIndex]
+				usedUrls.add(imgIndex)
+				imgIndex++
+			}
 		}
 	}
 	console.timeEnd('⏱️ parseGoogleForm:regex-extract')

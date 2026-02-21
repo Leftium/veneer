@@ -2,22 +2,12 @@
 	import type { Question } from '$lib'
 	import MarkdownIt from 'markdown-it'
 	//import emoji from 'markdown-it-emoji'
-	//@ts-expect-error: TODO
 	import easyTables from 'markdown-it-easy-tables'
-	//@ts-expect-error: TODO
 	import sup from 'markdown-it-sup'
-	//@ts-expect-error: TODO
 	import sub from 'markdown-it-sub'
-	//@ts-expect-error: TODO
 	import deflist from 'markdown-it-deflist'
 
 	import multimdTable from 'markdown-it-multimd-table'
-
-	import MarkdownItGitHubAlerts from 'markdown-it-github-alerts'
-
-	import 'markdown-it-github-alerts/styles/github-colors-light.css'
-	import 'markdown-it-github-alerts/styles/github-colors-dark-media.css'
-	import 'markdown-it-github-alerts/styles/github-base.css'
 
 	const md = new MarkdownIt({ html: true, linkify: true, typographer: true, breaks: true })
 	md.use(sup) //.use(emoji)
@@ -28,7 +18,6 @@
 			headerless: true,
 		})
 		.use(easyTables)
-		.use(MarkdownItGitHubAlerts)
 
 	import store from 'store'
 	import { browser } from '$app/environment'
@@ -86,6 +75,17 @@
 		return title?.trim()?.toLowerCase().replace(/\s+/g, '_')
 	}
 
+	// Server-side image proxy (disabled -- app should work without SSR/server)
+	// function proxyImgUrl(url?: string) {
+	// 	if (!url) return ''
+	// 	return `/api/image-proxy?url=${encodeURIComponent(url)}`
+	// }
+
+	function imgSrc(url?: string) {
+		if (!url) return ''
+		return url.replace(/=w\d+(\?|$)/i, '$1')
+	}
+
 	function handleChange(this: HTMLInputElement) {
 		const storedValues = store.get('storedValues') || { byId: {}, byTitle: {} }
 
@@ -101,7 +101,8 @@
 		if (field.type === 'CHECKBOXES') {
 			group =
 				storedValues.byId[field.id]?.split(', ') ||
-				storedValues.byTitle[normalizeTitle(field.title)]?.split(', ')
+				storedValues.byTitle[normalizeTitle(field.title)]?.split(', ') ||
+				[]
 		} else {
 			value = storedValues.byId[field.id] || storedValues.byTitle[normalizeTitle(field.title)]
 		}
@@ -122,7 +123,7 @@
 				</center>
 			{/if}
 			<center>
-				<img src={field.imgUrl?.replace(/=w\d+$/i, '')} alt="" />
+				<img src={imgSrc(field.imgUrl)} alt="" />
 			</center>
 		{/key}
 	{:else if field.type === 'VIDEO'}
@@ -148,6 +149,11 @@
 				</small>
 			</div>
 		</label>
+		{#if field.imgUrl}
+			<center class="question-image">
+				<img src={imgSrc(field.imgUrl)} alt="" />
+			</center>
+		{/if}
 
 		{#if field.type === 'PARAGRAPH_TEXT'}
 			<textarea
@@ -178,6 +184,11 @@
 				</small>
 			</div>
 		</label>
+		{#if field.imgUrl}
+			<center class="question-image">
+				<img src={imgSrc(field.imgUrl)} alt="" />
+			</center>
+		{/if}
 
 		<select
 			id="entry.{field.id}"
@@ -204,6 +215,11 @@
 				</small>
 			</div>
 		</label>
+		{#if field.imgUrl}
+			<center class="question-image">
+				<img src={imgSrc(field.imgUrl)} alt="" />
+			</center>
+		{/if}
 
 		{#each field.options as option}
 			<label>
@@ -228,6 +244,15 @@
 				{/if}{option}
 			</label>
 		{/each}
+		{#if field.type === 'CHECKBOXES' && field.required}
+			<input
+				type="checkbox"
+				style="opacity:0; position:absolute; width:0; height:0; pointer-events:none"
+				tabindex="-1"
+				required={browser && group.length === 0}
+				disabled={!browser || group.length > 0}
+			/>
+		{/if}
 	{:else}
 		<div class="hidden">
 			TODO: {field.type}
@@ -273,6 +298,10 @@
 	label[for] {
 		font-weight: bold;
 		margin-top: 1.5em;
+	}
+
+	.question-image {
+		margin-bottom: calc(var(--pico-spacing) * 0.375);
 	}
 
 	.required-mark {
