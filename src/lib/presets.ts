@@ -102,6 +102,9 @@ export const PRESETS: Record<string, Preset> = {
 	},
 }
 
+/** Presets shown in the launcher/builder dropdown (subset of PRESETS). */
+export const LAUNCHER_PRESETS = ['base', 'vivimil', 'btango-dj'] as const
+
 /**
  * Resolve which preset name applies for a given hostname.
  * Returns the preset name, or `null` if the domain maps to launcher / is unknown.

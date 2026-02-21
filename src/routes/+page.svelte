@@ -2,7 +2,7 @@
 	import { browser } from '$app/environment'
 	import * as linkify from 'linkifyjs'
 	import { DOCUMENT_URL_REGEX } from '$lib/google-document-util/url-id'
-	import { PRESETS } from '$lib/presets'
+	import { PRESETS, LAUNCHER_PRESETS } from '$lib/presets'
 
 	// Convert any CSS color to #rrggbb hex for <input type="color">
 	function toHex(color: string): string {
@@ -169,7 +169,7 @@
 		return qs ? `${base}?${qs}` : base
 	})
 
-	const presetNames = Object.keys(PRESETS)
+	const presetNames = LAUNCHER_PRESETS
 
 	// Resolved preset for placeholder hints and preview
 	let selectedPreset = $derived(PRESETS[preset] ?? PRESETS['base'])
