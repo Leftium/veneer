@@ -7,6 +7,16 @@
 	let urlInput = $state('')
 	let sheetInput = $state('')
 
+	// Advanced options
+	let preset = $state('')
+	let tabs = $state('')
+	let headerImageMode = $state('') // '' | 'form' | 'none' | 'custom'
+	let headerImageCustom = $state('')
+	let headerColor = $state('')
+	let headerHeight = $state('')
+	let headerTextColor = $state('')
+	let headerImageFit = $state('')
+
 	// Extract veneer ID from a URL by trying all DOCUMENT_URL_REGEX patterns
 	function veneerIdFromUrl(url: string): { prefix: string; id: string } | null {
 		for (const [prefix, regex] of Object.entries(DOCUMENT_URL_REGEX)) {
@@ -62,11 +72,40 @@
 	let veneerPath = $derived.by(() => {
 		if (!formResult) return null
 		const formPart = `${formResult.prefix}.${formResult.id}`
-		if (sheetResult) {
-			return `/${formPart}/${sheetResult.prefix}.${sheetResult.id}`
-		}
-		return `/${formPart}`
+		const base = sheetResult
+			? `/${formPart}/${sheetResult.prefix}.${sheetResult.id}`
+			: `/${formPart}`
+
+		const params = new URLSearchParams()
+		if (preset) params.set('preset', preset)
+		if (tabs) params.set('tabs', tabs)
+		const imgVal = headerImageMode === 'custom' ? headerImageCustom : headerImageMode // 'form', 'none', or ''
+		if (imgVal) params.set('headerImage', imgVal)
+		if (headerColor) params.set('headerColor', headerColor)
+		if (headerHeight) params.set('headerHeight', headerHeight)
+		if (headerTextColor) params.set('headerTextColor', headerTextColor)
+		if (headerImageFit) params.set('headerImageFit', headerImageFit)
+
+		const qs = params.toString()
+		return qs ? `${base}?${qs}` : base
 	})
+
+	const presetNames = Object.keys(PRESETS)
+
+	// Resolved preset for placeholder hints and preview
+	let selectedPreset = $derived(PRESETS[preset] ?? PRESETS['base'])
+
+	// Preview header values: use filled-in state value, fall back to selected preset
+	let previewBgImage = $derived.by(() => {
+		if (headerImageMode === 'none') return 'none'
+		if (headerImageMode === 'custom')
+			return headerImageCustom ? `url(${headerImageCustom})` : 'none'
+		if (headerImageMode === 'form') return 'none' // can't know without fetching
+		return selectedPreset.headerImage ? `url(${selectedPreset.headerImage})` : 'none'
+	})
+	let previewBgColor = $derived(headerColor || selectedPreset.headerColor)
+	let previewHeight = $derived(headerHeight || selectedPreset.headerHeight)
+	let previewBgSize = $derived(headerImageFit || selectedPreset.headerImageFit)
 
 	// Preset directory data
 	const presetDirectory = [
@@ -125,6 +164,85 @@
 					Generated link: <a href={veneerPath} target="_blank">{veneerPath}</a>
 				</p>
 			{/if}
+
+			<div
+				class="header-preview"
+				style:background-image={previewBgImage}
+				style:background-color={previewBgColor}
+				style:height={previewHeight}
+				style:background-size={previewBgSize}
+				style:background-position="center"
+			>
+				{#if headerImageMode === 'form'}
+					<span class="preview-note">form image shown on page</span>
+				{/if}
+			</div>
+
+			<details open>
+				<summary>Advanced options</summary>
+
+				<div class="advanced-grid">
+					<label for="opt-preset">Preset</label>
+					<select id="opt-preset" bind:value={preset}>
+						<option value="">(domain default)</option>
+						{#each presetNames as name (name)}
+							<option value={name}>{name}</option>
+						{/each}
+					</select>
+
+					<label for="opt-tabs">Tabs</label>
+					<div class="field-with-hint">
+						<input id="opt-tabs" type="text" placeholder="e.g. info.form.list" bind:value={tabs} />
+						<small>dot-separated; <code>*</code> for all</small>
+					</div>
+
+					<label for="opt-header-image">Header image</label>
+					<div class="field-with-hint">
+						<select id="opt-header-image" bind:value={headerImageMode}>
+							<option value="">(preset default)</option>
+							<option value="form">form</option>
+							<option value="none">none</option>
+							<option value="custom">custom URL…</option>
+						</select>
+						{#if headerImageMode === 'custom'}
+							<input type="url" placeholder="https://…" bind:value={headerImageCustom} />
+						{/if}
+					</div>
+
+					<label for="opt-image-fit">Image fit</label>
+					<select id="opt-image-fit" bind:value={headerImageFit}>
+						<option value="">({selectedPreset.headerImageFit})</option>
+						<option value="cover">cover — crop to fill</option>
+						<option value="contain">contain — fit, no crop</option>
+						<option value="100%">fill width</option>
+						<option value="100% 100%">stretch</option>
+					</select>
+
+					<label for="opt-header-color">Header color</label>
+					<input
+						id="opt-header-color"
+						type="text"
+						placeholder={selectedPreset.headerColor}
+						bind:value={headerColor}
+					/>
+
+					<label for="opt-header-height">Header height</label>
+					<input
+						id="opt-header-height"
+						type="text"
+						placeholder={selectedPreset.headerHeight}
+						bind:value={headerHeight}
+					/>
+
+					<label for="opt-text-color">Text color</label>
+					<input
+						id="opt-text-color"
+						type="text"
+						placeholder={selectedPreset.headerTextColor}
+						bind:value={headerTextColor}
+					/>
+				</div>
+			</details>
 		{:else if urlInput.trim()}
 			<small>
 				No supported URL detected. Supported formats: Google Forms, Google Sheets, forms.gle,
@@ -205,5 +323,64 @@
 		margin-inline: auto;
 		padding-inline: $size-5;
 		padding-block: $size-5;
+	}
+
+	details {
+		margin-top: $size-3;
+
+		summary {
+			cursor: pointer;
+			user-select: none;
+			font-weight: $font-weight-6;
+			margin-bottom: $size-2;
+		}
+	}
+
+	.advanced-grid {
+		display: grid;
+		grid-template-columns: max-content 1fr;
+		gap: $size-2 $size-3;
+		align-items: start;
+
+		label {
+			font-size: $font-size-1;
+			color: var(--app-muted-color, #666);
+			padding-top: $size-1;
+			text-align: right;
+		}
+
+		select,
+		input[type='text'],
+		input[type='url'] {
+			width: 100%;
+		}
+	}
+
+	.field-with-hint {
+		display: flex;
+		flex-direction: column;
+		gap: $size-1;
+	}
+
+	.header-preview {
+		border-radius: 0;
+		margin-block: $size-3;
+		margin-inline: calc(-1 * $size-5);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: $size-5;
+		overflow: hidden;
+		transition:
+			background-color 0.2s,
+			height 0.2s;
+	}
+
+	.preview-note {
+		font-size: $font-size-0;
+		color: rgba(255, 255, 255, 0.7);
+		background: rgba(0, 0, 0, 0.3);
+		padding: $size-1 $size-2;
+		border-radius: $radius-2;
 	}
 </style>

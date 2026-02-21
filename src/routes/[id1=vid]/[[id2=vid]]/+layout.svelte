@@ -326,8 +326,13 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 </script>
 
 <article class="content-bg">
-	<header>
-		<fi-spacer></fi-spacer>
+	<header
+		style:background-image={data.header.image ? `url(${data.header.image})` : 'none'}
+		style:background-color={data.header.color}
+		style:background-size={data.header.imageFit}
+		style:--header-text-color={data.header.textColor}
+	>
+		<fi-spacer style:height={data.header.height}></fi-spacer>
 
 		<h1 class="title">{data.title}</h1>
 
@@ -715,21 +720,11 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-end;
-		//row-gap: $size-4;
-
 		padding: 0;
-
-		background-image: url(/dance_night.gif);
-		background-size: cover;
 		background-position: center;
-		background-color: #0b4474;
-
-		fi-spacer {
-			height: 100px;
-		}
 
 		& * {
-			color: white;
+			color: var(--header-text-color, white);
 		}
 	}
 

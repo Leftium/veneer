@@ -216,5 +216,6 @@ port-4:  Group registration ← DONE (7893272)
 remove-picocss              ← DONE (see specs/remove-picocss.md)
 port-5:  Image proxy        ← TODO (low priority, defer until SSR re-enabled)
 locale.md (Phase 1)         ← DONE (see specs/locale.md)
-phase-3b: Header params     ← TODO (after remove-picocss)
+page-options Phase 3b       ← DONE (see specs/page-options.md)
+launcher Phase 3            ← DONE (see specs/launcher.md)
 ```

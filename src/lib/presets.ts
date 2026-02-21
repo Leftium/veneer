@@ -29,6 +29,7 @@ export interface Preset {
 	headerColor: string
 	headerHeight: string
 	headerTextColor: string
+	headerImageFit: string
 }
 
 export const PRESETS: Record<string, Preset> = {
@@ -39,6 +40,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerColor: '#0b4474',
 		headerHeight: '100px',
 		headerTextColor: 'white',
+		headerImageFit: 'cover',
 	},
 	btango: {
 		tabs: ['info', 'form', 'list'],
@@ -48,6 +50,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerColor: '#0b4474',
 		headerHeight: '100px',
 		headerTextColor: 'white',
+		headerImageFit: 'cover',
 	},
 	'btango-class': {
 		tabs: ['info', 'form', 'list'],
@@ -57,6 +60,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerColor: '#0b4474',
 		headerHeight: '100px',
 		headerTextColor: 'white',
+		headerImageFit: 'cover',
 	},
 	'btango-dj': {
 		tabs: ['form', 'list'],
@@ -66,6 +70,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerColor: '#0b4474',
 		headerHeight: '100px',
 		headerTextColor: 'white',
+		headerImageFit: 'cover',
 	},
 	vivimil: {
 		tabs: ['info', 'form', 'list'],
@@ -75,6 +80,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerColor: '#0b4474',
 		headerHeight: '100px',
 		headerTextColor: 'white',
+		headerImageFit: 'cover',
 	},
 	minimal: {
 		tabs: ['info'],
@@ -82,6 +88,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerColor: '#333',
 		headerHeight: '0',
 		headerTextColor: 'white',
+		headerImageFit: 'cover',
 	},
 	kiosk: {
 		tabs: ['form'],
@@ -89,6 +96,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerColor: '#333',
 		headerHeight: '40px',
 		headerTextColor: 'white',
+		headerImageFit: 'cover',
 	},
 }
 

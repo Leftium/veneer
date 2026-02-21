@@ -395,15 +395,8 @@ const tabs =
 | Header height     | Height of header spacer     | Preset / Query param                 |
 | Header text color | Color of title/nav text     | Preset / Query param                 |
 
-**Note:** `headerImageUrl` IS parsed from Google Form data but NOT yet used:
-
-```typescript
-// In google-form.ts — this data is available but unused
-const matches = html.match(/background-image: url\(([^)]*)/)
-if (matches?.length && matches[1]) {
-	form.headerImageUrl = matches[1]
-}
-```
+**`headerImageUrl`** is parsed from Google Form HTML and used when `?headerImage=form` is passed.
+Use `?headerImage=form` to display the form's own header image instead of the preset default.
 
 ### 3. Data Display Options
 
@@ -591,12 +584,56 @@ Files modified:
 1. `src/routes/(centered)/(veneer)/[id1=vid]/[[id2=vid]]/+layout.server.ts` — `?tabs=`, wildcard redirect, `?showErrors`, `numTabs` fix
 2. `src/routes/(centered)/(veneer)/[id1=vid]/[[id2=vid]]/+layout.svelte` — unlink raw/dev slides
 
-### Phase 3b: Header Param Overrides — TODO (after remove-picocss)
+### Phase 3b: Header Param Overrides — DONE
 
-Deferred until after `specs/remove-picocss.md` is implemented, since header markup/CSS will be restructured:
+Implemented `?headerImage=`, `?headerColor=`, `?headerHeight=`, `?headerTextColor=`, and
+`?headerImageFit=` overrides.
 
-1. `?headerImage=`, `?headerColor=`, `?headerHeight=`, `?headerTextColor=` overrides
-2. Pass merged config to layout/page components for header styling
+**`?headerImage=` sentinel values:**
+
+| Value      | Meaning                                                           |
+| ---------- | ----------------------------------------------------------------- |
+| _(absent)_ | Use preset default                                                |
+| a path/URL | Use that image literally                                          |
+| `form`     | Use the image parsed from Google Form metadata (`headerImageUrl`) |
+| `none`     | No image — show background color only                             |
+
+**Priority chain:**
+
+```
+1. ?headerImage=none   → null (no image)
+2. ?headerImage=form   → form.data.headerImageUrl (or null if form failed)
+3. ?headerImage=<url>  → literal value
+4. (absent)            → preset.headerImage
+```
+
+Same 1. query param → 2. preset priority for `headerColor`, `headerHeight`, `headerTextColor`,
+`headerImageFit`.
+
+**`?headerImageFit=`** maps to CSS `background-size`:
+
+| Param value | `background-size`                 |
+| ----------- | --------------------------------- |
+| `cover`     | `cover` (default for all presets) |
+| `contain`   | `contain`                         |
+| `100%`      | fill width                        |
+| `100% 100%` | stretch                           |
+
+**Header text color** uses a CSS custom property `--header-text-color` set on the `<header>`
+element, inherited by all children via `& * { color: var(--header-text-color, white) }`.
+
+**`fi-spacer` height** is controlled by `data.header.height` (bound via `style:height`), allowing
+extra space above title/nav so the background image is more visible.
+
+The `Preset` interface gained `headerImageFit: string`; all preset definitions default to `'cover'`.
+
+Files modified:
+
+1. `src/lib/presets.ts` — added `headerImageFit` to `Preset` interface and all preset definitions
+2. `src/routes/[id1=vid]/[[id2=vid]]/+layout.server.ts` — resolve header params after preset + form load; return `header: { image, color, height, textColor, imageFit }`
+3. `src/routes/[id1=vid]/[[id2=vid]]/+layout.svelte` — bind `style:background-image`, `style:background-color`, `style:background-size`, `style:--header-text-color` on `<header>`; bind `style:height` on `<fi-spacer>`; remove hardcoded SCSS values
+
+The launcher URL builder surfaces all these params as advanced options — see `specs/launcher.md`.
 
 ### Phase 3c: Short Tab URLs for Default Docs — TODO
 
@@ -643,21 +680,22 @@ Files to change:
 1. `src/routes/(centered)/(veneer)/[id1=vid]/[[id2=vid]]/+layout.server.ts` — compute `usingDefaultDocs`
 2. `src/routes/(centered)/(veneer)/[id1=vid]/[[id2=vid]]/+layout.svelte` — use it for tab hrefs and `goto()` calls
 
-### Phase 4: Dynamic Header Image
+### Phase 4: Dynamic Header Image — SUPERSEDED
 
-1. Use `headerImageUrl` from Google Form when available
-2. Fall back to preset/param value
-3. Fall back to default
+The original goal (use `headerImageUrl` from Google Form as a fallback) is covered by the
+`?headerImage=form` sentinel implemented in Phase 3b. Pass `?headerImage=form` to opt in to the
+form's own header image.
 
-```svelte
-<header style:background-image="url({config.headerImage || data.form?.headerImageUrl || '/default.gif'})">
-```
+The remaining work — extracting the form's accent color and background color from
+`FB_PUBLIC_LOAD_DATA_` and surfacing them as veneer params — is tracked in `specs/launcher.md`
+Phase 5 (Google Form Theme Colors).
 
 ### Phase 5: Theme System
 
 1. Define CSS custom properties for theming
-2. Allow color overrides via params
-3. Consider light/dark mode support
+2. Allow color overrides via params — partially done via Phase 3b header params
+3. Accent color + background color from Google Form — see `specs/launcher.md` Phase 5
+4. Consider light/dark mode support
 
 ## Migration Path
 
@@ -732,21 +770,22 @@ veneer.leftium.com/api/final-url       # API endpoint
 
 ## Complete Options Summary
 
-| Category      | Option           | Source                           | Priority (highest first)                            |
-| ------------- | ---------------- | -------------------------------- | --------------------------------------------------- |
-| **Preset**    | Preset name      | `?preset=` / Domain / Fallback   | 1. `?preset=` param, 2. Domain mapping, 3. `'base'` |
-| **Documents** | Form ID          | URL path / Preset                | 1. URL, 2. Preset default                           |
-|               | Sheet ID         | URL path / Preset                | 1. URL, 2. Auto-detect, 3. Preset default           |
-| **Tabs**      | Visible tabs     | Preset + query param             | 1. `?tabs=` param, 2. Preset                        |
-|               | Show errors      | `?showErrors` / Environment      | 1. `?showErrors` param, 2. dev=true / prod=false    |
-| **Header**    | Image            | Form data + preset + query param | 1. Query param, 2. Form `headerImageUrl`, 3. Preset |
-|               | Color            | Preset + query param             | 1. Query param, 2. Preset                           |
-|               | Height           | Preset + query param             | 1. Query param, 2. Preset                           |
-|               | Text color       | Preset + query param             | 1. Query param, 2. Preset                           |
-| **Data**      | Show hidden cols | Query param                      | `?allcols`                                          |
-|               | Show hidden rows | Query param                      | `?allrows`                                          |
-|               | Skip sheet scan  | Query param                      | `?skipsheetidscan`                                  |
-| **Locale**    | Language         | URL prefix                       | Paraglide handles this                              |
+| Category      | Option           | Source                           | Priority (highest first)                                                  |
+| ------------- | ---------------- | -------------------------------- | ------------------------------------------------------------------------- |
+| **Preset**    | Preset name      | `?preset=` / Domain / Fallback   | 1. `?preset=` param, 2. Domain mapping, 3. `'base'`                       |
+| **Documents** | Form ID          | URL path / Preset                | 1. URL, 2. Preset default                                                 |
+|               | Sheet ID         | URL path / Preset                | 1. URL, 2. Auto-detect, 3. Preset default                                 |
+| **Tabs**      | Visible tabs     | Preset + query param             | 1. `?tabs=` param, 2. Preset                                              |
+|               | Show errors      | `?showErrors` / Environment      | 1. `?showErrors` param, 2. dev=true / prod=false                          |
+| **Header**    | Image            | Form data + preset + query param | 1. `?headerImage=` param, 2. Form `headerImageUrl` (if `form`), 3. Preset |
+|               | Color            | Preset + query param             | 1. `?headerColor=` param, 2. Preset                                       |
+|               | Height           | Preset + query param             | 1. `?headerHeight=` param, 2. Preset                                      |
+|               | Text color       | Preset + query param             | 1. `?headerTextColor=` param, 2. Preset                                   |
+|               | Image fit        | Preset + query param             | 1. `?headerImageFit=` param, 2. Preset                                    |
+| **Data**      | Show hidden cols | Query param                      | `?allcols`                                                                |
+|               | Show hidden rows | Query param                      | `?allrows`                                                                |
+|               | Skip sheet scan  | Query param                      | `?skipsheetidscan`                                                        |
+| **Locale**    | Language         | URL prefix                       | Paraglide handles this                                                    |
 
 ## Design Decisions
 

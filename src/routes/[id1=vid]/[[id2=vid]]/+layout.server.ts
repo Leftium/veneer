@@ -38,6 +38,14 @@ export const load = async ({ params, url }) => {
 	const showErrorsParam = url.searchParams.get('showErrors')
 	const showErrors = showErrorsParam !== null ? showErrorsParam !== 'false' : dev
 
+	// Phase 3b: header param overrides
+	const headerImageParam = url.searchParams.get('headerImage')
+	const headerColor = url.searchParams.get('headerColor') ?? preset.headerColor
+	const headerHeight = url.searchParams.get('headerHeight') ?? preset.headerHeight
+	const headerTextColor = url.searchParams.get('headerTextColor') ?? preset.headerTextColor
+	const headerImageFit = url.searchParams.get('headerImageFit') ?? preset.headerImageFit
+	// headerImage resolved after form is loaded (needed for 'form' sentinel)
+
 	// URL params that control inclusion of sheet data hidden by user:
 	const allCols = url.searchParams.has('allcols')
 	const allRows = url.searchParams.has('allrows')
@@ -183,6 +191,16 @@ export const load = async ({ params, url }) => {
 
 	title = isOk(form) ? form.data.title : isOk(sheet) ? sheet.data.title : ''
 
+	// Phase 3b: resolve headerImage after form is loaded
+	const headerImage =
+		headerImageParam === 'none'
+			? null
+			: headerImageParam === 'form'
+				? isOk(form)
+					? form.data.headerImageUrl
+					: null
+				: (headerImageParam ?? preset.headerImage)
+
 	if (isOk(sheet)) {
 		sheet = Ok(stripHidden(sheet.data, allCols, allRows))
 	}
@@ -222,5 +240,12 @@ export const load = async ({ params, url }) => {
 		title,
 		form,
 		sheet,
+		header: {
+			image: headerImage,
+			color: headerColor,
+			height: headerHeight,
+			textColor: headerTextColor,
+			imageFit: headerImageFit,
+		},
 	}
 }
