@@ -481,6 +481,13 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	</d-footer>
 </d-article>
 
+<svelte:head>
+	<title>{data.title}</title>
+	<meta property="og:title" content={data.title} />
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content={page.url.href} />
+</svelte:head>
+
 {#if false}
 	<hr />
 	{@render children()}
