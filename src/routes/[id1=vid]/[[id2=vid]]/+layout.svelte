@@ -517,23 +517,41 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		max-width: 100%;
 		white-space: nowrap;
 
-		&:focus-visible/*,
-		&:has(button:focus) &:has(a:focus)*/ {
+		&:focus-visible,
+		&:has(a:focus) {
 			box-shadow: none;
 		}
 
-		//button,
 		a {
+			// Reset anchor defaults
+			text-decoration: none;
+			color: inherit;
+
 			flex: 0 1 auto;
 			min-width: 0;
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
-			text-align: center; // Center the button text
+			text-align: center;
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			padding: $size-1 $size-4;
+
+			// Button bar: no rounding by default, round only the ends
+			border-radius: 0;
+
+			&:first-child {
+				border-radius: $radius-round 0 0 $radius-round;
+			}
+
+			&:last-child {
+				border-radius: 0 $radius-round $radius-round 0;
+			}
+
+			&:only-child {
+				border-radius: $radius-round;
+			}
 
 			background-color: rgba(255, 255, 255, 0%);
 
@@ -563,6 +581,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		position: absolute;
 		inset: 0;
 		z-index: 20;
+		border-radius: inherit;
 
 		box-shadow: inset 0 0 20px -5px rgba(255, 255, 255, 0.6);
 		background: rgba(255, 255, 255, 0.05);
@@ -573,6 +592,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		position: absolute;
 		inset: 0;
 		z-index: 10;
+		border-radius: inherit;
 
 		backdrop-filter: blur(8px);
 		filter: url(#glass-distortion);
