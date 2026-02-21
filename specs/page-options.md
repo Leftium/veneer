@@ -598,6 +598,51 @@ Deferred until after `specs/remove-picocss.md` is implemented, since header mark
 1. `?headerImage=`, `?headerColor=`, `?headerHeight=`, `?headerTextColor=` overrides
 2. Pass merged config to layout/page components for header styling
 
+### Phase 3c: Short Tab URLs for Default Docs — TODO
+
+When viewing a domain's default docs (i.e., `params.id1`/`params.id2` match the preset's
+`defaultFormId`/`defaultSheetId`), tab links should use short URLs instead of full doc-ID paths:
+
+| Situation                     | Current tab href          | Target tab href              |
+| ----------------------------- | ------------------------- | ---------------------------- |
+| Default docs, non-default tab | `/g.abc.../s.xyz.../form` | `/form`                      |
+| Default docs, default tab     | `/g.abc.../s.xyz...`      | `/`                          |
+| Non-default docs, any tab     | `/g.abc123/form`          | `/g.abc123/form` (unchanged) |
+
+This applies in **both production and dev** (`?hostname=` simulation). In dev with
+`?hostname=btango.com`, the layout currently builds hrefs from `params.id1`/`params.id2` (the
+full routed values), so tab links show the long doc IDs even though the browser URL is short.
+The fix is the same for both environments.
+
+**Implementation:**
+
+In `+layout.server.ts`, detect whether the current doc IDs match the resolved preset's defaults
+and pass a boolean to the layout:
+
+```typescript
+const usingDefaultDocs =
+	params.id1 === preset.defaultFormId &&
+	(params.id2 === preset.defaultSheetId || (!params.id2 && !preset.defaultSheetId))
+```
+
+In `+layout.svelte`, use `data.usingDefaultDocs` to build short hrefs:
+
+```typescript
+// Build base path for tab links
+const docPath = data.usingDefaultDocs
+	? '' // short: /form, /list
+	: params.id2
+		? `/${params.id1}/${params.id2}`
+		: `/${params.id1}` // full: /g.abc/s.xyz
+```
+
+Default tab (first in visible tabs) links to `/` (if default docs) or `/g.abc123` (if not).
+
+Files to change:
+
+1. `src/routes/(centered)/(veneer)/[id1=vid]/[[id2=vid]]/+layout.server.ts` — compute `usingDefaultDocs`
+2. `src/routes/(centered)/(veneer)/[id1=vid]/[[id2=vid]]/+layout.svelte` — use it for tab hrefs and `goto()` calls
+
 ### Phase 4: Dynamic Header Image
 
 1. Use `headerImageUrl` from Google Form when available
