@@ -35,7 +35,7 @@ is not consulted — a new visitor with no cookie always sees English regardless
 
 ---
 
-## Phase 1: Browser Language as Default — TODO
+## Phase 1: Browser Language as Default — DONE
 
 **Goal:** Use the browser's preferred language as the locale default for new visitors, falling back
 to `en` only if the browser signals no supported language.
@@ -214,7 +214,7 @@ locale-aware or keyword-configurable via preset.
 ## Implementation Order
 
 ```
-Phase 1: preferredLanguage strategy   ← small, do soon (one config line)
+Phase 1: preferredLanguage strategy   ← DONE
 Phase 2: Language switcher UI         ← after remove-picocss (header CSS stable)
 Phase 3: Locale-aware form content    ← future, Option C (defer) for now
 Phase 4: Locale-aware column regex    ← after port-temp-branch infra

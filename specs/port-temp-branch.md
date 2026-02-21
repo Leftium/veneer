@@ -215,6 +215,6 @@ port-3:  NotificationBox    ← ALREADY ON MAIN (skip)
 port-4:  Group registration ← DONE (7893272)
 remove-picocss              ← DONE (see specs/remove-picocss.md)
 port-5:  Image proxy        ← TODO (low priority, defer until SSR re-enabled)
-locale.md (Phase 1)         ← TODO (enable preferredLanguage, one config line)
+locale.md (Phase 1)         ← DONE (see specs/locale.md)
 phase-3b: Header params     ← TODO (after remove-picocss)
 ```
