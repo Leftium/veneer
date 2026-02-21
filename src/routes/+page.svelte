@@ -402,21 +402,6 @@
 						<option value="100% 100%">stretch</option>
 					</select>
 
-					<label for="opt-header-color">Header color</label>
-					<div class="color-field">
-						<input
-							id="opt-header-color"
-							type="text"
-							placeholder={selectedPreset.headerColor}
-							bind:value={headerColor}
-						/>
-						<input
-							type="color"
-							value={toHex(headerColor || selectedPreset.headerColor)}
-							oninput={(e) => (headerColor = e.currentTarget.value)}
-						/>
-					</div>
-
 					<label for="opt-header-height">Extra height</label>
 					<div class="slider-field">
 						<input
@@ -446,6 +431,21 @@
 							type="color"
 							value={toHex(headerTextColor || selectedPreset.headerTextColor)}
 							oninput={(e) => (headerTextColor = e.currentTarget.value)}
+						/>
+					</div>
+
+					<label for="opt-header-color">Header color</label>
+					<div class="color-field">
+						<input
+							id="opt-header-color"
+							type="text"
+							placeholder={darkenHex(previewAccentColor, 0.5)}
+							bind:value={headerColor}
+						/>
+						<input
+							type="color"
+							value={toHex(headerColor || darkenHex(previewAccentColor, 0.5))}
+							oninput={(e) => (headerColor = e.currentTarget.value)}
 						/>
 					</div>
 
