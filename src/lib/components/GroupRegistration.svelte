@@ -440,8 +440,8 @@
 		margin-top: $size-2;
 	}
 
-	// Left border accent for all members when in group mode
-	.group-header + fieldset,
+	// Left border accent — always present to avoid resize when toggling group mode
+	.group-registration > fieldset,
 	.members-group fieldset {
 		border-left: 3px solid var(--app-border-color);
 		padding-left: $size-3;
