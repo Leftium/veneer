@@ -8,16 +8,16 @@
 	// Colors
 	--app-color: #{$gray-9};
 	--app-background-color: #{$gray-0};
-	--app-muted-color: #{$gray-5};
+	--app-muted-color: #646b79;
 
 	// Borders
 	--app-border-width: 1px;
 	--app-border-radius: #{$radius-2};
 	--app-border-color: #{$gray-4};
-	--app-muted-border-color: #{$gray-3};
+	--app-muted-border-color: rgb(231, 234, 239.5);
 
 	// Surfaces
-	--app-card-section-bg: #{$gray-1};
+	--app-card-section-bg: rgb(251, 251.5, 252.25);
 
 	// Spacing
 	--app-spacing: #{$size-3};
@@ -31,14 +31,14 @@
 		// Colors
 		--app-color: #{$gray-1};
 		--app-background-color: #{$gray-9};
-		--app-muted-color: #{$gray-5};
+		--app-muted-color: #7b8495;
 
 		// Borders
 		--app-border-color: #{$gray-6};
-		--app-muted-border-color: #{$gray-7};
+		--app-muted-border-color: #202632;
 
 		// Surfaces
-		--app-card-section-bg: #{$gray-8};
+		--app-card-section-bg: rgb(26, 30.5, 40.25);
 
 		// Semantic colors
 		--app-del-color: #{$red-4};

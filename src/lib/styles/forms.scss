@@ -61,9 +61,12 @@ textarea {
 input[type='checkbox'],
 input[type='radio'] {
 	display: inline-block;
-	width: auto;
+	width: 1.25em;
+	height: 1.25em;
 	margin-right: $size-2;
 	accent-color: #{$blue-6};
+	vertical-align: middle;
+	flex-shrink: 0;
 }
 
 // Submit button

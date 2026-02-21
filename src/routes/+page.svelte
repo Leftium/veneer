@@ -80,7 +80,7 @@
 	let allDomains = $derived(Object.entries(DOMAIN_PRESETS))
 </script>
 
-<main class="container">
+<main class="content-bg">
 	<!-- Header -->
 	<header>
 		<hgroup>
@@ -196,3 +196,14 @@
 		</small>
 	</footer>
 </main>
+
+<style lang="scss">
+	@use 'open-props-scss' as *;
+
+	main {
+		max-width: $size-content-3;
+		margin-inline: auto;
+		padding-inline: $size-5;
+		padding-block: $size-5;
+	}
+</style>

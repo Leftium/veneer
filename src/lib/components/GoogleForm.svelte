@@ -57,7 +57,7 @@
 	})
 </script>
 
-<main class="container">
+<div>
 	{#if oldForm?.success || oldForm?.status}
 		<article>
 			{#if oldForm?.success}
@@ -95,12 +95,12 @@
 		<hr />
 		<pre>{JSON.stringify(googleForm, null, 4)}</pre>
 	</div>
-</main>
+</div>
 
 <style lang="scss">
 	@use 'open-props-scss' as *;
 
-	main {
+	div {
 		padding-top: $size-2;
 	}
 
@@ -111,5 +111,6 @@
 	input[type='submit'] {
 		font-size: $font-size-2;
 		font-weight: $font-weight-7;
+		margin-bottom: $size-5;
 	}
 </style>

@@ -325,7 +325,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	}
 </script>
 
-<article>
+<article class="content-bg">
 	<header>
 		<fi-spacer></fi-spacer>
 
@@ -479,10 +479,9 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	@use 'open-props-scss' as *;
 
 	article {
-		max-width: $size-content-2;
+		max-width: $size-content-3;
 		margin-inline: auto;
 		padding: 0;
-		padding-inline: $size-3;
 		margin-block: 0;
 
 		h1 {
@@ -502,6 +501,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		footer {
 			min-height: $size-13;
 			padding-block: $size-3;
+			padding-inline: $size-5;
 			background-color: var(--app-card-section-bg);
 			border-top: 1px solid var(--app-muted-border-color);
 		}
@@ -580,11 +580,10 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	}
 
 	main {
-		/*
-		.active {
-			background-color: #8882;
+		// Notification box sits outside swiper, needs its own padding
+		& > div {
+			padding-inline: $size-5;
 		}
-		*/
 
 		// This prevents a scrolling context from forming,
 		// so the <body> can be the scrolling context for sticky elements inside <swiper-slide>.
@@ -621,6 +620,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 	content {
 		display: block;
+		padding-inline: $size-7;
 	}
 
 	.markdown {
@@ -655,7 +655,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 				margin-block: $size-2;
 				margin-inline: auto;
 				padding: 0;
-				padding-inline: $size-3;
+				padding-inline: $size-5;
 
 				dt,
 				dd {
@@ -712,7 +712,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	footer {
 		content {
 			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(calc($size-content-2 / 3), 1fr));
+			grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 			grid-template-rows: repeat(20, auto);
 			column-gap: $size-3;
 		}

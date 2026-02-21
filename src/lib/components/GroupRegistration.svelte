@@ -427,7 +427,6 @@
 		padding: $size-2 $size-3;
 		padding-inline: 0;
 		margin-bottom: 2px;
-		border-radius: $radius-2;
 		gap: 0;
 	}
 

@@ -87,7 +87,7 @@
 		display: flex;
 		align-items: center;
 
-		max-width: op.$size-content-2;
+		max-width: op.$size-content-3;
 		margin: op.$size-1;
 		padding: 0;
 

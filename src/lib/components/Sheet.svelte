@@ -159,7 +159,7 @@
 	dl {
 		display: grid;
 
-		flex-basis: $size-content-2;
+		flex-basis: $size-content-3;
 		flex-shrink: 1;
 
 		dt {
@@ -201,7 +201,7 @@
 
 				margin: auto;
 
-				max-width: $size-content-2;
+				max-width: $size-content-3;
 
 				fi-index {
 					opacity: 0.5;
