@@ -36,7 +36,8 @@
 
 	// Advanced options
 	let preset = $state('')
-	let tabs = $state('')
+	let selectedTabsArr = $state<string[]>([])
+	let tabs = $derived(selectedTabsArr.join('.'))
 	let headerImageMode = $state('') // '' | 'form' | 'none' | 'custom'
 	let headerImageCustom = $state('')
 	let headerColor = $state('')
@@ -321,10 +322,38 @@
 						{/each}
 					</select>
 
-					<label for="opt-tabs">Tabs</label>
-					<div class="field-with-hint">
-						<input id="opt-tabs" type="text" placeholder="e.g. info.form.list" bind:value={tabs} />
-						<small>dot-separated; <code>*</code> for all</small>
+					<span class="grid-label">Tabs</span>
+					<div class="tab-toggles" role="group" aria-label="Tabs">
+						{#each ALL_TABS as tabId (tabId)}
+							{@const meta = TAB_META[tabId]}
+							{@const isActive = selectedTabsArr.includes(tabId)}
+							<button
+								type="button"
+								class={['tab-toggle', { active: isActive }]}
+								onclick={() => {
+									if (isActive) {
+										selectedTabsArr = selectedTabsArr.filter((t) => t !== tabId)
+									} else {
+										selectedTabsArr = ALL_TABS.filter(
+											(t) => selectedTabsArr.includes(t) || t === tabId,
+										)
+									}
+								}}
+							>
+								{meta.icon}
+								{meta.name}
+							</button>
+						{/each}
+						{#if selectedTabsArr.length > 0}
+							<small class="tab-summary"
+								>{tabs}
+								<button type="button" class="clear-tabs" onclick={() => (selectedTabsArr = [])}
+									>✕</button
+								></small
+							>
+						{:else}
+							<small class="tab-summary">using preset default</small>
+						{/if}
 					</div>
 
 					<label for="opt-header-image">Header image</label>
@@ -540,7 +569,8 @@
 		gap: $size-2 $size-3;
 		align-items: start;
 
-		label {
+		label,
+		.grid-label {
 			font-size: $font-size-1;
 			color: var(--app-muted-color, #666);
 			padding-top: $size-1;
@@ -558,6 +588,55 @@
 		display: flex;
 		flex-direction: column;
 		gap: $size-1;
+	}
+
+	.tab-toggles {
+		display: flex;
+		flex-wrap: wrap;
+		gap: $size-1;
+		align-items: center;
+
+		.tab-toggle {
+			padding: $size-1 $size-2;
+			border: 1px solid var(--app-border-color, #ccc);
+			border-radius: $radius-2;
+			background: var(--app-surface-color, #f5f5f5);
+			color: var(--app-muted-color, #666);
+			cursor: pointer;
+			font-size: $font-size-0;
+
+			&.active {
+				background: var(--app-accent-color, #0b4474);
+				color: white;
+				border-color: var(--app-accent-color, #0b4474);
+			}
+
+			&:hover:not(.active) {
+				background: var(--app-border-color, #ddd);
+			}
+		}
+
+		.tab-summary {
+			width: 100%;
+			color: var(--app-muted-color, #666);
+			font-size: $font-size-0;
+			display: flex;
+			align-items: center;
+			gap: $size-1;
+		}
+
+		.clear-tabs {
+			padding: 0 $size-1;
+			border: none;
+			background: none;
+			color: var(--app-muted-color, #666);
+			cursor: pointer;
+			font-size: $font-size-0;
+
+			&:hover {
+				color: var(--app-color);
+			}
+		}
 	}
 
 	// Shared fixed width for the text input in color + slider rows
