@@ -43,6 +43,8 @@
 	let headerHeight = $state('')
 	let headerTextColor = $state('')
 	let headerImageFit = $state('')
+	let accentColor = $state('')
+	let bgColor = $state('')
 
 	// Tracks the URL that was last copied; resets when veneerPath changes
 	let copiedUrl = $state('')
@@ -57,7 +59,12 @@
 	}
 
 	// Form metadata from /api/form-meta (Phase 4)
-	let formMeta = $state<{ title: string; headerImageUrl: string | null } | null>(null)
+	let formMeta = $state<{
+		title: string
+		headerImageUrl: string | null
+		accentColor: string | null
+		bgColor: string | null
+	} | null>(null)
 	let formMetaLoading = $state(false)
 
 	$effect(() => {
@@ -157,6 +164,12 @@
 		if (headerHeight) params.set('headerHeight', headerHeight)
 		if (headerTextColor) params.set('headerTextColor', headerTextColor)
 		if (headerImageFit) params.set('headerImageFit', headerImageFit)
+		// Auto-emit 'form' for accent/bg when user hasn't set them but form has colors
+		const accentVal =
+			accentColor || (!selectedPreset.accentColor && formMeta?.accentColor ? 'form' : '')
+		const bgVal = bgColor || (!selectedPreset.bgColor && formMeta?.bgColor ? 'form' : '')
+		if (accentVal) params.set('accentColor', accentVal)
+		if (bgVal) params.set('bgColor', bgVal)
 
 		const qs = params.toString()
 		return qs ? `${base}?${qs}` : base
@@ -186,6 +199,8 @@
 	let previewBgSize = $derived(headerImageFit || selectedPreset.headerImageFit)
 
 	let previewTitle = $derived(formMeta?.title || '')
+	let previewAccentColor = $derived(accentColor || formMeta?.accentColor || '')
+	let previewBodyBgColor = $derived(bgColor || formMeta?.bgColor || '')
 
 	let resolvedTabs = $derived.by(() => {
 		const tabList = tabs
@@ -227,6 +242,11 @@
 					</nav-buttons>
 				{/if}
 			</div>
+			{#if previewBodyBgColor}
+				<div class="body-preview" style:background-color={previewBodyBgColor}>
+					<div class="card-hint"></div>
+				</div>
+			{/if}
 			<div class="preview-bar">
 				{#if veneerPath}
 					<input
@@ -373,6 +393,36 @@
 							type="color"
 							value={toHex(headerTextColor || selectedPreset.headerTextColor)}
 							oninput={(e) => (headerTextColor = e.currentTarget.value)}
+						/>
+					</div>
+
+					<label for="opt-accent-color">Accent color</label>
+					<div class="color-field">
+						<input
+							id="opt-accent-color"
+							type="text"
+							placeholder={formMeta?.accentColor || '(not set)'}
+							bind:value={accentColor}
+						/>
+						<input
+							type="color"
+							value={toHex(accentColor || formMeta?.accentColor || '#4285f4')}
+							oninput={(e) => (accentColor = e.currentTarget.value)}
+						/>
+					</div>
+
+					<label for="opt-bg-color">Background</label>
+					<div class="color-field">
+						<input
+							id="opt-bg-color"
+							type="text"
+							placeholder={formMeta?.bgColor || '(not set)'}
+							bind:value={bgColor}
+						/>
+						<input
+							type="color"
+							value={toHex(bgColor || formMeta?.bgColor || '#ffffff')}
+							oninput={(e) => (bgColor = e.currentTarget.value)}
 						/>
 					</div>
 				</div>
@@ -641,6 +691,19 @@
 		h1 {
 			margin-bottom: $size-2;
 			text-align: center;
+		}
+	}
+
+	.body-preview {
+		padding: $size-2 $size-4;
+		transition: background-color 0.2s;
+
+		.card-hint {
+			max-width: 70%;
+			margin-inline: auto;
+			height: 6px;
+			border-radius: 3px;
+			background: rgba(255, 255, 255, 0.6);
 		}
 	}
 

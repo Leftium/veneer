@@ -30,6 +30,8 @@ export interface Preset {
 	headerHeight: string
 	headerTextColor: string
 	headerImageFit: string
+	accentColor?: string
+	bgColor?: string
 }
 
 export const PRESETS: Record<string, Preset> = {

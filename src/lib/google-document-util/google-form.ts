@@ -61,6 +61,18 @@ enum EmailCollectionRuleEnum {
 
 type EmailOptions = 'NONE' | 'VERIFIED' | 'INPUT'
 
+/** Convert a [R, G, B, ...] tuple from FB_PUBLIC_LOAD_DATA_ to "#rrggbb" hex. */
+function rgbToHex(tuple: number[] | undefined): string | null {
+	if (!Array.isArray(tuple) || tuple.length < 3) return null
+	return (
+		'#' +
+		tuple
+			.slice(0, 3)
+			.map((n) => n.toString(16).padStart(2, '0'))
+			.join('')
+	)
+}
+
 type Form = {
 	filename: string
 	formAction: string
@@ -71,6 +83,8 @@ type Form = {
 	/// descriptionHtml?: string | null
 	collectEmails: EmailOptions
 	questions: Question[]
+	accentColor: string | null
+	bgColor: string | null
 	error: false
 }
 
@@ -99,6 +113,11 @@ export function parseGoogleForm(html: string) {
 
 	const arrayOfFields = jArray[1]?.[1] ?? []
 
+	// Phase 5: extract custom theme colors from jArray[1][4][5]
+	const colorArray = jArray[1]?.[4]?.[5]
+	const accentColor = rgbToHex(colorArray?.[3])
+	const bgColor = rgbToHex(colorArray?.[4])
+
 	const form: Form = {
 		filename,
 		formAction: '',
@@ -109,6 +128,8 @@ export function parseGoogleForm(html: string) {
 		/// descriptionHtml,
 		collectEmails: collectEmails as EmailOptions,
 		questions: [],
+		accentColor,
+		bgColor,
 		error: false,
 	}
 
@@ -242,6 +263,8 @@ export function adjustGoogleFormData(json: Form) {
 		//formAction: json.formAction,
 		headerImageUrl: json.headerImageUrl,
 		collectEmails: json.collectEmails,
+		accentColor: json.accentColor,
+		bgColor: json.bgColor,
 		firstInput: -1,
 		hasRequired: false,
 		fields: json.questions,

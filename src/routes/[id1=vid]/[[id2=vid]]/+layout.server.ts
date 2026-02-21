@@ -15,6 +15,18 @@ import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-wi
 
 const ALL_TABS = ['info', 'form', 'list', 'raw', 'dev']
 
+/** Return 'white' or 'black' for readable text on a given hex background. */
+function contrastText(hex: string | null): string | null {
+	if (!hex || !/^#[0-9a-f]{6}$/i.test(hex)) return null
+	const r = parseInt(hex.slice(1, 3), 16) / 255
+	const g = parseInt(hex.slice(3, 5), 16) / 255
+	const b = parseInt(hex.slice(5, 7), 16) / 255
+	// sRGB relative luminance (WCAG formula)
+	const lin = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
+	const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+	return L > 0.179 ? '#212529' : 'white' // #212529 = Open Props $gray-9
+}
+
 export const load = async ({ params, url }) => {
 	// --- Resolve preset for tab visibility ---
 	const hostname = ((dev && url.searchParams.get('hostname')) || url.hostname).replace(/^www\./, '')
@@ -45,6 +57,10 @@ export const load = async ({ params, url }) => {
 	const headerTextColor = url.searchParams.get('headerTextColor') ?? preset.headerTextColor
 	const headerImageFit = url.searchParams.get('headerImageFit') ?? preset.headerImageFit
 	// headerImage resolved after form is loaded (needed for 'form' sentinel)
+
+	// Phase 5: accent/background color param overrides
+	const accentColorParam = url.searchParams.get('accentColor')
+	const bgColorParam = url.searchParams.get('bgColor')
 
 	// URL params that control inclusion of sheet data hidden by user:
 	const allCols = url.searchParams.has('allcols')
@@ -201,6 +217,19 @@ export const load = async ({ params, url }) => {
 					: null
 				: (headerImageParam ?? preset.headerImage)
 
+	// Phase 5: resolve accentColor/bgColor — 'form' sentinel uses parsed form value
+	const accentColor =
+		accentColorParam === 'form'
+			? ((isOk(form) ? form.data.accentColor : null) ?? preset.accentColor ?? null)
+			: (accentColorParam ?? preset.accentColor ?? null)
+
+	const bgColor =
+		bgColorParam === 'form'
+			? ((isOk(form) ? form.data.bgColor : null) ?? preset.bgColor ?? null)
+			: (bgColorParam ?? preset.bgColor ?? null)
+
+	const accentText = contrastText(accentColor)
+
 	if (isOk(sheet)) {
 		sheet = Ok(stripHidden(sheet.data, allCols, allRows))
 	}
@@ -256,5 +285,8 @@ export const load = async ({ params, url }) => {
 		},
 		usingDefaultDocs,
 		defaultTab,
+		accentColor,
+		accentText,
+		bgColor,
 	}
 }

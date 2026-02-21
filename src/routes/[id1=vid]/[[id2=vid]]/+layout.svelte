@@ -219,6 +219,17 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		swiperContainer?.swiper?.destroy(true, true)
 	})
 
+	// Phase 5: apply bgColor to outer <html> element (body background behind content column)
+	$effect(() => {
+		const bg = data.bgColor
+		if (bg) {
+			document.documentElement.style.backgroundColor = bg
+		}
+		return () => {
+			document.documentElement.style.backgroundColor = ''
+		}
+	})
+
 	afterNavigate(({ to, type }) => {
 		// 1) skip if this was our own programmatic slideToTab
 		if (skipNextSlideChange) {
@@ -332,7 +343,12 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	}
 </script>
 
-<article class="content-bg">
+<article
+	class="content-bg"
+	style:--app-accent-color={data.accentColor}
+	style:--app-accent-text={data.accentText}
+	style:background-color={data.bgColor}
+>
 	<header
 		style:background-image={data.header.image ? `url(${data.header.image})` : 'none'}
 		style:background-color={data.header.color}

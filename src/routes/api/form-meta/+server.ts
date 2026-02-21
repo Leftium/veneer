@@ -5,7 +5,7 @@ import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-wi
 export const GET: RequestHandler = async ({ url }) => {
 	const id = url.searchParams.get('id')
 	if (!id) {
-		return json({ title: '', headerImageUrl: null })
+		return json({ title: '', headerImageUrl: null, accentColor: null, bgColor: null })
 	}
 
 	const result = await fetchWithDocumentId(id)
@@ -14,9 +14,11 @@ export const GET: RequestHandler = async ({ url }) => {
 		return json({
 			title: result.data.title,
 			headerImageUrl: result.data.headerImageUrl,
+			accentColor: result.data.accentColor ?? null,
+			bgColor: result.data.bgColor ?? null,
 		})
 	}
 
 	// Sheet or error — degrade gracefully
-	return json({ title: '', headerImageUrl: null })
+	return json({ title: '', headerImageUrl: null, accentColor: null, bgColor: null })
 }
