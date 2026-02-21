@@ -491,7 +491,7 @@ VITE_DEFAULT_FORM_ID=g.prodFormId
 VITE_DEFAULT_SHEET_ID=s.prodSheetId
 ```
 
-The `base` and `full` presets reference these env vars. Site-specific presets (btango, vivianblues) define their own doc IDs directly.
+The `base` preset references these env vars. Site-specific presets (btango, vivianblues) define their own doc IDs directly.
 
 ## Recommended Implementation
 
@@ -501,15 +501,30 @@ The `base` and `full` presets reference these env vars. Site-specific presets (b
 2. Restructure routes: rename `[base=base]/` to `(veneer)/`
 3. Remove `src/params/base.ts` (no longer needed)
 4. Update `src/hooks.ts` with new `reroute` logic (domain lookup, preset resolution, path normalization)
-5. Create `src/routes/+page.svelte` launcher page (basic version)
+5. Create `src/routes/+page.svelte` launcher page (stub — renders for unknown domains, minimal content)
 
-### Phase 2: Search Param Overrides
+### Phase 2: Launcher Page (MVP)
 
-1. Parse override params: `tabs`, `headerImage`, `headerColor`, etc.
+Useful immediately for development and testing without configured domains.
+
+1. List all defined presets with descriptions
+2. Link to preset domains (btango.com, vivianblues.com, etc.)
+3. Basic URL builder: paste a Google Form/Sheet URL → generate a veneer URL
+4. `?hostname=` helper for local dev (quick links to simulate different domains)
+
+Later enhancements (no dedicated phase — added incrementally as other features land):
+
+- Live previews of presets
+- Preset configurator for advanced users
+- Searchable/filterable preset list
+
+### Phase 3: Search Param Overrides
+
+1. Parse override params: `tabs`, `preset`, `headerImage`, `headerColor`, etc.
 2. Merge with resolved preset values in `+layout.server.ts`
 3. Pass merged config to layout/page components
 
-### Phase 3: Dynamic Header Image
+### Phase 4: Dynamic Header Image
 
 1. Use `headerImageUrl` from Google Form when available
 2. Fall back to preset/param value
@@ -519,17 +534,11 @@ The `base` and `full` presets reference these env vars. Site-specific presets (b
 <header style:background-image="url({config.headerImage || data.form?.headerImageUrl || '/default.gif'})">
 ```
 
-### Phase 4: Theme System
+### Phase 5: Theme System
 
 1. Define CSS custom properties for theming
 2. Allow color overrides via params
 3. Consider light/dark mode support
-
-### Phase 5: Full Launcher Page
-
-1. List presets with live previews/links
-2. URL builder form (paste Google Form/Sheet URLs)
-3. Preset configurator for advanced users
 
 ## Migration Path
 
