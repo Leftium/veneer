@@ -4,6 +4,23 @@
 	import { DOCUMENT_URL_REGEX } from '$lib/google-document-util/url-id'
 	import { DOMAIN_PRESETS, PRESETS } from '$lib/presets'
 
+	// Convert any CSS color to #rrggbb hex for <input type="color">
+	function toHex(color: string): string {
+		if (!color) return '#000000'
+		// Already hex
+		if (/^#[0-9a-f]{6}$/i.test(color)) return color
+		// Use an off-screen element to resolve CSS color names / rgb() etc.
+		const el = document.createElement('span')
+		el.style.color = color
+		document.body.appendChild(el)
+		const computed = getComputedStyle(el).color
+		document.body.removeChild(el)
+		const match = computed.match(/(\d+),\s*(\d+),\s*(\d+)/)
+		if (!match) return '#000000'
+		const [, r, g, b] = match
+		return '#' + [r, g, b].map((c) => Number(c).toString(16).padStart(2, '0')).join('')
+	}
+
 	const ALL_TABS = ['info', 'form', 'list', 'raw', 'dev']
 
 	const TAB_META: Record<string, { icon: string; name: string }> = {
@@ -115,7 +132,11 @@
 		const params = new URLSearchParams()
 		if (preset) params.set('preset', preset)
 		if (tabs) params.set('tabs', tabs)
-		const imgVal = headerImageMode === 'custom' ? headerImageCustom : headerImageMode // 'form', 'none', or ''
+		// Resolve header image param: auto-emit 'form' when not set but form has an image
+		const imgVal =
+			headerImageMode === 'custom'
+				? headerImageCustom
+				: headerImageMode || (formMeta?.headerImageUrl ? 'form' : '')
 		if (imgVal) params.set('headerImage', imgVal)
 		if (headerColor) params.set('headerColor', headerColor)
 		if (headerHeight) params.set('headerHeight', headerHeight)
@@ -131,14 +152,15 @@
 	// Resolved preset for placeholder hints and preview
 	let selectedPreset = $derived(PRESETS[preset] ?? PRESETS['base'])
 
-	// Preview header values: use filled-in state value, fall back to selected preset
+	// Preview header values: use filled-in state value, fall back to form, then preset
 	let previewBgImage = $derived.by(() => {
 		if (headerImageMode === 'none') return 'none'
 		if (headerImageMode === 'custom')
 			return headerImageCustom ? `url(${headerImageCustom})` : 'none'
-		if (headerImageMode === 'form') {
+		if (headerImageMode === 'form' || headerImageMode === '') {
+			// 'form' or '(not set)': use form image if available, then fall back to preset
 			if (formMeta?.headerImageUrl) return `url(${formMeta.headerImageUrl})`
-			return 'none'
+			if (headerImageMode === 'form') return 'none' // explicit 'form' but no image
 		}
 		return selectedPreset.headerImage ? `url(${selectedPreset.headerImage})` : 'none'
 	})
@@ -219,34 +241,28 @@
 				class="header-preview"
 				style:background-image={previewBgImage}
 				style:background-color={previewBgColor}
-				style:height={previewHeight}
 				style:background-size={previewBgSize}
 				style:background-position="center"
 				style:--header-text-color={headerTextColor || selectedPreset.headerTextColor}
 			>
-				{#if headerImageMode === 'form' && !formMeta?.headerImageUrl}
-					<span class="preview-note">
-						{#if formMetaLoading}
-							loading form image…
-						{:else}
-							form has no header image
-						{/if}
-					</span>
+				{#if formMetaLoading}
+					<span class="preview-note">loading…</span>
+				{:else if headerImageMode === 'form' && !formMeta?.headerImageUrl}
+					<span class="preview-note">form has no header image</span>
 				{/if}
-				<div class="preview-overlay">
-					{#if formMetaLoading}
-						<h1 class="preview-title shimmer" aria-label="Loading title">&nbsp;</h1>
-					{:else if previewTitle}
-						<h1 class="preview-title">{previewTitle}</h1>
-					{/if}
-					{#if resolvedTabs.length > 1}
-						<nav class="preview-tabs">
-							{#each resolvedTabs as tab (tab.id)}
-								<span class="preview-tab">{tab.icon} {tab.name}</span>
-							{/each}
-						</nav>
-					{/if}
-				</div>
+				<fi-spacer style:height={previewHeight}></fi-spacer>
+				{#if formMetaLoading}
+					<h1 class="preview-title shimmer" aria-label="Loading title">&nbsp;</h1>
+				{:else if previewTitle}
+					<h1 class="preview-title">{previewTitle}</h1>
+				{/if}
+				{#if resolvedTabs.length > 1}
+					<nav-buttons>
+						{#each resolvedTabs as tab (tab.id)}
+							<span class="glass">{tab.icon} {tab.name}</span>
+						{/each}
+					</nav-buttons>
+				{/if}
 			</div>
 
 			<details open>
@@ -255,7 +271,7 @@
 				<div class="advanced-grid">
 					<label for="opt-preset">Preset</label>
 					<select id="opt-preset" bind:value={preset}>
-						<option value="">(domain default)</option>
+						<option value="">(not set)</option>
 						{#each presetNames as name (name)}
 							<option value={name}>{name}</option>
 						{/each}
@@ -270,7 +286,7 @@
 					<label for="opt-header-image">Header image</label>
 					<div class="field-with-hint">
 						<select id="opt-header-image" bind:value={headerImageMode}>
-							<option value="">(preset default)</option>
+							<option value="">(not set)</option>
 							<option value="form">form</option>
 							<option value="none">none</option>
 							<option value="custom">custom URL…</option>
@@ -282,7 +298,7 @@
 
 					<label for="opt-image-fit">Image fit</label>
 					<select id="opt-image-fit" bind:value={headerImageFit}>
-						<option value="">({selectedPreset.headerImageFit})</option>
+						<option value="">(not set — {selectedPreset.headerImageFit})</option>
 						<option value="cover">cover — crop to fill</option>
 						<option value="contain">contain — fit, no crop</option>
 						<option value="100%">fill width</option>
@@ -290,12 +306,19 @@
 					</select>
 
 					<label for="opt-header-color">Header color</label>
-					<input
-						id="opt-header-color"
-						type="text"
-						placeholder={selectedPreset.headerColor}
-						bind:value={headerColor}
-					/>
+					<div class="color-field">
+						<input
+							type="color"
+							value={toHex(headerColor || selectedPreset.headerColor)}
+							oninput={(e) => (headerColor = e.currentTarget.value)}
+						/>
+						<input
+							id="opt-header-color"
+							type="text"
+							placeholder={selectedPreset.headerColor}
+							bind:value={headerColor}
+						/>
+					</div>
 
 					<label for="opt-header-height">Header height</label>
 					<input
@@ -306,12 +329,19 @@
 					/>
 
 					<label for="opt-text-color">Text color</label>
-					<input
-						id="opt-text-color"
-						type="text"
-						placeholder={selectedPreset.headerTextColor}
-						bind:value={headerTextColor}
-					/>
+					<div class="color-field">
+						<input
+							type="color"
+							value={toHex(headerTextColor || selectedPreset.headerTextColor)}
+							oninput={(e) => (headerTextColor = e.currentTarget.value)}
+						/>
+						<input
+							id="opt-text-color"
+							type="text"
+							placeholder={selectedPreset.headerTextColor}
+							bind:value={headerTextColor}
+						/>
+					</div>
 				</div>
 			</details>
 		{:else if urlInput.trim()}
@@ -433,6 +463,45 @@
 		gap: $size-1;
 	}
 
+	.color-field {
+		display: flex;
+		gap: $size-1;
+		align-items: center;
+
+		input[type='color'] {
+			flex: 0 0 2.5em;
+			width: 2.5em;
+			height: 2.5em;
+			padding: 3px;
+			border: 1px solid var(--app-border-color);
+			border-radius: var(--app-border-radius);
+			cursor: pointer;
+			background: none;
+			-webkit-appearance: none;
+			appearance: none;
+
+			&::-webkit-color-swatch-wrapper {
+				padding: 0;
+			}
+
+			&::-webkit-color-swatch {
+				border: none;
+				border-radius: 2px;
+			}
+
+			&::-moz-color-swatch {
+				border: none;
+				border-radius: 2px;
+			}
+		}
+
+		input[type='text'] {
+			flex: 1 1 0;
+			width: 0; // override the grid's width: 100% so flex can control sizing
+			min-width: 0;
+		}
+	}
+
 	.header-preview {
 		position: relative;
 		border-radius: 0;
@@ -441,40 +510,39 @@
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-end;
-		min-height: $size-5;
+		padding: 0;
 		overflow: hidden;
-		transition:
-			background-color 0.2s,
-			height 0.2s;
+		background-position: center;
+		transition: background-color 0.2s;
+
+		& * {
+			color: var(--header-text-color, white);
+		}
+
+		h1 {
+			margin-bottom: $size-2;
+			text-align: center;
+		}
 	}
 
 	.preview-note {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
 		font-size: $font-size-0;
 		color: rgba(255, 255, 255, 0.7);
 		background: rgba(0, 0, 0, 0.3);
 		padding: $size-1 $size-2;
 		border-radius: $radius-2;
-	}
-
-	.preview-overlay {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		width: 100%;
-		padding-bottom: $size-2;
-	}
-
-	.preview-title {
-		font-size: $font-size-2;
-		margin: 0;
-		text-align: center;
-		color: var(--header-text-color, white);
+		white-space: nowrap;
 	}
 
 	.preview-title.shimmer {
 		width: 40%;
 		min-width: 120px;
-		height: 1.2em;
+		height: 1.4em;
+		margin-inline: auto;
 		background: linear-gradient(
 			90deg,
 			rgba(255, 255, 255, 0.1) 25%,
@@ -495,32 +563,71 @@
 		}
 	}
 
-	.preview-tabs {
+	// Match real header nav-buttons styling
+	.header-preview nav-buttons {
 		display: flex;
 		justify-content: center;
-		gap: 0;
-		margin-top: $size-1;
+		margin-bottom: $size-2;
+		overflow: hidden;
+		max-width: 100%;
+		white-space: nowrap;
+
+		span {
+			flex: 0 1 auto;
+			min-width: 0;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			text-align: center;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: $size-1 $size-4;
+			border-radius: 0;
+			background-color: rgba(255, 255, 255, 0%);
+
+			&:first-child {
+				border-radius: $radius-round 0 0 $radius-round;
+			}
+
+			&:last-child {
+				border-radius: 0 $radius-round $radius-round 0;
+			}
+
+			&:only-child {
+				border-radius: $radius-round;
+			}
+		}
 	}
 
-	.preview-tab {
-		font-size: $font-size-0;
-		color: var(--header-text-color, white);
-		padding: $size-1 $size-3;
+	// Approximate the glass effect from the real header
+	.header-preview .glass {
+		position: relative;
+		isolation: isolate;
+		box-shadow: 0px 6px 24px rgba(0, 0, 0, 0.2);
+		backdrop-filter: blur(1px);
+		-webkit-backdrop-filter: blur(1px);
 		border: 1px solid rgba(255, 255, 255, 0.3);
-		background: rgba(255, 255, 255, 0.05);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
 
-		&:first-child {
-			border-radius: $radius-round 0 0 $radius-round;
+		&::before {
+			content: '';
+			position: absolute;
+			inset: 0;
+			z-index: 20;
+			border-radius: inherit;
+			box-shadow: inset 0 0 20px -5px rgba(255, 255, 255, 0.6);
+			background: rgba(255, 255, 255, 0.05);
 		}
 
-		&:last-child {
-			border-radius: 0 $radius-round $radius-round 0;
-		}
-
-		&:only-child {
-			border-radius: $radius-round;
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			z-index: 10;
+			border-radius: inherit;
+			backdrop-filter: blur(8px);
+			-webkit-backdrop-filter: blur(8px);
+			isolation: isolate;
 		}
 	}
 </style>

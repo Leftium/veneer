@@ -22,7 +22,9 @@ fieldset legend {
 }
 
 // Base form element styles
-input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='submit']),
+input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='hidden']):not(
+		[type='submit']
+	),
 textarea,
 select {
 	display: block;
@@ -168,7 +170,9 @@ button,
 
 // Dark mode form overrides
 @media (prefers-color-scheme: dark) {
-	input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='submit']),
+	input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='hidden']):not(
+			[type='submit']
+		),
 	textarea,
 	select {
 		&:focus {
