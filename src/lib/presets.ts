@@ -1,6 +1,10 @@
 // src/lib/presets.ts — Domain-preset system
 // See specs/page-options.md for full architecture docs.
 
+/** Google Forms default theme colors (unmodified form). */
+export const GOOGLE_FORM_ACCENT = '#673ab7'
+export const GOOGLE_FORM_BG = '#f0ebf8'
+
 /**
  * Maps hostnames to preset names.
  * - `string` value → preset name (looked up in PRESETS)

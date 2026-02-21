@@ -2,7 +2,7 @@
 	import { browser } from '$app/environment'
 	import * as linkify from 'linkifyjs'
 	import { DOCUMENT_URL_REGEX } from '$lib/google-document-util/url-id'
-	import { PRESETS, LAUNCHER_PRESETS } from '$lib/presets'
+	import { PRESETS, LAUNCHER_PRESETS, GOOGLE_FORM_ACCENT, GOOGLE_FORM_BG } from '$lib/presets'
 
 	// Convert any CSS color to #rrggbb hex for <input type="color">
 	function toHex(color: string): string {
@@ -193,8 +193,8 @@
 	let previewBgSize = $derived(headerImageFit || selectedPreset.headerImageFit)
 
 	let previewTitle = $derived(formMeta?.title || '')
-	let previewAccentColor = $derived(accentColor || formMeta?.accentColor || '')
-	let previewBodyBgColor = $derived(bgColor || formMeta?.bgColor || '')
+	let previewAccentColor = $derived(accentColor || formMeta?.accentColor || GOOGLE_FORM_ACCENT)
+	let previewBodyBgColor = $derived(bgColor || formMeta?.bgColor || GOOGLE_FORM_BG)
 
 	let resolvedTabs = $derived.by(() => {
 		const tabList = tabs
@@ -437,12 +437,12 @@
 						<input
 							id="opt-accent-color"
 							type="text"
-							placeholder={formMeta?.accentColor || '(not set)'}
+							placeholder={formMeta?.accentColor || GOOGLE_FORM_ACCENT}
 							bind:value={accentColor}
 						/>
 						<input
 							type="color"
-							value={toHex(accentColor || formMeta?.accentColor || '#4285f4')}
+							value={toHex(accentColor || formMeta?.accentColor || GOOGLE_FORM_ACCENT)}
 							oninput={(e) => (accentColor = e.currentTarget.value)}
 						/>
 					</div>
@@ -452,12 +452,12 @@
 						<input
 							id="opt-bg-color"
 							type="text"
-							placeholder={formMeta?.bgColor || '(not set)'}
+							placeholder={formMeta?.bgColor || GOOGLE_FORM_BG}
 							bind:value={bgColor}
 						/>
 						<input
 							type="color"
-							value={toHex(bgColor || formMeta?.bgColor || '#ffffff')}
+							value={toHex(bgColor || formMeta?.bgColor || GOOGLE_FORM_BG)}
 							oninput={(e) => (bgColor = e.currentTarget.value)}
 						/>
 					</div>

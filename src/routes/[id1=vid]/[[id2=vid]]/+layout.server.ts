@@ -6,7 +6,7 @@ import { Err, isErr, isOk, Ok } from 'wellcrafted/result'
 import * as linkify from 'linkifyjs'
 
 import { m } from '$lib/paraglide/messages.js'
-import { PRESETS, resolvePresetName } from '$lib/presets'
+import { PRESETS, resolvePresetName, GOOGLE_FORM_ACCENT, GOOGLE_FORM_BG } from '$lib/presets'
 
 import { getGoogleDocumentId } from '$lib/google-document-util/url-id.js'
 import { stripHidden } from '$lib/google-document-util/google-sheets.js'
@@ -217,15 +217,16 @@ export const load = async ({ params, url }) => {
 				: (headerImageParam ?? preset.headerImage)
 
 	// Phase 5: resolve accentColor/bgColor — 'form' sentinel (now also the default) uses parsed form value
+	// Final fallback is Google Forms' own default theme colors.
 	const accentColor =
 		accentColorParam === 'form' || accentColorParam == null
-			? ((isOk(form) ? form.data.accentColor : null) ?? preset.accentColor ?? null)
-			: (accentColorParam ?? preset.accentColor ?? null)
+			? ((isOk(form) ? form.data.accentColor : null) ?? preset.accentColor ?? GOOGLE_FORM_ACCENT)
+			: (accentColorParam ?? preset.accentColor ?? GOOGLE_FORM_ACCENT)
 
 	const bgColor =
 		bgColorParam === 'form' || bgColorParam == null
-			? ((isOk(form) ? form.data.bgColor : null) ?? preset.bgColor ?? null)
-			: (bgColorParam ?? preset.bgColor ?? null)
+			? ((isOk(form) ? form.data.bgColor : null) ?? preset.bgColor ?? GOOGLE_FORM_BG)
+			: (bgColorParam ?? preset.bgColor ?? GOOGLE_FORM_BG)
 
 	const accentText = contrastText(accentColor)
 
