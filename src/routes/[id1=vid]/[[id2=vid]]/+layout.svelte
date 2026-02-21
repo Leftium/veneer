@@ -379,9 +379,11 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 			{@const subject = successParty ? 'Successfully signed up!' : 'Sorry! There was a problem:'}
 			{@const message = successParty ? '' : `${form?.status}: ${form?.statusText}`}
 
-			<wrap-confetti>
-				<div use:confetti={{ duration: 10_000, force: 0.5, stageHeight: 1600 }}></div>
-			</wrap-confetti>
+			{#if successParty}
+				<wrap-confetti>
+					<div use:confetti={{ duration: 10_000, force: 0.5, stageHeight: 1600 }}></div>
+				</wrap-confetti>
+			{/if}
 
 			<pre hidden>{stringify({ form })}</pre>
 
