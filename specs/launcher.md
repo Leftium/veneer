@@ -159,7 +159,7 @@ let previewBgImage = $derived.by(() => {
 
 ---
 
-## Phase 4: Rich Preview (form fetch) — TODO
+## Phase 4: Rich Preview (form fetch) — DONE
 
 **Goal:** Show the real form title and header image in the preview strip, and render realistic tab
 buttons, so the launcher preview is close to the actual veneer page output.
@@ -174,12 +174,14 @@ GET /api/form-meta?id=g.abc123
 - Calls `fetchWithDocumentId(id)` server-side
 - Returns only the fields needed for the preview (title + headerImageUrl)
 - Returns `{ title: '', headerImageUrl: null }` on error (preview degrades gracefully)
+- Typed with `RequestHandler` for full type safety
 
 **File:** `src/routes/api/form-meta/+server.ts` (new)
 
 ### Launcher reactive fetch
 
-When `formResult` changes (user pastes a URL), trigger a `fetch('/api/form-meta?id=...')`:
+When `formResult` changes (user pastes a URL), trigger a `fetch('/api/form-meta?id=...')` with
+`AbortController` for cleanup on rapid re-pastes:
 
 ```typescript
 let formMeta = $state<{ title: string; headerImageUrl: string | null } | null>(null)
@@ -191,18 +193,20 @@ $effect(() => {
 		formMeta = null
 		return
 	}
+	const controller = new AbortController()
 	formMetaLoading = true
-	fetch(`/api/form-meta?id=${id}`)
+	fetch(`/api/form-meta?id=${id}`, { signal: controller.signal })
 		.then((r) => r.json())
 		.then((data) => {
 			formMeta = data
 		})
-		.catch(() => {
-			formMeta = null
+		.catch((e) => {
+			if (e.name !== 'AbortError') formMeta = null
 		})
 		.finally(() => {
 			formMetaLoading = false
 		})
+	return () => controller.abort()
 })
 ```
 
@@ -211,30 +215,51 @@ $effect(() => {
 Once `formMeta` is available:
 
 - **`?headerImage=form` sentinel** — `previewBgImage` uses `formMeta.headerImageUrl` instead of
-  showing the "form image shown on page" note
+  showing the "form image shown on page" note. If `formMeta.headerImageUrl` is `null`, shows
+  "form has no header image" note.
 - **Title** — render `formMeta.title` as an `<h1>` inside the preview strip (below the spacer),
-  matching the real header layout
-- **Tab buttons** — render the resolved tab list as non-functional visual-only buttons inside the
-  preview, using the same `.glass` style as the real nav buttons. Tab list derived from `tabs`
-  state → selected preset's `tabs` array → `ALL_TABS` fallback
+  matching the real header layout. Shows shimmer loading state while `formMetaLoading` is true.
+- **Tab buttons** — render the resolved tab list as non-functional visual-only `<span>` buttons
+  inside the preview, using pill-shaped border-radius styling. Tab list derived from `tabs`
+  state → selected preset's `tabs` array. Only shown when 2+ tabs are resolved.
 
-Loading state: show a subtle shimmer or placeholder while `formMetaLoading` is true.
+### Tab resolution
+
+Tab metadata defined in `TAB_META` constant matching the server-side `TABS` map:
+
+```typescript
+const ALL_TABS = ['info', 'form', 'list', 'raw', 'dev']
+
+const TAB_META: Record<string, { icon: string; name: string }> = {
+	info: { icon: 'ℹ️', name: 'Info' },
+	form: { icon: '✍', name: 'Form' },
+	list: { icon: '📋', name: 'List' },
+	raw: { icon: '🔧', name: 'RAW' },
+	dev: { icon: '🔧', name: 'Dev' },
+}
+```
+
+Resolved tabs: parse `tabs` state (dot-separated) filtering to valid `ALL_TABS`, or fall back to
+`selectedPreset.tabs`.
 
 ### Preview strip final layout
 
 ```
 ┌─────────────────────────────────────────────────┐
 │  [background image / color]                     │
-│                                                 │  ← fi-spacer height
+│                                                 │  ← height from headerHeight
 │  Form Title                                     │  ← from formMeta.title
 │  [ℹ️ Info]  [✍ Form]  [📋 List]               │  ← resolved tabs, visual only
 └─────────────────────────────────────────────────┘
 ```
 
-### Files to change
+### Files changed
 
 1. `src/routes/api/form-meta/+server.ts` — new endpoint
-2. `src/routes/+page.svelte` — `formMeta` state, `$effect` fetch, upgraded preview deriveds and markup
+2. `src/routes/+page.svelte` — `formMeta` state, `$effect` fetch with AbortController, upgraded
+   preview deriveds (`previewBgImage` form mode, `previewTitle`, `resolvedTabs`), enhanced preview
+   strip markup with title/tabs/shimmer, new CSS for `.preview-overlay`, `.preview-title`,
+   `.preview-tabs`, `.preview-tab`, shimmer animation
 
 ---
 

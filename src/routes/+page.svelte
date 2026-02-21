@@ -4,6 +4,16 @@
 	import { DOCUMENT_URL_REGEX } from '$lib/google-document-util/url-id'
 	import { DOMAIN_PRESETS, PRESETS } from '$lib/presets'
 
+	const ALL_TABS = ['info', 'form', 'list', 'raw', 'dev']
+
+	const TAB_META: Record<string, { icon: string; name: string }> = {
+		info: { icon: 'ℹ️', name: 'Info' },
+		form: { icon: '✍', name: 'Form' },
+		list: { icon: '📋', name: 'List' },
+		raw: { icon: '🔧', name: 'RAW' },
+		dev: { icon: '🔧', name: 'Dev' },
+	}
+
 	let urlInput = $state('')
 	let sheetInput = $state('')
 
@@ -16,6 +26,32 @@
 	let headerHeight = $state('')
 	let headerTextColor = $state('')
 	let headerImageFit = $state('')
+
+	// Form metadata from /api/form-meta (Phase 4)
+	let formMeta = $state<{ title: string; headerImageUrl: string | null } | null>(null)
+	let formMetaLoading = $state(false)
+
+	$effect(() => {
+		const id = formResult ? `${formResult.prefix}.${formResult.id}` : null
+		if (!id || formResult?.prefix === 's') {
+			formMeta = null
+			return
+		}
+		const controller = new AbortController()
+		formMetaLoading = true
+		fetch(`/api/form-meta?id=${id}`, { signal: controller.signal })
+			.then((r) => r.json())
+			.then((data) => {
+				formMeta = data
+			})
+			.catch((e) => {
+				if (e.name !== 'AbortError') formMeta = null
+			})
+			.finally(() => {
+				formMetaLoading = false
+			})
+		return () => controller.abort()
+	})
 
 	// Extract veneer ID from a URL by trying all DOCUMENT_URL_REGEX patterns
 	function veneerIdFromUrl(url: string): { prefix: string; id: string } | null {
@@ -100,12 +136,26 @@
 		if (headerImageMode === 'none') return 'none'
 		if (headerImageMode === 'custom')
 			return headerImageCustom ? `url(${headerImageCustom})` : 'none'
-		if (headerImageMode === 'form') return 'none' // can't know without fetching
+		if (headerImageMode === 'form') {
+			if (formMeta?.headerImageUrl) return `url(${formMeta.headerImageUrl})`
+			return 'none'
+		}
 		return selectedPreset.headerImage ? `url(${selectedPreset.headerImage})` : 'none'
 	})
 	let previewBgColor = $derived(headerColor || selectedPreset.headerColor)
 	let previewHeight = $derived(headerHeight || selectedPreset.headerHeight)
 	let previewBgSize = $derived(headerImageFit || selectedPreset.headerImageFit)
+
+	let previewTitle = $derived(formMeta?.title || '')
+
+	let resolvedTabs = $derived.by(() => {
+		const tabList = tabs
+			? tabs.split('.').filter((t: string) => ALL_TABS.includes(t))
+			: selectedPreset.tabs
+		return tabList
+			.filter((t: string) => TAB_META[t])
+			.map((t: string) => ({ id: t, ...TAB_META[t] }))
+	})
 
 	// Preset directory data
 	const presetDirectory = [
@@ -172,10 +222,31 @@
 				style:height={previewHeight}
 				style:background-size={previewBgSize}
 				style:background-position="center"
+				style:--header-text-color={headerTextColor || selectedPreset.headerTextColor}
 			>
-				{#if headerImageMode === 'form'}
-					<span class="preview-note">form image shown on page</span>
+				{#if headerImageMode === 'form' && !formMeta?.headerImageUrl}
+					<span class="preview-note">
+						{#if formMetaLoading}
+							loading form image…
+						{:else}
+							form has no header image
+						{/if}
+					</span>
 				{/if}
+				<div class="preview-overlay">
+					{#if formMetaLoading}
+						<h1 class="preview-title shimmer" aria-label="Loading title">&nbsp;</h1>
+					{:else if previewTitle}
+						<h1 class="preview-title">{previewTitle}</h1>
+					{/if}
+					{#if resolvedTabs.length > 1}
+						<nav class="preview-tabs">
+							{#each resolvedTabs as tab (tab.id)}
+								<span class="preview-tab">{tab.icon} {tab.name}</span>
+							{/each}
+						</nav>
+					{/if}
+				</div>
 			</div>
 
 			<details open>
@@ -363,12 +434,13 @@
 	}
 
 	.header-preview {
+		position: relative;
 		border-radius: 0;
 		margin-block: $size-3;
 		margin-inline: calc(-1 * $size-5);
 		display: flex;
-		align-items: center;
-		justify-content: center;
+		flex-direction: column;
+		justify-content: flex-end;
 		min-height: $size-5;
 		overflow: hidden;
 		transition:
@@ -382,5 +454,73 @@
 		background: rgba(0, 0, 0, 0.3);
 		padding: $size-1 $size-2;
 		border-radius: $radius-2;
+	}
+
+	.preview-overlay {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 100%;
+		padding-bottom: $size-2;
+	}
+
+	.preview-title {
+		font-size: $font-size-2;
+		margin: 0;
+		text-align: center;
+		color: var(--header-text-color, white);
+	}
+
+	.preview-title.shimmer {
+		width: 40%;
+		min-width: 120px;
+		height: 1.2em;
+		background: linear-gradient(
+			90deg,
+			rgba(255, 255, 255, 0.1) 25%,
+			rgba(255, 255, 255, 0.3) 50%,
+			rgba(255, 255, 255, 0.1) 75%
+		);
+		background-size: 200% 100%;
+		animation: shimmer 1.5s infinite;
+		border-radius: $radius-2;
+	}
+
+	@keyframes shimmer {
+		0% {
+			background-position: 200% 0;
+		}
+		100% {
+			background-position: -200% 0;
+		}
+	}
+
+	.preview-tabs {
+		display: flex;
+		justify-content: center;
+		gap: 0;
+		margin-top: $size-1;
+	}
+
+	.preview-tab {
+		font-size: $font-size-0;
+		color: var(--header-text-color, white);
+		padding: $size-1 $size-3;
+		border: 1px solid rgba(255, 255, 255, 0.3);
+		background: rgba(255, 255, 255, 0.05);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+
+		&:first-child {
+			border-radius: $radius-round 0 0 $radius-round;
+		}
+
+		&:last-child {
+			border-radius: 0 $radius-round $radius-round 0;
+		}
+
+		&:only-child {
+			border-radius: $radius-round;
+		}
 	}
 </style>
