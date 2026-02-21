@@ -2,7 +2,13 @@
 	import { browser } from '$app/environment'
 	import * as linkify from 'linkifyjs'
 	import { DOCUMENT_URL_REGEX } from '$lib/google-document-util/url-id'
-	import { PRESETS, LAUNCHER_PRESETS, GOOGLE_FORM_ACCENT, GOOGLE_FORM_BG } from '$lib/presets'
+	import {
+		PRESETS,
+		LAUNCHER_PRESETS,
+		GOOGLE_FORM_ACCENT,
+		GOOGLE_FORM_BG,
+		darkenHex,
+	} from '$lib/presets'
 
 	// Convert any CSS color to #rrggbb hex for <input type="color">
 	function toHex(color: string): string {
@@ -19,6 +25,17 @@
 		if (!match) return '#000000'
 		const [, r, g, b] = match
 		return '#' + [r, g, b].map((c) => Number(c).toString(16).padStart(2, '0')).join('')
+	}
+
+	// WCAG contrast text: returns dark or white based on relative luminance
+	function contrastText(hex: string): string {
+		if (!/^#[0-9a-f]{6}$/i.test(hex)) return 'white'
+		const r = parseInt(hex.slice(1, 3), 16) / 255
+		const g = parseInt(hex.slice(3, 5), 16) / 255
+		const b = parseInt(hex.slice(5, 7), 16) / 255
+		const lin = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
+		const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+		return L > 0.179 ? '#212529' : 'white'
 	}
 
 	const ALL_TABS = ['info', 'form', 'list', 'raw', 'dev']
@@ -188,13 +205,13 @@
 		if (formMeta?.headerImageUrl) return `url(${formMeta.headerImageUrl})`
 		return 'none'
 	})
-	let previewBgColor = $derived(headerColor || selectedPreset.headerColor)
-	let previewHeight = $derived(headerHeight || selectedPreset.headerHeight)
-	let previewBgSize = $derived(headerImageFit || selectedPreset.headerImageFit)
-
 	let previewTitle = $derived(formMeta?.title || '')
 	let previewAccentColor = $derived(accentColor || formMeta?.accentColor || GOOGLE_FORM_ACCENT)
+	let previewAccentText = $derived(contrastText(previewAccentColor))
 	let previewBodyBgColor = $derived(bgColor || formMeta?.bgColor || GOOGLE_FORM_BG)
+	let previewBgColor = $derived(headerColor || darkenHex(previewAccentColor, 0.5))
+	let previewHeight = $derived(headerHeight || selectedPreset.headerHeight)
+	let previewBgSize = $derived(headerImageFit || selectedPreset.headerImageFit)
 
 	let resolvedTabs = $derived.by(() => {
 		const tabList = tabs
@@ -208,7 +225,12 @@
 
 <main class="content-bg">
 	{#if formResult}
-		<div class="sticky-preview">
+		<div
+			class="sticky-preview"
+			style:background-color={previewBodyBgColor}
+			style:--app-accent-color={previewAccentColor}
+			style:--app-accent-text={previewAccentText}
+		>
 			<div
 				class="header-preview"
 				style:background-image={previewBgImage}
@@ -236,11 +258,6 @@
 					</nav-buttons>
 				{/if}
 			</div>
-			{#if previewBodyBgColor}
-				<div class="body-preview" style:background-color={previewBodyBgColor}>
-					<div class="card-hint"></div>
-				</div>
-			{/if}
 			<div class="preview-bar">
 				{#if veneerPath}
 					<input
@@ -531,16 +548,16 @@
 			display: inline;
 			padding: $size-1 $size-2;
 			font-size: inherit;
-			border: 1px solid var(--app-border-color, #ccc);
+			border: 1px solid var(--app-accent-color, #ccc);
 			border-radius: var(--app-border-radius, 4px);
-			background: var(--app-surface-color, #f5f5f5);
-			color: var(--app-color, inherit);
+			background: var(--app-accent-color, #f5f5f5);
+			color: var(--app-accent-text, white);
 			cursor: pointer;
 			text-decoration: none;
 			font-weight: $font-weight-6;
 
 			&:hover {
-				background: var(--app-border-color, #ddd);
+				background: color-mix(in srgb, var(--app-accent-color, #ddd) 85%, black);
 			}
 		}
 
@@ -737,7 +754,7 @@
 		z-index: 10;
 		margin-top: calc(-1 * $size-5);
 		margin-inline: calc(-1 * $size-5);
-		background: var(--app-background-color, white);
+		transition: background-color 0.2s;
 	}
 
 	.header-preview {
@@ -777,19 +794,6 @@
 		h1 {
 			margin-bottom: $size-2;
 			text-align: center;
-		}
-	}
-
-	.body-preview {
-		padding: $size-2 $size-4;
-		transition: background-color 0.2s;
-
-		.card-hint {
-			max-width: 70%;
-			margin-inline: auto;
-			height: 6px;
-			border-radius: 3px;
-			background: rgba(255, 255, 255, 0.6);
 		}
 	}
 

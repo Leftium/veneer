@@ -6,7 +6,13 @@ import { Err, isErr, isOk, Ok } from 'wellcrafted/result'
 import * as linkify from 'linkifyjs'
 
 import { m } from '$lib/paraglide/messages.js'
-import { PRESETS, resolvePresetName, GOOGLE_FORM_ACCENT, GOOGLE_FORM_BG } from '$lib/presets'
+import {
+	PRESETS,
+	resolvePresetName,
+	GOOGLE_FORM_ACCENT,
+	GOOGLE_FORM_BG,
+	darkenHex,
+} from '$lib/presets'
 
 import { getGoogleDocumentId } from '$lib/google-document-util/url-id.js'
 import { stripHidden } from '$lib/google-document-util/google-sheets.js'
@@ -52,7 +58,7 @@ export const load = async ({ params, url }) => {
 
 	// Phase 3b: header param overrides
 	const headerImageParam = url.searchParams.get('headerImage')
-	const headerColor = url.searchParams.get('headerColor') ?? preset.headerColor
+	const headerColorParam = url.searchParams.get('headerColor')
 	const headerHeight = url.searchParams.get('headerHeight') ?? preset.headerHeight
 	const headerTextColor = url.searchParams.get('headerTextColor') ?? preset.headerTextColor
 	const headerImageFit = url.searchParams.get('headerImageFit') ?? preset.headerImageFit
@@ -229,6 +235,10 @@ export const load = async ({ params, url }) => {
 			: (bgColorParam ?? preset.bgColor ?? GOOGLE_FORM_BG)
 
 	const accentText = contrastText(accentColor)
+
+	// Derive header color: explicit param → darkened accent (preset headerColor ignored
+	// in favour of accent-derived color for visual coherence with the form's theme)
+	const headerColor = headerColorParam ?? darkenHex(accentColor, 0.5)
 
 	if (isOk(sheet)) {
 		sheet = Ok(stripHidden(sheet.data, allCols, allRows))

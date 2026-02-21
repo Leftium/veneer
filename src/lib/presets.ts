@@ -5,6 +5,15 @@
 export const GOOGLE_FORM_ACCENT = '#673ab7'
 export const GOOGLE_FORM_BG = '#f0ebf8'
 
+/** Mix a #rrggbb hex color with black. `amount` 0–1 = how much black (0.5 = 50% darker). */
+export function darkenHex(hex: string, amount = 0.5): string {
+	if (!/^#[0-9a-f]{6}$/i.test(hex)) return hex
+	const r = Math.round(parseInt(hex.slice(1, 3), 16) * (1 - amount))
+	const g = Math.round(parseInt(hex.slice(3, 5), 16) * (1 - amount))
+	const b = Math.round(parseInt(hex.slice(5, 7), 16) * (1 - amount))
+	return '#' + [r, g, b].map((c) => c.toString(16).padStart(2, '0')).join('')
+}
+
 /**
  * Maps hostnames to preset names.
  * - `string` value → preset name (looked up in PRESETS)
