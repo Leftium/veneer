@@ -579,24 +579,29 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		backdrop-filter: blur(1px);
 		-webkit-backdrop-filter: blur(1px);
 		border: 1px solid rgba(255, 255, 255, 0.3);
+
+		// Softer text shadow than the header title for a glass-integrated look
+		text-shadow:
+			0 0 10px rgba(0, 0, 0, 0.4),
+			0 1px 5px rgba(0, 0, 0, 0.5);
 	}
 
 	.glass::before {
 		content: '';
 		position: absolute;
 		inset: 0;
-		z-index: 20;
+		z-index: -1;
 		border-radius: inherit;
 
 		box-shadow: inset 0 0 20px -5px rgba(255, 255, 255, 0.6);
-		background: rgba(255, 255, 255, 0.05);
+		background: rgba(255, 255, 255, 0.25);
 	}
 
 	.glass::after {
 		content: '';
 		position: absolute;
 		inset: 0;
-		z-index: 10;
+		z-index: -2;
 		border-radius: inherit;
 
 		backdrop-filter: blur(8px);
@@ -717,6 +722,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	}
 
 	header {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-end;
@@ -725,6 +731,25 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 		& * {
 			color: var(--header-text-color, white);
+			text-shadow:
+				0 0 8px rgba(0, 0, 0, 0.7),
+				0 1px 3px rgba(0, 0, 0, 0.9);
+		}
+
+		// Bottom gradient scrim for text readability over images
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background: linear-gradient(to bottom, transparent 40%, rgba(0, 0, 0, 0.45) 100%);
+			pointer-events: none;
+			z-index: 0;
+		}
+
+		// Ensure content sits above the scrim
+		& > * {
+			position: relative;
+			z-index: 1;
 		}
 	}
 

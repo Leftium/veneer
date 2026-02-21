@@ -132,11 +132,14 @@
 		const params = new URLSearchParams()
 		if (preset) params.set('preset', preset)
 		if (tabs) params.set('tabs', tabs)
-		// Resolve header image param: auto-emit 'form' when not set but form has an image
+		// Resolve header image param:
+		// - explicit mode → emit that value
+		// - '(not set)' + preset has no image + form has image → auto-emit 'form'
+		// - '(not set)' + preset has image → omit param (server uses preset image)
 		const imgVal =
 			headerImageMode === 'custom'
 				? headerImageCustom
-				: headerImageMode || (formMeta?.headerImageUrl ? 'form' : '')
+				: headerImageMode || (!selectedPreset.headerImage && formMeta?.headerImageUrl ? 'form' : '')
 		if (imgVal) params.set('headerImage', imgVal)
 		if (headerColor) params.set('headerColor', headerColor)
 		if (headerHeight) params.set('headerHeight', headerHeight)
@@ -157,12 +160,14 @@
 		if (headerImageMode === 'none') return 'none'
 		if (headerImageMode === 'custom')
 			return headerImageCustom ? `url(${headerImageCustom})` : 'none'
-		if (headerImageMode === 'form' || headerImageMode === '') {
-			// 'form' or '(not set)': use form image if available, then fall back to preset
-			if (formMeta?.headerImageUrl) return `url(${formMeta.headerImageUrl})`
-			if (headerImageMode === 'form') return 'none' // explicit 'form' but no image
+		if (headerImageMode === 'form') {
+			// Explicit 'from form': use form image if available, else none
+			return formMeta?.headerImageUrl ? `url(${formMeta.headerImageUrl})` : 'none'
 		}
-		return selectedPreset.headerImage ? `url(${selectedPreset.headerImage})` : 'none'
+		// '(not set)': preset image wins; fall back to form image; then none
+		if (selectedPreset.headerImage) return `url(${selectedPreset.headerImage})`
+		if (formMeta?.headerImageUrl) return `url(${formMeta.headerImageUrl})`
+		return 'none'
 	})
 	let previewBgColor = $derived(headerColor || selectedPreset.headerColor)
 	let previewHeight = $derived(headerHeight || selectedPreset.headerHeight)
@@ -517,6 +522,25 @@
 
 		& * {
 			color: var(--header-text-color, white);
+			text-shadow:
+				0 0 8px rgba(0, 0, 0, 0.7),
+				0 1px 3px rgba(0, 0, 0, 0.9);
+		}
+
+		// Bottom gradient scrim for text readability over images
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background: linear-gradient(to bottom, transparent 40%, rgba(0, 0, 0, 0.45) 100%);
+			pointer-events: none;
+			z-index: 0;
+		}
+
+		// Ensure content sits above the scrim
+		& > * {
+			position: relative;
+			z-index: 1;
 		}
 
 		h1 {
@@ -609,21 +633,26 @@
 		-webkit-backdrop-filter: blur(1px);
 		border: 1px solid rgba(255, 255, 255, 0.3);
 
+		// Softer text shadow than the header title for a glass-integrated look
+		text-shadow:
+			0 0 10px rgba(0, 0, 0, 0.4),
+			0 1px 5px rgba(0, 0, 0, 0.5);
+
 		&::before {
 			content: '';
 			position: absolute;
 			inset: 0;
-			z-index: 20;
+			z-index: -1;
 			border-radius: inherit;
 			box-shadow: inset 0 0 20px -5px rgba(255, 255, 255, 0.6);
-			background: rgba(255, 255, 255, 0.05);
+			background: rgba(255, 255, 255, 0.25);
 		}
 
 		&::after {
 			content: '';
 			position: absolute;
 			inset: 0;
-			z-index: 10;
+			z-index: -2;
 			border-radius: inherit;
 			backdrop-filter: blur(8px);
 			-webkit-backdrop-filter: blur(8px);

@@ -36,7 +36,7 @@ export const PRESETS: Record<string, Preset> = {
 	base: {
 		tabs: ['info', 'form', 'list'],
 		// No default doc IDs — unknown domains render the launcher page.
-		headerImage: '/dance_night.gif',
+		headerImage: null,
 		headerColor: '#0b4474',
 		headerHeight: '100px',
 		headerTextColor: 'white',
