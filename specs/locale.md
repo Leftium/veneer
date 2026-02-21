@@ -184,8 +184,9 @@ Future: locale-keyed pattern maps, or a more general NLP-based column detection.
 
 ## Phase 5: GroupRegistration Widget Strings — TODO
 
-Once the GroupRegistration widget is ported (see `specs/port-temp-branch.md`), its UI strings
-(labels, placeholders, role names) need translating via Paraglide messages.
+GroupRegistration is now ported (see `specs/port-temp-branch.md` § 4). Its UI strings are
+currently hardcoded in Korean (`단체 N명`, `단체 취소`, `신청자 추가`, etc.). These need
+translating via Paraglide messages for English-language visitors.
 
 ---
 

@@ -381,7 +381,7 @@ const tabsParam = url.searchParams.get('tabs')
 const tabs =
 	tabsParam === '*'
 		? ALL_TABS
-		: tabsParam?.split(',').filter((t) => ALL_TABS.includes(t)) || preset.tabs
+		: tabsParam?.split('.').filter((t) => ALL_TABS.includes(t)) || preset.tabs
 ```
 
 **Edge case — tab segment not in visible set:** If the URL specifies a tab that isn't in the resolved tab list (e.g., `btango.com/list?tabs=info.form`), the requested tab is ignored and the default tab (first in `?tabs=` list) is shown instead. The `list` tab doesn't exist in the visible set, so it gracefully falls back.

@@ -22,9 +22,9 @@ Locale strategy improvements are tracked separately in `specs/locale.md`.
 
 ## Items to Port
 
-### 1a. Bug Fixes — TODO
+### 1a. Bug Fixes — DONE
 
-**a. `google-form.ts`: Enum values swapped** (`2d68c78`)
+**a. `google-form.ts`: Enum values swapped** (`2d68c78`) — `c9abce0`
 
 `PAGE_BREAK` and `FILE_UPLOAD` were assigned wrong numeric values:
 
@@ -38,20 +38,21 @@ PAGE_BREAK = 8,
 FILE_UPLOAD = 13,
 ```
 
-**b. `google-form.ts` + `GoogleFormField.svelte`: submittable question images** (`3751e20`)
+Also added `'PAGE_BREAK'` to `QuestionType` union in both `google-form.ts` and `src/lib/index.ts`.
 
-Main already parses `field[6]` for IMAGE/VIDEO types and does basic index-based `imgUrl` assignment.
-What's missing:
+**b. `google-form.ts` + `GoogleFormField.svelte`: submittable question images** (`3751e20`) — `0084951`
 
 - `field[6] ?? field[9]?.[0]` — `field[9][0]` is the media path for _submittable_ questions with
   an attached image (different from standalone IMAGE fields)
 - Two-pass URL matching: width-based first (`=w{N}` suffix), then sequential fallback for
   HTML/JSON ordering mismatches
-- `question.mediaWidth` tracking
-- `GoogleFormField.svelte`: render image between question label and input element (not just for
-  standalone IMAGE types)
+- `question.mediaWidth` tracking (already present in main's `Question` interface)
+- `GoogleFormField.svelte`: `imgSrc()` helper strips `=w{N}` suffix; renders image between label
+  and input for all submittable field types (TEXT/PARAGRAPH_TEXT, DROPDOWN, MULTIPLE_CHOICE/CHECKBOXES)
+- Also added required-checkbox sentinel (hidden checkbox enforces native validation when no option selected)
+- Also removed unused `markdown-it-github-alerts` import from `GoogleFormField.svelte` (dead import)
 
-**c. `GoogleFormField.svelte`: Checkbox group hydration crash** (`603f19c`)
+**c. `GoogleFormField.svelte`: Checkbox group hydration crash** (`603f19c`) — `0084951`
 
 Checkbox `group` state initialized to `undefined` when no stored value; causes hydration crash.
 Fix: initialize to `[]`:
@@ -63,163 +64,113 @@ storedValues.byTitle[normalizeTitle(field.title)]?.split(', ')
 storedValues.byTitle[normalizeTitle(field.title)]?.split(', ') || []
 ```
 
-**d. `sheet-data-pipeline.svelte.ts`: `stripEmptyColumns` incomplete** (`92239f9`)
+**d. `sheet-data-pipeline.svelte.ts`: `stripEmptyColumns` incomplete** (`92239f9`) — `c9abce0`
 
-Was only filtering columns, not corresponding cells in each row:
+Was only filtering cells in rows, not the `columns` array itself:
 
 ```typescript
+// After (correct):
 rows = rows.map((row) => row.filter((cell, ci) => columns[ci].lengthMax || columns[ci].title))
 columns = columns.filter((col) => col.lengthMax || col.title)
 ```
 
-Files:
+Files modified:
 
 - `src/lib/google-document-util/google-form.ts`
 - `src/lib/components/GoogleFormField.svelte`
 - `src/lib/google-document-util/sheet-data-pipeline.svelte.ts`
+- `src/lib/index.ts`
 
 ---
 
-### 1b. Perf Fixes — TODO
+### 1b. Perf Fixes — ALREADY ON MAIN (skip)
 
-**a. Remove Cheerio from Google Form parsing** (`b7cedfc`)
+**a. Remove Cheerio from Google Form parsing** (`b7cedfc`) — already applied
 
-Replaces Cheerio DOM parsing with regex in `google-form.ts`. Removes `cheerio` dependency (~200KB,
-~95% CPU reduction for form parsing: 11.9ms → 0.5ms).
+Verified: no `import * as cheerio` in `google-form.ts` on main. Regex-based parsing was already
+in place before this port session began.
 
-Note: `b7cedfc` is the refined version of `546c22f` (same change, better `/formsz/` URL pattern).
-Only port `b7cedfc`.
+**b. Cache timezone offset in `excelDateToUnix`** (`f9e756d`) — already applied
 
-Main already has the Cheerio removal applied (it landed as part of the existing `google-form.ts`
-state) — **verify before porting**: check if `import * as cheerio` still exists in
-`src/lib/google-document-util/google-form.ts` on main.
-
-**b. Cache timezone offset in `excelDateToUnix`** (`f9e756d`)
-
-Avoids repeated `dayjs.tz()` calls per sheet cell — significant for large sheets:
-
-```typescript
-const timezoneOffsetCache = new Map<string, number>()
-
-function getTimezoneOffset(timeZone: string): number {
-	if (!timezoneOffsetCache.has(timeZone)) {
-		const offset = dayjs().tz(timeZone).utcOffset() * 60 * 1000
-		timezoneOffsetCache.set(timeZone, offset)
-	}
-	return timezoneOffsetCache.get(timeZone)!
-}
-```
-
-Files:
-
-- `src/lib/google-document-util/google-form.ts`
-- `src/lib/util.ts`
-- `package.json` / `pnpm-lock.yaml` (remove `cheerio`)
+`timezoneOffsetCache` and `getTimezoneOffset()` already present in `src/lib/util.ts` on main.
 
 ---
 
-### 2. Infrastructure — TODO
+### 2. Infrastructure — DONE
 
-**a. `src/lib/dance-constants.ts` (new)**
+**a. `src/lib/dance-constants.ts` (new)** — `3c29319`
 
 Centralizes regex constants previously duplicated across `Sheet.svelte` and
-`sheet-data-pipeline.svelte.ts`:
+`sheet-data-pipeline.svelte.ts`. Actual values implemented (differ slightly from spec draft):
 
 ```typescript
-export const REGEX_DANCE_ROLE = /role|역할|리드|리더/i
 export const REGEX_DANCE_NAME = /name|닉네임/i
-export const REGEX_DANCE_WISH = /말씀|한마디/i
+export const REGEX_DANCE_ROLE = /role|역할|리드|리더/i
+export const REGEX_DANCE_WISH = /말씀|한마디/i // dropped 'message|' vs old pipeline
 export const REGEX_DANCE_PAID = /입금여|입금확/i
-export const REGEX_DANCE_GROUP = /group|그룹/i
+export const REGEX_DANCE_GROUP = /group|그룹|단체/i // added 단체 (group in formal Korean)
 export const REGEX_DANCE_LEADER = /lead|리더|리드/i
-export const REGEX_DANCE_FOLLOW = /follow|팔뤄|팔로우/i
+export const REGEX_DANCE_FOLLOW = /follow|팔뤄|팔로우|팔로워/i // added 팔로워 (alternative spelling)
 ```
 
-Update `Sheet.svelte` and `sheet-data-pipeline.svelte.ts` to import from here instead of
-re-declaring.
+**b. `vite.config.ts`: Add vitest config** — `3c29319`
 
-**b. `vite.config.ts`: Add vitest config**
+- Changed `import { defineConfig } from 'vite'` → `import { defineConfig } from 'vitest/config'`
+- Added `test: { include: ['src/**/*.test.ts'] }`
+- Also removed existing `esbuild.supported['top-level-await']: true` — this was already in main's
+  vite config (not from temp branch) and breaks Safari; removed as part of this commit
+- Added `vitest` dev dependency and `test`/`test:watch` scripts to `package.json`
 
-Required to run the group registration serialization tests:
+**c. `static/favicon.svg` + `src/app.html`** — `bfe315b`
 
-```typescript
-import { defineConfig } from 'vitest/config' // was 'vite'
-
-export default defineConfig({
-	// ...existing config...
-	test: {
-		include: ['src/**/*.test.ts'],
-	},
-})
-```
-
-**Note:** Do NOT port `optimizeDeps.esbuildOptions.supported['top-level-await']: true` — this
-prevents Vite from transpiling TLA and breaks Safari.
-
-**c. `static/favicon.svg` + `src/app.html`**
-
-Replace `favicon.png` with SVG favicon. Update `app.html` reference from `.png` to `.svg`.
+Replaced `favicon.png` with SVG. Updated `app.html` reference from `.png` to `.svg`.
 
 Files:
 
 - `src/lib/dance-constants.ts` (new)
-- `src/lib/components/Sheet.svelte`
-- `src/lib/google-document-util/sheet-data-pipeline.svelte.ts`
+- `src/lib/components/Sheet.svelte` (import from dance-constants)
+- `src/lib/google-document-util/sheet-data-pipeline.svelte.ts` (import from dance-constants)
 - `vite.config.ts`
+- `package.json` / `pnpm-lock.yaml`
 - `static/favicon.svg` (new)
-- `static/favicon.png` (delete)
+- `static/favicon.png` (deleted)
 - `src/app.html`
 
 ---
 
-### 3. NotificationBox Improvements — TODO
+### 3. NotificationBox Improvements — ALREADY ON MAIN (skip)
 
-Two commits that improve the notification box independently of group registration.
-
-**a. No-JS support + confetti snippet** (`fbd66ca`)
-
-- Adds `confetti?: Snippet` prop — confetti is now passed in as a snippet rather than hardcoded
-- CSS-only dismiss toggle (works without JS)
-- `onclick` type fix
-
-**b. CSS-only dismissal animation** (`d0c6289`)
-
-- Animates the notification box collapsing on dismiss using `max-height` CSS transition
-- CSS variables for timing: `--notification-box-exit-duration`, `--parent-collapse-duration`,
-  `--parent-collapse-delay`
-- `overflow: hidden` on wrapper
-
-Files:
-
-- `src/lib/components/NotificationBox.svelte`
-- `src/routes/(centered)/(veneer)/[id1=vid]/[[id2=vid]]/+layout.svelte` (confetti snippet wiring)
+Verified: `src/lib/components/NotificationBox.svelte` on main is identical to temp branch.
+Both the confetti snippet prop and CSS-only dismissal animation were already present.
 
 ---
 
-### 4. Group Registration — TODO
+### 4. Group Registration — DONE
+
+**Commit:** `7893272`
 
 The largest feature. Detects a name+role+group field triple in a Google Form and replaces them
 with a custom widget that lets users register a group of dancers (leader + followers) in a single
 submission. Also expands group registrations in the sheet list view.
 
-Depends on: Item 2 (dance-constants, vitest).
+The role field is optional (2-field pattern: name + group; 3-field: name + role + group).
 
 **New files:**
 
 - `src/lib/group-registration/detect.ts` — pattern detection for name/role/group field triples
 - `src/lib/group-registration/serialization.ts` — serialize/parse group member data to/from form field string
 - `src/lib/group-registration/serialization.test.ts` — vitest unit tests
-- `src/lib/components/GroupRegistration.svelte` — the widget UI (556 lines)
-- `specs/group-registration.md` — full spec (port from temp-branch)
-- `reference/google-forms-data-structure.md` — reference doc (port from temp-branch)
+- `src/lib/components/GroupRegistration.svelte` — the widget UI
+- `specs/group-registration.md` — full spec (ported from temp-branch)
+- `reference/google-forms-data-structure.md` — reference doc (ported from temp-branch)
 
 **Modified files:**
 
-- `src/lib/components/GoogleForm.svelte` — build render plan; collapse detected triples into `GroupRegistration` widget
-- `src/lib/components/GoogleFormField.svelte` — `imgSrc()` helper, render question images below label (see also 1a-b)
-- `src/lib/components/Sheet.svelte` — `_groupIndex` / `_isGroupMember` row classes, hide wish field for group members
-- `src/lib/google-document-util/sheet-data-pipeline.svelte.ts` — `expandGroupMembers()`, group column detection, import from `dance-constants`
-- `src/lib/index.ts` — export new types if needed
+- `src/lib/components/GoogleForm.svelte` — build render plan; collapse detected triples into `GroupRegistration` widget; uses plain `Set` (not `SvelteSet`) since consumed-index tracking is local to `$derived.by()`
+- `src/lib/components/GoogleFormField.svelte` — `imgSrc()` helper, render question images below label (also covers 1a-b)
+- `src/lib/components/Sheet.svelte` — `_groupIndex` / `_isGroupMember` row classes, hide wish field for group members, header text changed to Korean `명 신청`
+- `src/lib/google-document-util/sheet-data-pipeline.svelte.ts` — `expandGroupMembers()`, group column detection via `REGEX_DANCE_GROUP`, import from `dance-constants` and `group-registration/serialization`
+- `src/lib/index.ts` — added `'PAGE_BREAK'` to `QuestionType` union (fixes omission from 1a-a)
 
 ---
 
@@ -257,13 +208,13 @@ Files:
 ## Port Order vs Other Work
 
 ```
-port-1a: Bug fixes          ← do first (fixes real bugs in existing functionality)
-port-1b: Perf fixes         ← do alongside 1a (isolated, high impact)
-port-2:  Infrastructure     ← needed before group registration
-port-3:  NotificationBox    ← standalone, can be done anytime
-port-4:  Group registration ← main feature, depends on port-2
-remove-picocss              ← can be parallel to port-4 or after
-port-5:  Image proxy        ← low priority, defer until SSR re-enabled
-locale.md (Phase 1)         ← enable preferredLanguage, can be done anytime
-phase-3b: Header params     ← after remove-picocss
+port-1a: Bug fixes          ← DONE (c9abce0, 0084951)
+port-1b: Perf fixes         ← ALREADY ON MAIN (skip)
+port-2:  Infrastructure     ← DONE (3c29319, bfe315b)
+port-3:  NotificationBox    ← ALREADY ON MAIN (skip)
+port-4:  Group registration ← DONE (7893272)
+remove-picocss              ← TODO (see specs/remove-picocss.md)
+port-5:  Image proxy        ← TODO (low priority, defer until SSR re-enabled)
+locale.md (Phase 1)         ← TODO (enable preferredLanguage, one config line)
+phase-3b: Header params     ← TODO (after remove-picocss)
 ```
