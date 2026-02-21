@@ -203,12 +203,14 @@ export function renderRelativeTimes({ extra, columns, rows }: SheetDataPipe) {
 	return { extra, columns, rows }
 }
 
-const REGEX_DANCE_ROLE = /role|역할|리드|리더/i
-const REGEX_DANCE_NAME = /name|닉네임/i
-const REGEX_DANCE_WISH = /message|말씀|한마디/i
-const REGEX_DANCE_PAID = /입금여|입금확/i
-const REGEX_DANCE_LEADER = /lead|리더|리드/i
-const REGEX_DANCE_FOLLOW = /follow|팔뤄|팔로우/i
+import {
+	REGEX_DANCE_ROLE,
+	REGEX_DANCE_NAME,
+	REGEX_DANCE_WISH,
+	REGEX_DANCE_PAID,
+	REGEX_DANCE_LEADER,
+	REGEX_DANCE_FOLLOW,
+} from '$lib/dance-constants'
 
 export function collectExtraDance({ extra, columns, rows }: SheetDataPipe) {
 	console.time('⏱️ sheet-pipeline:collectExtraDance')

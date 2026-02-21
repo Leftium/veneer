@@ -12,6 +12,7 @@
 	import { stringify } from '$lib/util'
 
 	import StickyHeaderGrid from '$lib/components/StickyHeaderSummaryDetailsGrid.svelte'
+	import { REGEX_DANCE_LEADER, REGEX_DANCE_FOLLOW } from '$lib/dance-constants'
 
 	interface Props {
 		data: any
@@ -19,9 +20,6 @@
 	}
 
 	let { data, onToggle }: Props = $props()
-
-	const REGEX_DANCE_LEADER = /lead|리더|리드/i
-	const REGEX_DANCE_FOLLOW = /follow|팔뤄|팔로우/i
 
 	const { extra, columns, rows } = data
 </script>
