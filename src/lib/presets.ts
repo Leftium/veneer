@@ -12,10 +12,10 @@ export const DOMAIN_PRESETS: Record<string, string | null> = {
 	'btango.com': 'btango',
 	'tangoclass.btango.com': 'btango-class',
 	'tangodj.btango.com': 'btango-dj',
-	'vivianblues.com': 'vivianblues',
-	'vivibl.com': 'vivianblues',
-	'vivimil.com': 'vivianblues',
-	'xn--pg3bl5ba.com': 'vivianblues', // IDN alias (비비블.com)
+	'vivianblues.com': 'vivimil',
+	'vivibl.com': 'vivimil',
+	'vivimil.com': 'vivimil',
+	'xn--pg3bl5ba.com': 'vivimil', // IDN alias (비비블.com)
 
 	// Veneer home — no preset, shows launcher
 	'veneer.leftium.com': null,
@@ -67,7 +67,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerHeight: '100px',
 		headerTextColor: 'white',
 	},
-	vivianblues: {
+	vivimil: {
 		tabs: ['info', 'form', 'list'],
 		defaultFormId: 'g.r6eRUz2U9uf5oVFn6',
 		defaultSheetId: 's.13E_wsbrKLEsuV-eDaTKl0a967EdpYgcZrXH0Gq_KK3g',

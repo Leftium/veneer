@@ -60,7 +60,7 @@ export function urlFromVeneerId(veneerId: string, apiUrl = true) {
 	return URL_TEMPLATES[prefix].replace('{ID}', id)
 }
 
-function googleDocumentIdFromUrl(url: string) {
+export function googleDocumentIdFromUrl(url: string) {
 	for (const [prefix, regex] of Object.entries(GOOGLE_FORM_OR_SHEET_REGEX)) {
 		const matches = url.match(regex)
 		if (matches) {

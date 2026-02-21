@@ -75,10 +75,10 @@ export const DOMAIN_PRESETS: Record<string, string | null> = {
 	'btango.com': 'btango',
 	'tangoclass.btango.com': 'btango-class',
 	'tangodj.btango.com': 'btango-dj',
-	'vivianblues.com': 'vivianblues',
-	'vivibl.com': 'vivianblues', // alias → same preset
-	'vivimil.com': 'vivianblues', // alias → same preset
-	'xn--pg3bl5ba.com': 'vivianblues', // IDN alias
+	'vivianblues.com': 'vivimil',
+	'vivibl.com': 'vivimil', // alias → same preset
+	'vivimil.com': 'vivimil', // alias → same preset
+	'xn--pg3bl5ba.com': 'vivimil', // IDN alias
 
 	// Veneer home — no preset, shows launcher
 	'veneer.leftium.com': null,
@@ -138,7 +138,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerHeight: '100px',
 		headerTextColor: 'white',
 	},
-	vivianblues: {
+	vivimil: {
 		tabs: ['info', 'form', 'list'],
 		defaultFormId: 'g.r6eRUz2U9uf5oVFn6',
 		defaultSheetId: 's.13E_wsbrKLEsuV-eDaTKl0a967EdpYgcZrXH0Gq_KK3g',
@@ -340,7 +340,7 @@ When a domain has no preset mapping (or maps to `null`), the root `/` renders a 
 
 - Lists all known presets with descriptions and live links
 - Provides a form to paste Google Form/Sheet URLs and generate a veneer URL
-- Links to preset domains (btango.com, vivianblues.com, etc.)
+- Links to preset domains (btango.com, vivimil.com, etc.)
 - Serves as the "home page" for `veneer.leftium.com`
 
 **Route:** `src/routes/+page.svelte`
@@ -511,7 +511,7 @@ Notable decisions during implementation:
 
 - **No env var fallbacks** — `base` preset has no default doc IDs; launcher page renders instead
 - **btango-dj uses `tabs: ['form', 'list']`** — info content renders inline above the form (existing conditional in `+layout.svelte` handles this)
-- **`vivimil.com`** is the primary domain for the vivianblues preset (supersedes `vivianblues.com`)
+- **`vivimil.com`** is the primary domain for the `vivimil` preset (supersedes `vivianblues.com`)
 - **Legacy `[flags]/` route left in place** for reference; doesn't conflict with new routing
 
 ### Phase 2: Launcher Page (MVP)
