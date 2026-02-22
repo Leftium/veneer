@@ -32,6 +32,7 @@
 
 	import markdownitDeflist from 'markdown-it-deflist'
 	import MarkdownItGitHubAlerts from 'markdown-it-github-alerts'
+	import centerText from 'markdown-it-center-text'
 
 	import 'markdown-it-github-alerts/styles/github-colors-light.css'
 	import 'markdown-it-github-alerts/styles/github-colors-dark-media.css'
@@ -53,6 +54,7 @@
 		[markdownitDeflist],
 		[MarkdownItGitHubAlerts],
 		[linkifyRelative],
+		[centerText],
 	])
 
 	let { params, data, children } = $props()

@@ -7,6 +7,7 @@
 	import deflist from 'markdown-it-deflist'
 
 	import multimdTable from 'markdown-it-multimd-table'
+	import centerText from 'markdown-it-center-text'
 
 	const md = new MarkdownIt({ html: true, linkify: true, typographer: true, breaks: true })
 	md.use(sup) //.use(emoji)
@@ -17,6 +18,7 @@
 			headerless: true,
 		})
 		.use(easyTables)
+		.use(centerText)
 
 	import { onMount } from 'svelte'
 	import store from 'store'

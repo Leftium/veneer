@@ -55,6 +55,11 @@ body {
 	color: $gray-9;
 }
 
+// Centered text (markdown-it-center-text plugin: ->text<-)
+.text-align-center {
+	text-align: center;
+}
+
 // Content column background — applied to the centering containers
 // (veneer article, launch main, etc.)
 // Box shadow matches PicoCSS card shadow for the same depth effect.
