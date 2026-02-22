@@ -47,8 +47,7 @@
 	import NotificationBox from '$lib/components/NotificationBox.svelte'
 	import { slide } from 'svelte/transition'
 	import { isOk } from 'wellcrafted/result'
-	import { linkListifyDefinitionList } from '$lib/markdown/dl-to-link-list.js'
-	import { undent } from '$lib/tag-functions/undent.js'
+	import FooterSection from '$lib/components/FooterSection.svelte'
 
 	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
 		[markdownitDeflist],
@@ -146,7 +145,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 `,
 	)
 
-	let standardFooter = $derived(undent`
+	let standardFooter = $derived(`
 		# Powered by Veneer
 
 		<div>
@@ -154,11 +153,13 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 		Make your own!
 		~ https://veneer.leftium.com
 
-		Source code
+		Leftium/veneer
 		~ https://github.com/Leftium/veneer
+		~ icon:octicon:mark-github-16
 
-		By Leftium
+		Leftium.com
 		~ https://leftium.com
+		~ icon:bi:globe
 
 		</div>
 	`)
@@ -478,11 +479,11 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	<d-footer>
 		<content>
 			{#each data.footers as footer, i (i)}
-				<d-section>{@html md`${internalizeLinks(linkListifyDefinitionList(footer))}`}</d-section>
+				<FooterSection md={footer} transform={internalizeLinks} />
 			{/each}
 
-			<d-section>{@html md`${linkListifyDefinitionList(footerSources)}`}</d-section>
-			<d-section>{@html md`${linkListifyDefinitionList(standardFooter)}`}</d-section>
+			<FooterSection md={footerSources} />
+			<FooterSection md={standardFooter} />
 		</content>
 	</d-footer>
 </d-article>

@@ -12,6 +12,7 @@
 		GOOGLE_FORM_BG,
 		darkenHex,
 	} from '$lib/presets'
+	import FooterSection from '$lib/components/FooterSection.svelte'
 
 	// Convert any CSS color to #rrggbb hex for <input type="color">
 	function toHex(color: string): string {
@@ -494,26 +495,33 @@
 
 	<!-- Footer -->
 	<footer>
-		<section>
-			<h3>More</h3>
-			<ul>
-				<li><a href={resolve('/presets')}>Presets &amp; Demo</a></li>
-			</ul>
-		</section>
-		<section>
-			<h3>Powered by Veneer</h3>
-			<ul>
-				<li>
-					<a href="https://github.com/Leftium/veneer" target="_blank" rel="noopener noreferrer"
-						>Source code</a
-					>
-				</li>
-				<li>
-					<a href="https://leftium.com" target="_blank" rel="noopener noreferrer">Made by Leftium</a
-					>
-				</li>
-			</ul>
-		</section>
+		<FooterSection
+			md={`
+			# More
+			<div>
+
+			Presets & Demo
+			~ /presets
+
+			</div>
+		`}
+		/>
+		<FooterSection
+			md={`
+			# Powered by Veneer
+			<div>
+
+			Leftium/veneer
+			~ https://github.com/Leftium/veneer
+			~ icon:octicon:mark-github-16
+
+			Leftium.com
+			~ https://leftium.com
+			~ icon:bi:globe
+
+			</div>
+		`}
+		/>
 	</footer>
 </main>
 
@@ -847,27 +855,40 @@
 		border-top: 1px solid var(--app-muted-border-color);
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+		grid-template-rows: repeat(20, auto);
 		column-gap: $size-3;
 
-		section {
-			h3 {
+		:global {
+			d-section {
+				grid-row: span 2;
+				display: grid;
+				grid-template-rows: subgrid;
+			}
+
+			h1 {
+				grid-row: 1;
+				align-self: end;
 				margin-bottom: $size-1;
 				color: color-mix(in srgb, var(--app-color) 30%, transparent);
 				font-size: $font-size-1;
 			}
 
-			ul {
-				list-style: none;
-				padding: 0;
-				margin: 0;
-			}
+			div {
+				grid-row: 2;
 
-			li a {
-				text-decoration: none;
-				color: color-mix(in srgb, var(--app-color) 30%, transparent);
+				ul {
+					list-style: none;
+					padding: 0;
+					margin: 0;
+				}
 
-				&:hover {
-					text-decoration: underline;
+				li a {
+					text-decoration: none;
+					color: color-mix(in srgb, var(--app-color) 30%, transparent);
+
+					&:hover {
+						text-decoration: underline;
+					}
 				}
 			}
 		}

@@ -8,9 +8,29 @@
  *
  *   - [Term](https://example.com)
  *
- * If any term has multiple definitions or the definition text isn’t a URL,
+ * Optionally, a second `~` line can specify an Iconify icon:
+ *
+ *   Term
+ *   ~ https://example.com
+ *   ~ icon:set:name
+ *
+ * which produces:
+ *
+ *   - [<iconify-icon icon="set:name" width="16" height="16" ...></iconify-icon> Term](https://example.com)
+ *
+ * If any term has unrecognized definitions or the definition text isn't a URL,
  * the original block is kept and a console.warn is emitted.
  */
+
+const ICON_STYLE = 'vertical-align: -0.125em; margin-left: -20px; margin-right: 4px;'
+
+// Matches absolute URLs (https://...) and relative paths (/...) including bare /
+const URL_RE = /^~\s*((?:https?:\/\/)\S+|\/\S*)\s*$/
+
+function makeIconTag(iconName: string): string {
+	return `<iconify-icon icon="${iconName}" width="16" height="16" style="${ICON_STYLE}"></iconify-icon>`
+}
+
 export function linkListifyDefinitionList(markdown: string): string {
 	const lines = markdown.split(/\r?\n/)
 	const out: string[] = []
@@ -29,11 +49,23 @@ export function linkListifyDefinitionList(markdown: string): string {
 				j++
 			}
 
-			// only handle single-URL defs
+			// single `~` line: URL only (no icon)
 			if (defs.length === 1) {
-				const m = defs[0].match(/^~\s*(https?:\/\/\S+)\s*$/)
+				const m = defs[0].match(URL_RE)
 				if (m) {
 					out.push(`- [${term}](${m[1]})`)
+					i = j
+					continue
+				}
+			}
+
+			// two `~` lines: URL + icon
+			if (defs.length === 2) {
+				const urlMatch = defs[0].match(URL_RE)
+				const iconMatch = defs[1].match(/^~\s*icon:(\S+)\s*$/)
+				if (urlMatch && iconMatch) {
+					const icon = makeIconTag(iconMatch[1])
+					out.push(`- [${icon}${term}](${urlMatch[1]})`)
 					i = j
 					continue
 				}
@@ -42,7 +74,7 @@ export function linkListifyDefinitionList(markdown: string): string {
 			// fallback: emit original block
 			console.warn(
 				`Skipped def-list at line ${i + 1}: ` +
-					`found ${defs.length} “~” lines or non-URL definition.`,
+					`found ${defs.length} "~" lines or non-URL definition.`,
 			)
 			out.push(term, ...defs)
 			i = j
