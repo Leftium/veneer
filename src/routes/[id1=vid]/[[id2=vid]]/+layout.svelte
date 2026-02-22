@@ -151,17 +151,14 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 		<div>
 
-		Home
-		~ ${page.url.origin}
+		Make your own!
+		~ https://veneer.leftium.com
 
 		Source code
 		~ https://github.com/Leftium/veneer
 
-		Made by Leftium
+		By Leftium
 		~ https://leftium.com
-
-		See other projects
-		~ https://github.com/Leftium?tab=repositories&type=source
 
 		</div>
 	`)
