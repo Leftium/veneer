@@ -8,7 +8,7 @@
 	dayjs.extend(isBetween)
 	dayjs.extend(utc)
 
-	import { stringify } from '$lib/util'
+	import { stringify, assignDancerImages } from '$lib/util'
 
 	import StickyHeaderGrid from '$lib/components/StickyHeaderSummaryDetailsGrid.svelte'
 	import DancerIcon from '$lib/components/DancerIcon.svelte'
@@ -16,14 +16,16 @@
 
 	interface Props {
 		data: any
+		title?: string
 		onToggle?: () => void
 	}
 
-	let { data, onToggle }: Props = $props()
+	let { data, title = '', onToggle }: Props = $props()
 
 	let extra = $derived(data.extra)
 	let columns = $derived(data.columns)
 	let rows = $derived(data.rows)
+	let imageNums = $derived(assignDancerImages(title, rows.length))
 </script>
 
 {#snippet rowDetails(row: string | any[], _r: any)}
@@ -95,6 +97,7 @@
 									: REGEX_DANCE_FOLLOW.test(row[ci.role]?.render)
 										? 'follow'
 										: 'unknown'}
+								imageNum={imageNums[r]}
 							/>
 						</fi-role>
 						<fi-info>

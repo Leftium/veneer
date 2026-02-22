@@ -2,12 +2,13 @@
 	interface Props {
 		role: 'lead' | 'follow' | 'unknown'
 		representative?: boolean
+		imageNum?: number
 	}
 
-	let { role, representative = false }: Props = $props()
+	let { role, representative = false, imageNum }: Props = $props()
 
-	const randomNum = Math.ceil(Math.random() * 6)
-	const num = $derived(representative ? 6 : randomNum)
+	const fallbackNum = Math.ceil(Math.random() * 6)
+	const num = $derived(representative ? 6 : (imageNum ?? fallbackNum))
 	const padded = $derived(String(num).padStart(2, '0'))
 
 	const glowMap = {

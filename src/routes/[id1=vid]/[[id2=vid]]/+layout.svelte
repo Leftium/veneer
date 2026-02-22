@@ -448,7 +448,8 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 			{#if data.navTabs.list.icon}
 				<swiper-slide data-tid="list" hidden={!hasJS && tid !== 'list'}>
 					{#if isOk(data.sheet)}
-						<Sheet data={finalData} onToggle={callSwiperUpdateAutoHeight}></Sheet>
+						<Sheet data={finalData} title={data.title} onToggle={callSwiperUpdateAutoHeight}
+						></Sheet>
 
 						<pre hidden>{stringify(data.sheet.data)}}</pre>
 					{:else}
@@ -460,7 +461,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 			{#if data.navTabs.raw.icon}
 				<swiper-slide data-tid="raw" hidden={!hasJS && tid !== 'raw'}>
 					{#if isOk(data.sheet)}
-						<Sheet data={raw} onToggle={callSwiperUpdateAutoHeight}></Sheet>
+						<Sheet data={raw} title={data.title} onToggle={callSwiperUpdateAutoHeight}></Sheet>
 					{/if}
 					<pre hidden>{stringify(raw)}</pre>
 				</swiper-slide>
