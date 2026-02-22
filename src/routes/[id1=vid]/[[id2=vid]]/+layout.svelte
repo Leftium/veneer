@@ -285,7 +285,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 						const count = finalData.extra.count
 						const callout = !count
 							? ''
-							: `<div class="tooltip">${count.total} people going! 💃${count.follows} 🕺${count.leaders}</div>`
+							: `<div class="tooltip">${count.total} people going! <span class="dancer-icon dancer-follow"><img src="/dancers/follows/06-F.png" alt="follow"></span>${count.follows} <span class="dancer-icon dancer-lead"><img src="/dancers/leads/06-L.png" alt="lead"></span>${count.leaders}</div>`
 						const button = `<a href="${internalLink}" role=button class=outline>Sign up ➡️</a>`
 						out.push(callout)
 						out.push(button)
@@ -865,8 +865,8 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 				min(var(--r), var(--p) - var(--h) * tan(var(--a) / 2)) / var(--r);
 			clip-path: polygon(
 				0 100%,
-				0 0,
-				100% 0,
+				0 -50%,
+				100% -50%,
 				100% 100%,
 				min(100%, var(--p) + var(--h) * tan(var(--a) / 2)) 100%,
 				var(--p) calc(100% + var(--h)),
@@ -906,6 +906,47 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 			border-image: conic-gradient(var(--c2) 0 0) fill 0 / var(--r)
 				max(var(--b), 100% - var(--p) - var(--h) * tan(var(--a) / 2)) 0
 				max(var(--b), var(--p) - var(--h) * tan(var(--a) / 2)) / 0 0 var(--h) 0;
+		}
+
+		.dancer-icon {
+			display: inline-flex;
+			align-items: flex-end;
+			justify-content: center;
+			position: relative;
+			width: 2.2em;
+			height: 2.2em;
+			vertical-align: middle;
+			overflow: visible;
+		}
+		.dancer-icon::before {
+			content: '';
+			position: absolute;
+			inset: 0;
+			border-radius: 50%;
+		}
+		.dancer-follow::before {
+			background: radial-gradient(
+				circle,
+				rgba(255, 105, 180, 0.55) 0%,
+				rgba(255, 105, 180, 0.15) 55%,
+				transparent 70%
+			);
+		}
+		.dancer-lead::before {
+			background: radial-gradient(
+				circle,
+				rgba(65, 135, 255, 0.55) 0%,
+				rgba(65, 135, 255, 0.15) 55%,
+				transparent 70%
+			);
+		}
+		.dancer-icon img {
+			position: relative;
+			height: 3.5em;
+			width: auto;
+			object-fit: contain;
+			object-position: bottom;
+			filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.3)) drop-shadow(0 0 3px rgba(0, 0, 0, 0.15));
 		}
 	}
 

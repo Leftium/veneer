@@ -11,6 +11,7 @@
 	import { stringify } from '$lib/util'
 
 	import StickyHeaderGrid from '$lib/components/StickyHeaderSummaryDetailsGrid.svelte'
+	import DancerIcon from '$lib/components/DancerIcon.svelte'
 	import { REGEX_DANCE_LEADER, REGEX_DANCE_FOLLOW } from '$lib/dance-constants'
 
 	interface Props {
@@ -63,7 +64,10 @@
 				{@const count = extra.count}
 				<gh>
 					<span>{count.total}명 신청</span>
-					<span>💃{count.follows} 🕺{count.leaders}</span>
+					<span
+						><DancerIcon role="follow" representative />{count.follows}
+						<DancerIcon role="lead" representative />{count.leaders}</span
+					>
 				</gh>
 			{/snippet}
 
@@ -84,12 +88,14 @@
 							<div>{@html row[0].render.replace(/^0*/, '<gz>$&</gz>')}.</div>
 							<div>{row[ci.paid]?.render ? '💰' : ''}</div>
 						</fi-index>
-						<fi-role
-							>{REGEX_DANCE_LEADER.test(row[ci.role]?.render)
-								? '🕺'
-								: REGEX_DANCE_FOLLOW.test(row[ci.role]?.render)
-									? '💃'
-									: '❓'}
+						<fi-role>
+							<DancerIcon
+								role={REGEX_DANCE_LEADER.test(row[ci.role]?.render)
+									? 'lead'
+									: REGEX_DANCE_FOLLOW.test(row[ci.role]?.render)
+										? 'follow'
+										: 'unknown'}
+							/>
 						</fi-role>
 						<fi-info>
 							<h4>{row[ci.name]?.render}</h4>
@@ -179,8 +185,6 @@
 			grid-column: 1 / -1;
 			display: flex;
 			flex-wrap: wrap;
-			column-gap: 1rem;
-
 			justify-content: center;
 			font-size: 188%;
 		}
@@ -207,10 +211,11 @@
 				fi-index {
 					opacity: 0.5;
 					text-align: right;
+					margin-top: $size-1;
 				}
 
 				fi-role {
-					font-size: $font-size-6;
+					margin-left: -0.5em;
 				}
 
 				fi-info {
@@ -219,6 +224,7 @@
 					white-space: wrap;
 
 					h4 {
+						margin-top: $size-1;
 						margin-bottom: $size-1;
 					}
 
