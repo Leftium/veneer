@@ -23,13 +23,12 @@
 		stripEmptyColumns,
 		stripEmptyRows,
 	} from '$lib/google-document-util/sheet-data-pipeline.svelte.js'
-	import { onDestroy, onMount, tick } from 'svelte'
+	import { onDestroy, onMount, tick, untrack } from 'svelte'
 	import { afterNavigate, goto } from '$app/navigation'
 	import { browser } from '$app/environment'
 	import { gg } from '@leftium/gg'
 	import { linkifyRelative, makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
 
-	// @ts-expect-error
 	import markdownitDeflist from 'markdown-it-deflist'
 	import MarkdownItGitHubAlerts from 'markdown-it-github-alerts'
 
@@ -58,37 +57,37 @@
 	let { params, data, children } = $props()
 
 	// Phase 3c: short URLs when viewing domain's default docs
-	const docPath = data.usingDefaultDocs
-		? ''
-		: params.id2
-			? `/${params.id1}/${params.id2}`
-			: `/${params.id1}`
+	let docPath = $derived(
+		data.usingDefaultDocs ? '' : params.id2 ? `/${params.id1}/${params.id2}` : `/${params.id1}`,
+	)
 
 	// Preserve search params (e.g. ?hostname=) for dev navigation
 	const search = page.url.search
 
 	let swiperContainer = $state<SwiperContainer>()
-	let activeTab = $state(params.tid)
+	let activeTab = $state(untrack(() => params.tid))
 	let notificationBoxHidden = $state(false)
 
-	let tid = $state(params.tid || 'info')
+	let tid = $state(untrack(() => params.tid) || 'info')
 
 	const successParty = page.url.searchParams.has('yay')
 
-	const raw = makeRaw(data.sheet)
+	let raw = $derived(makeRaw(data.sheet))
 
-	const finalData = pipe(
-		raw,
-		extractColumnHeaders,
-		stripEmptyRows,
-		addIndex,
-		adjustColumnTypes,
-		adjustColumnLengths,
-		stripEmptyColumns,
-		hidePhoneNumbers,
-		padNumericRenders,
-		renderRelativeTimes,
-		collectExtraDance,
+	let finalData = $derived(
+		pipe(
+			raw,
+			extractColumnHeaders,
+			stripEmptyRows,
+			addIndex,
+			adjustColumnTypes,
+			adjustColumnLengths,
+			stripEmptyColumns,
+			hidePhoneNumbers,
+			padNumericRenders,
+			renderRelativeTimes,
+			collectExtraDance,
+		),
 	)
 
 	let skipNextSlideChange = false

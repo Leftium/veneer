@@ -21,7 +21,9 @@
 
 	let { data, onToggle }: Props = $props()
 
-	const { extra, columns, rows } = data
+	let extra = $derived(data.extra)
+	let columns = $derived(data.columns)
+	let rows = $derived(data.rows)
 </script>
 
 {#snippet rowDetails(row: string | any[], r: any)}
