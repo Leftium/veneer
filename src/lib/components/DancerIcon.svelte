@@ -7,28 +7,36 @@
 
 	let { role, representative = false, imageNum }: Props = $props()
 
+	const bothPool = [7, 9, 10, 11, 12, 13, 15, 16, 17, 20, 21, 22, 23, 24, 25, 27, 30, 32] as const
 	const fallbackNum = Math.ceil(Math.random() * 6)
-	const num = $derived(representative ? 6 : (imageNum ?? fallbackNum))
-	const padded = $derived(String(num).padStart(2, '0'))
+	const fallbackBothNum = bothPool[Math.floor(Math.random() * bothPool.length)]
 
 	const glowMap = {
 		follow:
 			'radial-gradient(circle, rgba(255, 105, 180, 0.55) 0%, rgba(255, 105, 180, 0.15) 55%, transparent 70%)',
 		lead: 'radial-gradient(circle, rgba(65, 135, 255, 0.55) 0%, rgba(65, 135, 255, 0.15) 55%, transparent 70%)',
-		both: 'radial-gradient(circle at 30% 30%, rgba(255, 105, 180, 0.55) 0%, rgba(255, 105, 180, 0.15) 40%, transparent 70%), radial-gradient(circle at 70% 70%, rgba(65, 135, 255, 0.55) 0%, rgba(65, 135, 255, 0.15) 40%, transparent 70%)',
+		both: 'radial-gradient(circle at 20% 50%, rgba(255, 105, 180, 0.6) 0%, rgba(255, 105, 180, 0.1) 35%, transparent 55%), radial-gradient(circle at 80% 50%, rgba(65, 135, 255, 0.6) 0%, rgba(65, 135, 255, 0.1) 35%, transparent 55%)',
 		unknown:
 			'radial-gradient(circle, rgba(160, 160, 160, 0.45) 0%, rgba(160, 160, 160, 0.12) 55%, transparent 70%)',
 	} as const
 
-	// For 'both', randomly pick lead or follow image
-	const bothRole = Math.random() < 0.5 ? 'lead' : 'follow'
-	const imageRole = $derived(role === 'both' ? bothRole : role)
-	const suffixMap = { lead: 'L', follow: 'F' } as const
+	const dirMap = { lead: 'leads', follow: 'follows', both: 'both' } as const
+	const suffixMap = { lead: 'L', follow: 'F', both: 'B' } as const
+	const representativeMap = { lead: 6, follow: 6, both: 20 } as const
+
+	const numForRole = $derived(
+		representative
+			? (representativeMap[role as keyof typeof representativeMap] ?? 6)
+			: role === 'both'
+				? fallbackBothNum
+				: (imageNum ?? fallbackNum),
+	)
+	const paddedForRole = $derived(String(numForRole).padStart(2, '0'))
 
 	const glow = $derived(glowMap[role])
 	const src = $derived(
-		role !== 'unknown' && imageRole !== 'unknown'
-			? `/dancers/${imageRole === 'lead' ? 'leads' : 'follows'}/${padded}-${suffixMap[imageRole as 'lead' | 'follow']}.png`
+		role !== 'unknown'
+			? `/dancers/${dirMap[role as keyof typeof dirMap]}/${paddedForRole}-${suffixMap[role as keyof typeof suffixMap]}.png`
 			: null,
 	)
 </script>
