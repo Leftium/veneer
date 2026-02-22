@@ -92,11 +92,14 @@
 						</fi-index>
 						<fi-role>
 							<DancerIcon
-								role={REGEX_DANCE_LEADER.test(row[ci.role]?.render)
-									? 'lead'
-									: REGEX_DANCE_FOLLOW.test(row[ci.role]?.render)
-										? 'follow'
-										: 'unknown'}
+								role={REGEX_DANCE_LEADER.test(row[ci.role]?.render) &&
+								REGEX_DANCE_FOLLOW.test(row[ci.role]?.render)
+									? 'both'
+									: REGEX_DANCE_LEADER.test(row[ci.role]?.render)
+										? 'lead'
+										: REGEX_DANCE_FOLLOW.test(row[ci.role]?.render)
+											? 'follow'
+											: 'unknown'}
 								imageNum={imageNums[r]}
 							/>
 						</fi-role>
