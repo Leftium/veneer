@@ -136,11 +136,14 @@
 		!sourceUrlForm && !sourceUrlSheet
 			? ''
 			: `
-# Source Documents
+# Sources
 <div>
 
 ${!sourceUrlForm ? '' : `Google Form\n~ ${sourceUrlForm}\n~ icon:simple-icons:googleforms`}
 ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons:googlesheets`}
+춤으로 전하는 힐링 대화
+~ https://e.kakao.com/t/healing-message-with-dance
+~ icon:simple-icons:kakaotalk
 </div>
 `,
 	)
