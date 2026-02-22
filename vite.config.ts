@@ -15,6 +15,13 @@ export default defineConfig({
 			strategy: ['cookie', 'preferredLanguage', 'baseLocale'],
 		}),
 	],
+	css: {
+		preprocessorOptions: {
+			scss: {
+				silenceDeprecations: ['if-function'],
+			},
+		},
+	},
 	test: {
 		include: ['src/**/*.test.ts'],
 	},
