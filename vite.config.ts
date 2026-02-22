@@ -2,12 +2,12 @@ import { paraglideVitePlugin } from '@inlang/paraglide-js'
 import devtoolsJson from 'vite-plugin-devtools-json'
 import { sveltekit } from '@sveltejs/kit/vite'
 import { defineConfig } from 'vitest/config'
-import { openInEditorPlugin } from '@leftium/gg'
+import ggPlugins from '@leftium/gg/vite'
 
 export default defineConfig({
 	plugins: [
 		sveltekit(),
-		openInEditorPlugin(),
+		...ggPlugins(),
 		devtoolsJson(),
 		paraglideVitePlugin({
 			project: './project.inlang',
