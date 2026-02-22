@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { dev } from '$app/environment'
+	import { resolve } from '$app/paths'
 	import { DOMAIN_PRESETS, PRESETS } from '$lib/presets'
 
 	// Preset directory data
@@ -29,7 +30,7 @@
 					{/if}
 					&mdash;
 					{#if dev}
-						<a href="/?hostname={entry.domain}" target="_blank">[preview]</a>
+						<a href={resolve(`/?hostname=${entry.domain}`)} target="_blank">[preview]</a>
 					{:else}
 						<a href="https://{entry.domain}/" target="_blank" rel="noopener noreferrer"
 							>{entry.domain}</a
@@ -43,7 +44,7 @@
 	<!-- Demo -->
 	<section>
 		<h2>Demo</h2>
-		<div><a href="/g.chwbD7sLmAoLe65Z8" target="_blank">Demo form</a> (no preset)</div>
+		<div><a href={resolve('/g.chwbD7sLmAoLe65Z8')} target="_blank">Demo form</a> (no preset)</div>
 	</section>
 
 	<!-- Dev Helpers -->
@@ -54,7 +55,7 @@
 			<ul>
 				{#each allDomains as [domain, presetName] (domain)}
 					<li>
-						<a href="/?hostname={domain}" target="_blank">
+						<a href={resolve(`/?hostname=${domain}`)} target="_blank">
 							{domain}
 						</a>
 						{#if presetName}
@@ -73,7 +74,7 @@
 		<section>
 			<h3>More</h3>
 			<ul>
-				<li><a href="/">Veneer Builder</a></li>
+				<li><a href={resolve('/')}>Veneer Builder</a></li>
 			</ul>
 		</section>
 		<section>

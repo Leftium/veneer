@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { GoogleFormDocument } from '$lib/google-document-util/types'
 	import { m } from '$lib/paraglide/messages'
+	import { SvelteSet } from 'svelte/reactivity'
 
 	import GoogleFormField from './GoogleFormField.svelte'
 	import GroupRegistration from './GroupRegistration.svelte'
@@ -31,7 +32,7 @@
 		// Build a set of field indices that are consumed by group registration.
 		// A 3-field match (name + role + group) consumes 3 indices;
 		// a 2-field match (name + group, no role) consumes only 2.
-		const consumed = new Set<number>()
+		const consumed = new SvelteSet<number>()
 		for (const match of matches) {
 			consumed.add(match.startIndex)
 			consumed.add(match.startIndex + 1)

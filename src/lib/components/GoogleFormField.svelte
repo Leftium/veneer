@@ -198,7 +198,7 @@
 			onchange={handleChange}
 		>
 			<option value="">Choose</option>
-			{#each field.options as option}
+			{#each field.options as option (option)}
 				<option value={option}>{option}</option>
 			{/each}
 		</select>
@@ -220,7 +220,7 @@
 			</center>
 		{/if}
 
-		{#each field.options as option}
+		{#each field.options as option (option)}
 			<label>
 				{#if field.type === 'CHECKBOXES' || field.options.length === 1}
 					<input

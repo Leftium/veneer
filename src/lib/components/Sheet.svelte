@@ -28,7 +28,7 @@
 {#snippet rowDetails(row: string | any[], _r: any)}
 	{@const skippedColumns = 1}
 	<dl>
-		{#each row.slice(skippedColumns) as cell, ci}
+		{#each row.slice(skippedColumns) as cell, ci (ci)}
 			<dt>{columns[ci + skippedColumns]?.title}</dt>
 			<dd>
 				{cell.value}
@@ -43,13 +43,13 @@
 		{@const gridTemplateColumns = `auto repeat(${columns.length - 1}, minmax(120px, 1fr))`}
 		<StickyHeaderGrid {gridTemplateColumns} data={{ columns, rows }} {onToggle} {rowDetails}>
 			{#snippet header()}
-				{#each columns as column}
+				{#each columns as column (column.title)}
 					<gh>{column.title}</gh>
 				{/each}
 			{/snippet}
 
 			{#snippet rowSummary(columns, row, r, makeToggleDetails)}
-				{#each columns as { isNumeric }, c}
+				{#each columns as { isNumeric }, c (c)}
 					{@const render = row[c]?.render || ''}
 					<gd class={{ numeric: isNumeric }} onclick={makeToggleDetails(r)} role="none">
 						{@html isNumeric ? render.replace(/^0*/, '<gz>$&</gz>') : render}

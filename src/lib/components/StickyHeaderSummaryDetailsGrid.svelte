@@ -44,7 +44,7 @@
 >
 	{@render header()}
 
-	{#each data.rows as row, ri}
+	{#each data.rows as row, ri (ri)}
 		{@render rowSummary(data.columns, row, ri, makeToggleDetails)}
 
 		{#if ri === detailsOpened}

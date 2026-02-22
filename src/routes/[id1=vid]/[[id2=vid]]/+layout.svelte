@@ -26,6 +26,8 @@
 	import { onDestroy, onMount, tick, untrack } from 'svelte'
 	import { afterNavigate, goto } from '$app/navigation'
 	import { browser } from '$app/environment'
+	import { resolve } from '$app/paths'
+	import type { Pathname } from '$app/types'
 	import { linkifyRelative, makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
 
 	import markdownitDeflist from 'markdown-it-deflist'
@@ -114,7 +116,7 @@
 		// after sliding, update URL *only* on user-driven calls
 		if (updateHistory) {
 			const tabPath = tid === data.defaultTab ? docPath || '/' : `${docPath}/${tid}`
-			goto(`${tabPath}${search}`, {
+			goto(resolve(`${tabPath}${search}` as Pathname), {
 				replaceState: false,
 				noScroll: true,
 				keepFocus: true,
@@ -349,7 +351,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 		{#if data.numTabs > 1}
 			<nav-buttons>
-				{#each Object.entries(data.navTabs) as [tid, { name, icon, error }]}
+				{#each Object.entries(data.navTabs) as [tid, { name, icon, error }] (tid)}
 					{#if icon}
 						<a
 							class={['glass', { active: activeTab === tid }]}
@@ -357,9 +359,11 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 								e.preventDefault()
 								slideToTab(tid)
 							}}
-							href={tid === data.defaultTab
-								? `${docPath || '/'}${search}`
-								: `${docPath}/${tid}${search}`}
+							href={resolve(
+								(tid === data.defaultTab
+									? `${docPath || '/'}${search}`
+									: `${docPath}/${tid}${search}`) as Pathname,
+							)}
 						>
 							{icon}
 							{name}{error ? ' ⚠️' : ''}
@@ -474,7 +478,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 	</d-main>
 	<d-footer>
 		<content>
-			{#each data.footers as footer}
+			{#each data.footers as footer, i (i)}
 				<d-section>{@html md`${internalizeLinks(linkListifyDefinitionList(footer))}`}</d-section>
 			{/each}
 

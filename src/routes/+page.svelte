@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { browser } from '$app/environment'
+	import { resolve } from '$app/paths'
+	import type { Pathname } from '$app/types'
+	import { SvelteURLSearchParams } from 'svelte/reactivity'
 	import * as linkify from 'linkifyjs'
 	import { DOCUMENT_URL_REGEX } from '$lib/google-document-util/url-id'
 	import {
@@ -166,7 +169,7 @@
 			? `/${formPart}/${sheetResult.prefix}.${sheetResult.id}`
 			: `/${formPart}`
 
-		const params = new URLSearchParams()
+		const params = new SvelteURLSearchParams()
 		if (preset) params.set('preset', preset)
 		if (tabs) params.set('tabs', tabs)
 		// Resolve header image param:
@@ -268,7 +271,8 @@
 						onfocus={(e) => e.currentTarget.select()}
 					/>
 					<p class="preview-actions-prose">
-						<a href={veneerPath} target="_blank">Open</a> this veneer in a new tab, or
+						<a href={resolve(veneerPath as Pathname)} target="_blank">Open</a> this veneer in a new
+						tab, or
 						<button
 							class:copied={copiedUrl && copiedUrl === window.location.origin + veneerPath}
 							onclick={async () => {
@@ -493,7 +497,7 @@
 		<section>
 			<h3>More</h3>
 			<ul>
-				<li><a href="/presets">Presets &amp; Demo</a></li>
+				<li><a href={resolve('/presets')}>Presets &amp; Demo</a></li>
 			</ul>
 		</section>
 		<section>
