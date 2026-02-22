@@ -4,6 +4,7 @@ import isBetween from 'dayjs/plugin/isBetween'
 import utc from 'dayjs/plugin/utc'
 import type { ResultGoogleSheet } from '$lib/google-document-util/types'
 import { isErr } from 'wellcrafted/result'
+import { gg } from '@leftium/gg'
 
 dayjs.extend(relativeTime)
 dayjs.extend(isBetween)
@@ -29,9 +30,9 @@ function makeCell(cell: Partial<SheetDataPipe['rows'][number][number]>) {
 }
 
 export function makeRaw(sheet: ResultGoogleSheet) {
-	console.time('⏱️ sheet-pipeline:makeRaw')
+	gg.time('⏱️ sheet-pipeline:makeRaw')
 	if (isErr(sheet)) {
-		console.timeEnd('⏱️ sheet-pipeline:makeRaw')
+		gg.timeEnd('⏱️ sheet-pipeline:makeRaw')
 		return { extra: { timeZone: 'utc' }, columns: [], rows: [] }
 	}
 
@@ -49,7 +50,7 @@ export function makeRaw(sheet: ResultGoogleSheet) {
 
 	const timeZone = sheet.data.timeZone
 
-	console.timeEnd('⏱️ sheet-pipeline:makeRaw')
+	gg.timeEnd('⏱️ sheet-pipeline:makeRaw')
 	return { extra: { timeZone } as unknown, columns, rows }
 }
 
@@ -67,14 +68,14 @@ export function stripEmptyRows({ extra, columns, rows }: SheetDataPipe) {
 }
 
 export function adjustColumnLengths({ extra, columns, rows }: SheetDataPipe) {
-	console.time('⏱️ sheet-pipeline:adjustColumnLengths')
+	gg.time('⏱️ sheet-pipeline:adjustColumnLengths')
 	for (const row of rows) {
 		for (const [ci, cell] of row.entries()) {
 			columns[ci].lengthMax = Math.max(columns[ci].lengthMax, cell.value.length)
 			columns[ci].lengthMin = Math.min(columns[ci].lengthMin, cell.value.length)
 		}
 	}
-	console.timeEnd('⏱️ sheet-pipeline:adjustColumnLengths')
+	gg.timeEnd('⏱️ sheet-pipeline:adjustColumnLengths')
 	return { extra, columns, rows }
 }
 
@@ -101,7 +102,7 @@ export function extractColumnHeaders({ extra, columns, rows }: SheetDataPipe) {
 
 const REGEX_NUMERIC = /^[0-9-.,/: ]*$/
 export function adjustColumnTypes({ extra, columns, rows }: SheetDataPipe) {
-	console.time('⏱️ sheet-pipeline:adjustColumnTypes')
+	gg.time('⏱️ sheet-pipeline:adjustColumnTypes')
 	for (const row of rows) {
 		for (const [ci, cell] of row.entries()) {
 			if (!REGEX_NUMERIC.test(cell.value)) {
@@ -109,12 +110,12 @@ export function adjustColumnTypes({ extra, columns, rows }: SheetDataPipe) {
 			}
 		}
 	}
-	console.timeEnd('⏱️ sheet-pipeline:adjustColumnTypes')
+	gg.timeEnd('⏱️ sheet-pipeline:adjustColumnTypes')
 	return { extra, columns, rows }
 }
 
 export function padNumericRenders({ extra, columns, rows }: SheetDataPipe) {
-	console.time('⏱️ sheet-pipeline:padNumericRenders')
+	gg.time('⏱️ sheet-pipeline:padNumericRenders')
 	for (const row of rows) {
 		for (const [ci, cell] of row.entries()) {
 			if (cell.value && columns[ci].isNumeric && !cell.ts) {
@@ -122,12 +123,12 @@ export function padNumericRenders({ extra, columns, rows }: SheetDataPipe) {
 			}
 		}
 	}
-	console.timeEnd('⏱️ sheet-pipeline:padNumericRenders')
+	gg.timeEnd('⏱️ sheet-pipeline:padNumericRenders')
 	return { extra, columns, rows }
 }
 
 export function hidePhoneNumbers({ extra, columns, rows }: SheetDataPipe) {
-	console.time('⏱️ sheet-pipeline:hidePhoneNumbers')
+	gg.time('⏱️ sheet-pipeline:hidePhoneNumbers')
 	for (const row of rows) {
 		for (const [ci, cell] of row.entries()) {
 			if (/(contact)|(연락)/i.test(columns[ci].title)) {
@@ -136,7 +137,7 @@ export function hidePhoneNumbers({ extra, columns, rows }: SheetDataPipe) {
 			}
 		}
 	}
-	console.timeEnd('⏱️ sheet-pipeline:hidePhoneNumbers')
+	gg.timeEnd('⏱️ sheet-pipeline:hidePhoneNumbers')
 	return { extra, columns, rows }
 }
 
@@ -147,7 +148,7 @@ export function stripEmptyColumns({ extra, columns, rows }: SheetDataPipe) {
 }
 
 export function renderRelativeTimes({ extra, columns, rows }: SheetDataPipe) {
-	console.time('⏱️ sheet-pipeline:renderRelativeTimes')
+	gg.time('⏱️ sheet-pipeline:renderRelativeTimes')
 	const utcjs = dayjs.utc
 
 	for (const row of rows) {
@@ -163,7 +164,7 @@ export function renderRelativeTimes({ extra, columns, rows }: SheetDataPipe) {
 			}
 		}
 	}
-	console.timeEnd('⏱️ sheet-pipeline:renderRelativeTimes')
+	gg.timeEnd('⏱️ sheet-pipeline:renderRelativeTimes')
 	return { extra, columns, rows }
 }
 
@@ -180,7 +181,7 @@ import {
 import { parse as parseGroupMembers } from '$lib/group-registration/serialization'
 
 export function collectExtraDance({ extra, columns, rows }: SheetDataPipe) {
-	console.time('⏱️ sheet-pipeline:collectExtraDance')
+	gg.time('⏱️ sheet-pipeline:collectExtraDance')
 	const ci = {
 		role: columns.findIndex((c) => REGEX_DANCE_ROLE.test(c.title)),
 		name: columns.findIndex((c) => REGEX_DANCE_NAME.test(c.title)),
@@ -190,7 +191,7 @@ export function collectExtraDance({ extra, columns, rows }: SheetDataPipe) {
 	}
 
 	if (ci.name === -1 || ci.role === -1) {
-		console.timeEnd('⏱️ sheet-pipeline:collectExtraDance')
+		gg.timeEnd('⏱️ sheet-pipeline:collectExtraDance')
 		return { extra, columns, rows }
 	}
 
@@ -212,7 +213,7 @@ export function collectExtraDance({ extra, columns, rows }: SheetDataPipe) {
 		ci,
 	}
 
-	console.timeEnd('⏱️ sheet-pipeline:collectExtraDance')
+	gg.timeEnd('⏱️ sheet-pipeline:collectExtraDance')
 	return { extra, columns, rows }
 }
 

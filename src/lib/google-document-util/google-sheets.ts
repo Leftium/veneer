@@ -1,6 +1,7 @@
 import { Err, Ok } from 'wellcrafted/result'
 import { excelDateToUnix } from '$lib/util'
 import type { GoogleSheet } from './types'
+import { gg } from '@leftium/gg'
 
 type GoogleSheetsApiResult = {
 	properties: { title: string; timeZone: string }
@@ -27,10 +28,10 @@ type GoogleSheetsApiResult = {
 }
 
 export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
-	console.time('⏱️ adjustGoogleSheetData')
+	gg.time('⏱️ adjustGoogleSheetData')
 	const data = json?.sheets?.[0]?.data[0]
 	if (!data) {
-		console.timeEnd('⏱️ adjustGoogleSheetData')
+		gg.timeEnd('⏱️ adjustGoogleSheetData')
 		return Err({ message: `JSON Google Sheet data has unexpected shape.`, json })
 	}
 
@@ -54,7 +55,7 @@ export function adjustGoogleSheetData(json: GoogleSheetsApiResult) {
 				}),
 	)
 
-	console.timeEnd('⏱️ adjustGoogleSheetData')
+	gg.timeEnd('⏱️ adjustGoogleSheetData')
 	return Ok({ title, sheetTitle, timeZone, rows, hiddenColumns, hiddenRows })
 }
 

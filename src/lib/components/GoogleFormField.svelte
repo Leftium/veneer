@@ -40,14 +40,6 @@
 		markdown?: string | null,
 		options?: { collapseNewlines: any } | undefined,
 	) {
-		/*
-		console.log(`parseMarkdown ${'-'.repeat(100)}`);
-		console.log({ options });
-		console.log('[IN:]');
-		console.log(markdown);
-		console.log('[OUT:]');
-        */
-
 		markdown = markdown || ''
 
 		const collapsNewlines = options?.collapseNewlines ?? false
@@ -64,7 +56,6 @@
 
 		result = result.replace(/^(<p>)|(<\/p>\s*$)/g, '')
 
-		// console.log(result);
 		return result
 	}
 

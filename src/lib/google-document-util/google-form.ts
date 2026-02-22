@@ -1,5 +1,6 @@
 import { Err, Ok } from 'wellcrafted/result'
 import type { QuestionType, Question } from '$lib'
+import { gg } from '@leftium/gg'
 
 enum GoogleFormsFieldTypeEnum {
 	TEXT = 0,
@@ -54,18 +55,18 @@ type Form = {
 }
 
 export function parseGoogleForm(html: string) {
-	console.time('⏱️ parseGoogleForm:total')
-	console.time('⏱️ parseGoogleForm:json-extract')
+	gg.time('⏱️ parseGoogleForm:total')
+	gg.time('⏱️ parseGoogleForm:json-extract')
 	let data = html.split('FB_PUBLIC_LOAD_DATA_ = ')[1]
 	if (!data) {
-		console.timeEnd('⏱️ parseGoogleForm:json-extract')
-		console.timeEnd('⏱️ parseGoogleForm:total')
+		gg.timeEnd('⏱️ parseGoogleForm:json-extract')
+		gg.timeEnd('⏱️ parseGoogleForm:total')
 		return Err({ message: 'Error parsing Google form data.' })
 	}
 	data = data.substring(0, data.lastIndexOf(';'))
 
 	const jArray = JSON.parse(data)
-	console.timeEnd('⏱️ parseGoogleForm:json-extract')
+	gg.timeEnd('⏱️ parseGoogleForm:json-extract')
 
 	const description = jArray[1]?.[0] ?? null
 	/// const descriptionHtml = jArray[1]?.[24]?.[1] ?? null
@@ -100,9 +101,7 @@ export function parseGoogleForm(html: string) {
 
 	for (const field of arrayOfFields) {
 		if (field.length < 4) {
-			console.log('Continue: Non Submittable field or field without answer was found') // Logging added
-			console.log(field.length)
-			console.log(field)
+			gg('Non-submittable field or field without answer', field.length, field)
 			continue
 		}
 
@@ -174,7 +173,7 @@ export function parseGoogleForm(html: string) {
 	}
 
 	// Inject media source url's using regex (replaces Cheerio for performance):
-	console.time('⏱️ parseGoogleForm:regex-extract')
+	gg.time('⏱️ parseGoogleForm:regex-extract')
 
 	// Extract form action
 	const formActionMatch = html.match(/<form[^>]*action="([^"]*)"/)
@@ -214,9 +213,9 @@ export function parseGoogleForm(html: string) {
 			}
 		}
 	}
-	console.timeEnd('⏱️ parseGoogleForm:regex-extract')
+	gg.timeEnd('⏱️ parseGoogleForm:regex-extract')
 
-	console.timeEnd('⏱️ parseGoogleForm:total')
+	gg.timeEnd('⏱️ parseGoogleForm:total')
 	return Ok(form)
 }
 
