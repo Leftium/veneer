@@ -139,8 +139,8 @@
 # Source Documents
 <div>
 
-${!sourceUrlForm ? '' : `Google Form\n~ ${sourceUrlForm}`}
-${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
+${!sourceUrlForm ? '' : `Google Form\n~ ${sourceUrlForm}\n~ icon:simple-icons:googleforms`}
+${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons:googlesheets`}
 </div>
 `,
 	)
