@@ -28,7 +28,9 @@
 		representative
 			? (representativeMap[role as keyof typeof representativeMap] ?? 6)
 			: role === 'both'
-				? fallbackBothNum
+				? imageNum != null
+					? bothPool[imageNum % bothPool.length]
+					: fallbackBothNum
 				: (imageNum ?? fallbackNum),
 	)
 	const paddedForRole = $derived(String(numForRole).padStart(2, '0'))
