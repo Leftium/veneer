@@ -19,7 +19,7 @@
 	"devDependencies": {
 		"@eslint/compat": "^2.0.2",
 		"@eslint/js": "^10.0.1",
-		"@leftium/gg": "^0.0.46",
+		"@leftium/gg": "^0.0.47",
 		"@neoconfetti/svelte": "^2.2.2",
 		"@sveltejs/adapter-auto": "^7.0.1",
 		"@sveltejs/kit": "^2.53.0",

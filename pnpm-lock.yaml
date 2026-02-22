@@ -22,8 +22,8 @@ importers:
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.0.1)
       '@leftium/gg':
-        specifier: ^0.0.46
-        version: 0.0.46(svelte@5.53.2)
+        specifier: ^0.0.47
+        version: 0.0.47(svelte@5.53.2)
       '@neoconfetti/svelte':
         specifier: ^2.2.2
         version: 2.2.2(svelte@5.53.2)
@@ -385,8 +385,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@leftium/gg@0.0.46':
-    resolution: {integrity: sha512-wZKYi+A4RR/pi5r59JyK5cKyZLN3dhocZsFpmfBhxGx5ps/7eSJi+pe37kfEbxwQh4yfgGr+J9+XawPhxeZhzQ==}
+  '@leftium/gg@0.0.47':
+    resolution: {integrity: sha512-l9e1dxT4SsEV5l0aosJiQfa5rEoCZBCKmgNmYOB79r3DY29VY/QE4eC3nyU9PX3JqQLea+cPKXBYEMaYxle7FA==}
     peerDependencies:
       svelte: ^5.0.0
     peerDependenciesMeta:
@@ -1922,7 +1922,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@leftium/gg@0.0.46(svelte@5.53.2)':
+  '@leftium/gg@0.0.47(svelte@5.53.2)':
     dependencies:
       '@sveltejs/acorn-typescript': 1.0.9(acorn@8.16.0)
       '@tanstack/virtual-core': 3.13.18
