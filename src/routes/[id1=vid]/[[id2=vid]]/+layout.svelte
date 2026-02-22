@@ -71,7 +71,7 @@
 
 	let tid = $state(untrack(() => params.tid) || 'info')
 
-	const successParty = page.url.searchParams.has('yay')
+	const successParty = untrack(() => data.successParty)
 
 	let raw = $derived(makeRaw(data.sheet))
 

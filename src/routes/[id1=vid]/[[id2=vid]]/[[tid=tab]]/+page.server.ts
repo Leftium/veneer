@@ -3,7 +3,7 @@ import { fail, redirect } from '@sveltejs/kit'
 import { PRESETS, resolvePresetName } from '$lib/presets'
 
 export const actions = {
-	default: async ({ params, request, url }) => {
+	default: async ({ cookies, params, request, url }) => {
 		const formData = await request.formData()
 
 		const documentId = formData.get('documentId')?.toString()
@@ -44,10 +44,10 @@ export const actions = {
 			: params.id2
 				? `/${params.id1}/${params.id2}`
 				: `/${params.id1}`
-		// Preserve search params (e.g. ?hostname=, ?preset=) and add ?yay
-		const redirectParams = new URLSearchParams(url.search)
-		redirectParams.delete('yay')
-		const extra = redirectParams.toString()
-		throw redirect(303, `${docPath}/list?yay${extra ? `&${extra}` : ''}`)
+		// Flash cookie signals success to the layout (consumed once, never pollutes the URL)
+		cookies.set('yay', '1', { path: '/', maxAge: 60, httpOnly: false })
+		// Preserve search params (e.g. ?hostname=, ?preset=) through the redirect
+		const extra = url.searchParams.toString()
+		throw redirect(303, `${docPath}/list${extra ? `?${extra}` : ''}`)
 	},
 }

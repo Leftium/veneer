@@ -33,7 +33,11 @@ function contrastText(hex: string | null): string | null {
 	return L > 0.179 ? '#212529' : 'white' // #212529 = Open Props $gray-9
 }
 
-export const load = async ({ params, url }) => {
+export const load = async ({ cookies, params, url }) => {
+	// Flash cookie set by the form action on successful submission — consume it once.
+	const successParty = cookies.get('yay') === '1'
+	if (successParty) cookies.delete('yay', { path: '/' })
+
 	// --- Resolve preset for tab visibility ---
 	const hostname = ((dev && url.searchParams.get('hostname')) || url.hostname).replace(/^www\./, '')
 	const presetName = url.searchParams.get('preset') || resolvePresetName(hostname) || 'base'
@@ -279,6 +283,7 @@ export const load = async ({ params, url }) => {
 	const defaultTab = tabs[0] || 'info'
 
 	return {
+		successParty,
 		document1,
 		document2,
 		warnings,
