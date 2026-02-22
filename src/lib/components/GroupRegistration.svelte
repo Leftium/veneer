@@ -53,30 +53,6 @@
 		return null
 	}
 
-	function roleToOption(role: Role): string {
-		if (!role) return ''
-		if (role === 'leader' || role === 'both') {
-			return roleField?.options.find((o) => REGEX_DANCE_LEADER.test(o)) ?? ''
-		}
-		if (role === 'follower') {
-			return roleField?.options.find((o) => REGEX_DANCE_FOLLOW.test(o)) ?? ''
-		}
-		return ''
-	}
-
-	function roleToOptions(role: Role): string[] {
-		const opts: string[] = []
-		if (role === 'leader' || role === 'both') {
-			const o = roleField?.options.find((opt) => REGEX_DANCE_LEADER.test(opt))
-			if (o) opts.push(o)
-		}
-		if (role === 'follower' || role === 'both') {
-			const o = roleField?.options.find((opt) => REGEX_DANCE_FOLLOW.test(opt))
-			if (o) opts.push(o)
-		}
-		return opts
-	}
-
 	// --- Serialization ---
 
 	let serializedGroup = $derived.by(() => {
@@ -304,7 +280,6 @@
 		/>
 
 		{#if roleField}
-			<!-- svelte-ignore a11y_label_has_associated_control -->
 			<label for="">
 				{#if roleField.required}
 					<span class="required-mark">*</span>
@@ -381,7 +356,6 @@
 					/>
 
 					{#if roleField}
-						<!-- svelte-ignore a11y_label_has_associated_control -->
 						<label for=""
 							><span class="required-mark" aria-hidden="true" style="visibility:hidden">*</span>
 							{roleField.title}</label

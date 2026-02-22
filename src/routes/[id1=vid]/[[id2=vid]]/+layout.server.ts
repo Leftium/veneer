@@ -87,7 +87,6 @@ export const load = async ({ params, url }) => {
 
 	const warnings = []
 
-	let title = ''
 	let info = ''
 	let footers: string[] = []
 
@@ -216,7 +215,7 @@ export const load = async ({ params, url }) => {
 		}
 	}
 
-	title = isOk(form) ? form.data.title : isOk(sheet) ? sheet.data.title : ''
+	const title = isOk(form) ? form.data.title : isOk(sheet) ? sheet.data.title : ''
 
 	// Phase 3b: resolve headerImage after form is loaded
 	// absent param defaults to 'form' (use the Google Form's own header image)

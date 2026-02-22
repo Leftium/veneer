@@ -8,7 +8,6 @@
 	dayjs.extend(isBetween)
 	dayjs.extend(utc)
 
-	import { gg } from '@leftium/gg'
 	import { stringify } from '$lib/util'
 
 	import StickyHeaderGrid from '$lib/components/StickyHeaderSummaryDetailsGrid.svelte'
@@ -26,7 +25,7 @@
 	let rows = $derived(data.rows)
 </script>
 
-{#snippet rowDetails(row: string | any[], r: any)}
+{#snippet rowDetails(row: string | any[], _r: any)}
 	{@const skippedColumns = 1}
 	<dl>
 		{#each row.slice(skippedColumns) as cell, ci}
@@ -68,7 +67,7 @@
 				</gh>
 			{/snippet}
 
-			{#snippet rowSummary(columns, row, r, makeToggleDetails)}
+			{#snippet rowSummary(_columns, row, r, makeToggleDetails)}
 				{@const ci = extra.ci}
 				{@const groupIndex = (row as any)._groupIndex ?? -1}
 				{@const isGroupMember = (row as any)._isGroupMember === true}

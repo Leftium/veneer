@@ -26,7 +26,6 @@
 	import { onDestroy, onMount, tick, untrack } from 'svelte'
 	import { afterNavigate, goto } from '$app/navigation'
 	import { browser } from '$app/environment'
-	import { gg } from '@leftium/gg'
 	import { linkifyRelative, makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
 
 	import markdownitDeflist from 'markdown-it-deflist'
@@ -172,7 +171,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}`}
 
 		// 1. Build an array of tab IDs in the order you render slides
 		const orderedTabs = Object.entries(data.navTabs)
-			.filter(([key, tab]) => tab.icon) // only include tabs with icons
+			.filter(([_key, tab]) => tab.icon) // only include tabs with icons
 			.map(([key]) => key)
 
 		// 2. Find the index of the current tid

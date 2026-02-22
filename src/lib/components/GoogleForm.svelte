@@ -16,7 +16,7 @@
 		oldForm?: any
 	}
 
-	let { googleForm, data, oldForm }: Props = $props()
+	let { googleForm, data: _data, oldForm }: Props = $props()
 
 	// Build a render plan: sequence of items to render (individual fields or group widgets).
 	// Group registration triples are collapsed into a single { type: 'group', match } entry.

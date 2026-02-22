@@ -68,9 +68,6 @@
 		return result
 	}
 
-	const parseMarkdownCollapseNewlines = (markdown?: string | null) =>
-		parseMarkdown(markdown, { collapseNewlines: true })
-
 	function normalizeTitle(title: string) {
 		return title?.trim()?.toLowerCase().replace(/\s+/g, '_')
 	}
@@ -206,7 +203,6 @@
 			{/each}
 		</select>
 	{:else if ['MULTIPLE_CHOICE', 'CHECKBOXES'].includes(field.type)}
-		<!-- svelte-ignore a11y_label_has_associated_control -->
 		<label for="">
 			{#if field.required}
 				<span class="required-mark">*</span>
