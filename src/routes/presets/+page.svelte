@@ -74,7 +74,7 @@
 	<footer>
 		<FooterSection
 			md={`
-			# More
+			# Related Links
 			<div>
 
 			Veneer Builder
@@ -85,7 +85,7 @@
 		/>
 		<FooterSection
 			md={`
-			# Powered by Veneer
+			# About Veneer
 			<div>
 
 			Leftium/veneer

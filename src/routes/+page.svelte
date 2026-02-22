@@ -497,7 +497,7 @@
 	<footer>
 		<FooterSection
 			md={`
-			# More
+			# Related Links
 			<div>
 
 			Presets & Demo
@@ -508,7 +508,7 @@
 		/>
 		<FooterSection
 			md={`
-			# Powered by Veneer
+			# About Veneer
 			<div>
 
 			Leftium/veneer
