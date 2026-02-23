@@ -1,6 +1,7 @@
 <script lang="ts">
 	import {
 		getDancerScale,
+		getBubbleTop,
 		getDockScale,
 		findNearestUnit,
 		type PlacedUnit,
@@ -29,6 +30,9 @@
 		anchorPercent?: number
 		/** Called with active unit info during scrub, or null when scrub ends. */
 		onActiveUnit?: (info: ActiveUnitInfo | null) => void
+		/** Global multiplier applied on top of the per-image bubble-top fraction.
+		 *  1.0 = use per-image value as-is; <1 shifts bubbles down, >1 shifts up. */
+		bubbleHeightFraction?: number
 	}
 
 	let {
@@ -39,6 +43,7 @@
 		marginTop = -36,
 		anchorPercent = 0,
 		onActiveUnit,
+		bubbleHeightFraction = 1.0,
 	}: Props = $props()
 
 	const containerHeight = $derived(baseIconHeight * heightMultiplier)
@@ -150,11 +155,31 @@
 			}
 		}
 
-		// Emit active unit info for speech bubble positioning
+		// Emit active unit info for speech bubble positioning.
+		// The rendered dancer height = baseIconHeight * scaleFactor * dockScale (CSS
+		// scale() applies scaleFactor × dockScale). The bubble anchor is a fraction of
+		// that height measured up from the feet: bubbleTop × scaleFactor × baseIconHeight
+		// × dockScale. bubbleHeightFraction is a global multiplier for fine-tuning.
 		if (onActiveUnit && nearestIdx >= 0 && wrapperEls[nearestIdx]) {
+			const wrapperRect = wrapperEls[nearestIdx].getBoundingClientRect()
+			const nearestUnit = units[nearestIdx]
+			const nearestRole =
+				nearestUnit.type === 'pair'
+					? 'both'
+					: nearestUnit.members[0].role === 'lead' || nearestUnit.members[0].role === 'unknown'
+						? 'lead'
+						: ('follow' as const)
+			const scaleFactor = getDancerScale(nearestRole, nearestUnit.imageNum)
+			const nearestDistance = Math.abs(positions[nearestIdx] - scrubX)
+			const nearestDockScale = getDockScale(nearestDistance, neighborRadius, effectiveDock)
+			const perImageBubbleTop = getBubbleTop(nearestRole, nearestUnit.imageNum)
+			const visualHeight =
+				baseIconHeight * scaleFactor * perImageBubbleTop * bubbleHeightFraction * nearestDockScale
+			const visualTop = wrapperRect.bottom - visualHeight
+			const adjustedRect = new DOMRect(wrapperRect.x, visualTop, wrapperRect.width, visualHeight)
 			onActiveUnit({
 				unitIndex: nearestIdx,
-				rect: wrapperEls[nearestIdx].getBoundingClientRect(),
+				rect: adjustedRect,
 			})
 		}
 	}

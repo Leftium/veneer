@@ -30,6 +30,7 @@
 	let viewHeightMultiplier = $state(0.8)
 	let viewMarginTop = $state(-36)
 	let viewAnchorPercent = $state(0)
+	let viewBubbleHeightFraction = $state(1.0)
 
 	// Current real song number (always up-to-date from firstSignupTs)
 	let currentSongNumber = $derived(getSongNumber(firstSignupTs))
@@ -55,8 +56,12 @@
 	let partyEl: HTMLElement | undefined = $state(undefined)
 	let activeUnitIndex: number | null = $state(null)
 	let bubbleCenterX = $state(0)
-	let bubbleTopY = $state(0)
+	let bubbleAnchorY = $state(0)
+	let bubbleBelow = $state(false)
 	let containerWidth = $state(0)
+
+	/** Minimum viewport space above dancer needed to place bubble on top. */
+	const MIN_ABOVE_SPACE = 60
 
 	function handleActiveUnit(info: ActiveUnitInfo | null) {
 		if (!info || !partyEl) {
@@ -66,8 +71,18 @@
 		activeUnitIndex = info.unitIndex
 		const containerRect = partyEl.getBoundingClientRect()
 		bubbleCenterX = info.rect.left + info.rect.width / 2 - containerRect.left
-		bubbleTopY = info.rect.bottom - containerRect.top
 		containerWidth = containerRect.width
+
+		// Prefer above; fall back to below if not enough viewport space above the dancer.
+		// info.rect now reflects the estimated img bounds (computed in DanceFloor).
+		const spaceAbove = info.rect.top
+		if (spaceAbove >= MIN_ABOVE_SPACE) {
+			bubbleBelow = false
+			bubbleAnchorY = info.rect.top - containerRect.top
+		} else {
+			bubbleBelow = true
+			bubbleAnchorY = info.rect.bottom - containerRect.top // dancer bottom, relative to container
+		}
 	}
 
 	let activeUnit = $derived(activeUnitIndex != null ? placedUnits[activeUnitIndex] : null)
@@ -83,9 +98,16 @@
 			marginTop={viewMarginTop}
 			anchorPercent={viewAnchorPercent}
 			onActiveUnit={handleActiveUnit}
+			bubbleHeightFraction={viewBubbleHeightFraction}
 		/>
 		{#if activeUnit}
-			<SpeechBubble unit={activeUnit} centerX={bubbleCenterX} topY={bubbleTopY} {containerWidth} />
+			<SpeechBubble
+				unit={activeUnit}
+				centerX={bubbleCenterX}
+				anchorY={bubbleAnchorY}
+				below={bubbleBelow}
+				{containerWidth}
+			/>
 		{/if}
 	</div>
 {/if}
@@ -97,14 +119,16 @@
 		{viewHeightMultiplier}
 		{viewMarginTop}
 		{viewAnchorPercent}
+		{viewBubbleHeightFraction}
 		onchange={(newConfig, newSong) => {
 			config = newConfig
 			songNumberOverride = newSong
 		}}
-		onviewchange={(hm, mt, ap) => {
+		onviewchange={(hm, mt, ap, bhf) => {
 			viewHeightMultiplier = hm
 			viewMarginTop = mt
 			viewAnchorPercent = ap
+			viewBubbleHeightFraction = bhf
 		}}
 		ondancers={(d) => {
 			dancerOverride = d

@@ -6,16 +6,25 @@
 		unit: PlacedUnit
 		/** Horizontal center of the active dancer in px, relative to the parent container. */
 		centerX: number
-		/** Top of the bubble area in px, relative to the parent container (bottom edge of the dancer). */
-		topY: number
+		/** Y anchor in px, relative to the parent container (dancer top if above, dancer bottom if below). */
+		anchorY: number
+		/** If true, render below the anchor; if false, render above. */
+		below?: boolean
 		/** Width of the parent container in px (for edge clamping). */
 		containerWidth: number
 	}
 
-	let { unit, centerX, topY, containerWidth }: Props = $props()
+	let { unit, centerX, anchorY, below = false, containerWidth }: Props = $props()
 
-	/** Measured bubble width for edge clamping (Svelte bind:clientWidth). */
+	/** Measured bubble dimensions for edge clamping and above/below positioning.
+	 *  Initial estimates avoid first-frame flicker before bind:client* fires. */
 	let bubbleWidth = $state(0)
+	let bubbleHeight = $state(32)
+
+	const POINTER_HEIGHT = 8
+
+	/** Top position of the wrapper: above the dancer (offset by bubble height) or below. */
+	const wrapperTop = $derived(below ? anchorY : anchorY - bubbleHeight - POINTER_HEIGHT)
 
 	/**
 	 * Clamped left position for the bubble card.
@@ -55,20 +64,36 @@
 	}
 </script>
 
-<div class="speech-bubble-wrapper" style:top="{topY}px">
+<div
+	class="speech-bubble-wrapper"
+	class:below
+	class:above={!below}
+	style:top="{wrapperTop}px"
+	style:--bubble-h="{bubbleHeight}px"
+>
 	<!-- Pointer triangle: stays centered on the dancer -->
 	<div class="pointer" style:left="{centerX}px"></div>
 
 	<!-- Bubble card: centered on dancer but clamped to container edges -->
 	{#if unit.type === 'solo'}
-		<div class="bubble solo" style:left="{bubbleLeft}px" bind:clientWidth={bubbleWidth}>
+		<div
+			class="bubble solo"
+			style:left="{bubbleLeft}px"
+			bind:clientWidth={bubbleWidth}
+			bind:clientHeight={bubbleHeight}
+		>
 			<div class="name">{formatName(unit.members[0])}</div>
 			{#if hasWish(unit.members[0])}
 				<div class="message">{unit.members[0].wish}</div>
 			{/if}
 		</div>
 	{:else if leftMember && rightMember}
-		<div class="bubble pair" style:left="{bubbleLeft}px" bind:clientWidth={bubbleWidth}>
+		<div
+			class="bubble pair"
+			style:left="{bubbleLeft}px"
+			bind:clientWidth={bubbleWidth}
+			bind:clientHeight={bubbleHeight}
+		>
 			<div class="inner-bubble left">
 				<div class="name">{formatName(leftMember)}</div>
 				{#if hasWish(leftMember)}
@@ -93,23 +118,22 @@
 		left: 0;
 		right: 0;
 		pointer-events: none;
-		z-index: 200;
+		z-index: -1;
 	}
 
+	// Shared pointer base
 	.pointer {
 		position: absolute;
-		top: 0;
 		transform: translateX(-50%);
 		width: 0;
 		height: 0;
 		border-left: 6px solid transparent;
 		border-right: 6px solid transparent;
-		border-bottom: 8px solid var(--app-accent-color, #{$blue-6});
 	}
 
+	// Shared bubble base
 	.bubble {
 		position: absolute;
-		top: 8px; // below the pointer triangle
 		width: fit-content;
 		background: var(--app-accent-color, #{$blue-6});
 		color: var(--app-accent-text, white);
@@ -117,6 +141,30 @@
 		border-radius: 6px;
 		padding: 6px 10px;
 		max-width: min($size-content-2, 100%);
+	}
+
+	// Above: bubble first, then pointer below it pointing down
+	// wrapperTop = anchorY - bubbleHeight - pointerHeight
+	// so: bubble at top:0, pointer at top:bubbleHeight
+	.above .bubble {
+		top: 0;
+	}
+
+	.above .pointer {
+		top: var(--bubble-h);
+		border-top: 8px solid var(--app-accent-color, #{$blue-6});
+	}
+
+	// Below: pointer first pointing up, then bubble below it
+	// wrapperTop = anchorY
+	// so: pointer at top:0, bubble at top:pointerHeight
+	.below .pointer {
+		top: 0;
+		border-bottom: 8px solid var(--app-accent-color, #{$blue-6});
+	}
+
+	.below .bubble {
+		top: 8px;
 	}
 
 	.bubble.pair {

@@ -1,6 +1,6 @@
 # Virtual Dance Party
 
-> **Status**: Phase 3 complete
+> **Status**: Phase 4 complete
 >
 > **Last updated**: 2026-02-24
 
@@ -62,17 +62,26 @@ Make the dance floor interactive.
 **Depends on**: Phase 2
 **Committed**: `913bda0`
 
-### Phase 4 — Speech Bubbles
+### Phase 4 — Speech Bubbles ✓
 
 Show dancer info when active.
 
-- Solo bubble (name + message + paid indicator)
-- Dual bubble overlay for pairs (left/right aligned to image side)
-- Bubble alignment using `LEADER_ON_LEFT` + flip state
-- Positioning relative to magnified dancer
+- `SpeechBubble.svelte`: solo bubble (name + message + paid indicator) and dual bubble overlay for pairs (left/right aligned to image side)
+- Bubble alignment using `LEADER_ON_LEFT` + flip state via `getBubbleAlignment()`
+- Positioning: above dancer by default, below if <60px viewport space above
+- Per-image bubble anchor height (`BUBBLE_TOPS` in `dance-party.ts`) — tuned via `/dancer-scales` page
+- Bubble renders behind dancer (`z-index: -1`) so appendages overlap naturally
+- Edge-clamped horizontally (stays within container), pointer triangle stays centered on dancer
+- Accent-colored using `--app-accent-color` / `--app-accent-text` CSS vars
+- Pair bubbles: two inner sub-bubbles, flex-wrap for mobile, left member left-aligned, right member right-aligned
+- Global `bubbleHeightFraction` multiplier in DevTuningPanel for fine-tuning
+- Re-tuned `DANCER_SCALES` (heads touch reference line) and added `BUBBLE_TOPS` per-image data
+- `/dancer-scales` page: added bubble-top slider (B) per image with mini speech bubble tooltip preview
+- Instant dismiss on scrub end
 
 **Deliverable**: informative overlays during scrub
 **Depends on**: Phase 3
+**Committed**: `a496076` (initial), further commits pending
 
 ### Phase 5 — Sharing + URL State
 
@@ -638,12 +647,14 @@ Changes take effect immediately (no reload). Values are stored in `sessionStorag
 
 ### New Files
 
-| File                                   | Role                                                                                                                                                                   |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/lib/components/DanceParty.svelte` | Top-level component. Receives dancer data + form title. Computes pairing, placement, song seed. Renders `DanceFloor` + speech bubble overlay. Can be used standalone.  |
-| `src/lib/components/DanceFloor.svelte` | The interactive strip. Manages scrub state, renders positioned dancer icons, applies dock magnification. Uses `scrubAction` action.                                    |
-| `src/lib/dance-party.ts`               | Pure functions: pairing, placement, priority scoring, hash utilities, dock scale computation, dock layout, image metadata, scale normalization. Fully testable.        |
-| `src/lib/scrubAction.ts`               | Ported from weather-sense `trackable.ts`. Svelte `use:scrubAction` action for pointer/touch gesture detection with horizontal-scrub vs vertical-scroll discrimination. |
+| File                                     | Role                                                                                                                                                                   |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/lib/components/DanceParty.svelte`   | Top-level component. Receives dancer data + form title. Computes pairing, placement, song seed. Renders `DanceFloor` + speech bubble overlay. Can be used standalone.  |
+| `src/lib/components/DanceFloor.svelte`   | The interactive strip. Manages scrub state, renders positioned dancer icons, applies dock magnification. Emits `onActiveUnit` callback with adjusted rect for bubbles. |
+| `src/lib/components/SpeechBubble.svelte` | Solo/pair speech bubble with accent-colored card, pointer triangle, edge clamping, above/below positioning. Renders behind dancers (`z-index: -1`).                    |
+| `src/lib/dance-party.ts`                 | Pure functions: pairing, placement, priority scoring, hash utilities, dock scale, image metadata, scale normalization, `BUBBLE_TOPS` per-image anchor data.            |
+| `src/lib/scrubAction.ts`                 | Ported from weather-sense `trackable.ts`. Svelte `use:scrubAction` action for pointer/touch gesture detection with horizontal-scrub vs vertical-scroll discrimination. |
+| `src/routes/dancer-scales/+page.svelte`  | Dev tool: per-image scale and bubble-top tuning with visual preview. Exports JSON for `DANCER_SCALES` and `BUBBLE_TOPS`.                                               |
 
 ### Modified Files
 

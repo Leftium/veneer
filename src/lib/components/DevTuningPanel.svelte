@@ -11,8 +11,14 @@
 		viewHeightMultiplier?: number
 		viewMarginTop?: number
 		viewAnchorPercent?: number
+		viewBubbleHeightFraction?: number
 		onchange: (config: DancePartyConfig, songNumber: number) => void
-		onviewchange?: (heightMultiplier: number, marginTop: number, anchorPercent: number) => void
+		onviewchange?: (
+			heightMultiplier: number,
+			marginTop: number,
+			anchorPercent: number,
+			bubbleHeightFraction: number,
+		) => void
 		ondancers?: (dancers: DancerRow[] | null) => void
 	}
 
@@ -23,6 +29,7 @@
 		viewHeightMultiplier: initHeightMult = 0.8,
 		viewMarginTop: initMarginTop = -36,
 		viewAnchorPercent: initAnchorPct = 0,
+		viewBubbleHeightFraction: initBubbleHF = 1.0,
 		onchange,
 		onviewchange,
 		ondancers,
@@ -59,6 +66,7 @@
 	let heightMultiplier = $state(0.8)
 	let marginTop = $state(-36)
 	let anchorPercent = $state(0)
+	let bubbleHeightFraction = $state(1.0)
 
 	// Synthetic dancers
 	let numLeads = $state(0)
@@ -139,7 +147,12 @@
 	function applyConfig(
 		c: DancePartyConfig,
 		song: number,
-		view?: { heightMultiplier: number; marginTop: number; anchorPercent: number },
+		view?: {
+			heightMultiplier: number
+			marginTop: number
+			anchorPercent: number
+			bubbleHeightFraction?: number
+		},
 	) {
 		hasMessage = c.weights.hasMessage
 		hasPaid = c.weights.hasPaid
@@ -160,12 +173,13 @@
 			heightMultiplier = view.heightMultiplier
 			marginTop = view.marginTop
 			anchorPercent = view.anchorPercent
+			bubbleHeightFraction = view.bubbleHeightFraction ?? 1.0
 		}
 	}
 
 	// Persist to sessionStorage & notify parent on any change
 	$effect(() => {
-		const view = { heightMultiplier, marginTop, anchorPercent }
+		const view = { heightMultiplier, marginTop, anchorPercent, bubbleHeightFraction }
 		const data = {
 			config: currentConfig,
 			songNumber: localSongNumber,
@@ -178,7 +192,7 @@
 			// sessionStorage may be unavailable
 		}
 		onchange(currentConfig, localSongNumber)
-		onviewchange?.(heightMultiplier, marginTop, anchorPercent)
+		onviewchange?.(heightMultiplier, marginTop, anchorPercent, bubbleHeightFraction)
 	})
 
 	// Emit synthetic dancers when counts change
@@ -200,7 +214,12 @@
 				const data = JSON.parse(stored) as {
 					config: DancePartyConfig
 					songNumber: number
-					view?: { heightMultiplier: number; marginTop: number; anchorPercent: number }
+					view?: {
+						heightMultiplier: number
+						marginTop: number
+						anchorPercent: number
+						bubbleHeightFraction?: number
+					}
 					dancers?: { numLeads: number; numFollows: number; numBoth: number }
 				}
 				applyConfig(data.config, data.songNumber, data.view)
@@ -219,6 +238,7 @@
 				heightMultiplier: initHeightMult,
 				marginTop: initMarginTop,
 				anchorPercent: initAnchorPct,
+				bubbleHeightFraction: initBubbleHF,
 			})
 		}
 	})
@@ -240,6 +260,7 @@
 				heightMultiplier: 0.8,
 				marginTop: -36,
 				anchorPercent: 0,
+				bubbleHeightFraction: 1.0,
 			},
 		)
 		numLeads = 0
@@ -475,6 +496,17 @@
 						max="100"
 						step="5"
 						bind:value={anchorPercent}
+					/>
+
+					<label for="dp-bubbleHF">bubbleHF</label>
+					<span class="val">{bubbleHeightFraction.toFixed(2)}</span>
+					<input
+						id="dp-bubbleHF"
+						type="range"
+						min="0.5"
+						max="1.2"
+						step="0.01"
+						bind:value={bubbleHeightFraction}
 					/>
 				</div>
 			</fieldset>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { DANCER_SCALES } from '$lib/dance-party'
+	import { DANCER_SCALES, BUBBLE_TOPS } from '$lib/dance-party'
 
 	const STORAGE_KEY = 'dancer-scale-tuning'
 	const REF_HEIGHT = 150
@@ -28,9 +28,31 @@
 		}
 	}
 
+	const DEFAULT_BUBBLE_TOP = 0.8
+
+	function makeBubbleDefaults(): Record<SectionKey, Record<number, number>> {
+		return {
+			both: { ...BUBBLE_TOPS.both },
+			lead: { ...BUBBLE_TOPS.lead },
+			follow: { ...BUBBLE_TOPS.follow },
+		}
+	}
+
 	function loadFromStorage(): Record<SectionKey, Record<number, number>> | null {
 		try {
 			const raw = sessionStorage.getItem(STORAGE_KEY)
+			if (raw) return JSON.parse(raw)
+		} catch {
+			// ignore
+		}
+		return null
+	}
+
+	const BUBBLE_STORAGE_KEY = 'dancer-bubble-top-tuning'
+
+	function loadBubbleTopsFromStorage(): Record<SectionKey, Record<number, number>> | null {
+		try {
+			const raw = sessionStorage.getItem(BUBBLE_STORAGE_KEY)
 			if (raw) return JSON.parse(raw)
 		} catch {
 			// ignore
@@ -42,10 +64,19 @@
 		loadFromStorage() ?? makeDefaults(),
 	)
 
+	let bubbleTops: Record<SectionKey, Record<number, number>> = $state(
+		loadBubbleTopsFromStorage() ?? makeBubbleDefaults(),
+	)
+
 	// Persist to sessionStorage whenever scales change (side-effect only, no state mutation)
 	$effect(() => {
 		const json = JSON.stringify(scales)
 		sessionStorage.setItem(STORAGE_KEY, json)
+	})
+
+	$effect(() => {
+		const json = JSON.stringify(bubbleTops)
+		sessionStorage.setItem(BUBBLE_STORAGE_KEY, json)
 	})
 
 	function padNum(n: number): string {
@@ -66,15 +97,29 @@
 		}
 	}
 
+	function resetBubbleOne(sectionKey: SectionKey, num: number) {
+		bubbleTops[sectionKey][num] = BUBBLE_TOPS[sectionKey]?.[num] ?? DEFAULT_BUBBLE_TOP
+	}
+
+	function resetBubbleSection(sectionKey: SectionKey, count: number) {
+		for (let i = 1; i <= count; i++) {
+			bubbleTops[sectionKey][i] = BUBBLE_TOPS[sectionKey]?.[i] ?? DEFAULT_BUBBLE_TOP
+		}
+	}
+
 	function resetAll() {
 		const defaults = makeDefaults()
 		scales.both = defaults.both
 		scales.lead = defaults.lead
 		scales.follow = defaults.follow
+		const bubbleDefaults = makeBubbleDefaults()
+		bubbleTops.both = bubbleDefaults.both
+		bubbleTops.lead = bubbleDefaults.lead
+		bubbleTops.follow = bubbleDefaults.follow
 	}
 
 	let exportJson = $derived(
-		`export const DANCER_SCALES = ${JSON.stringify(scales, null, '\t')} as const`,
+		`export const DANCER_SCALES = ${JSON.stringify(scales, null, '\t')} as const\n\nexport const BUBBLE_TOPS: Record<string, Record<number, number>> = ${JSON.stringify(bubbleTops, null, '\t')}`,
 	)
 </script>
 
@@ -102,9 +147,14 @@
 			<div class="gallery" style:--ref-height="{REF_HEIGHT}px">
 				{#each Array.from({ length: section.count }, (_, i) => i + 1) as num (num)}
 					{@const scale = scales[section.key][num] ?? 1.0}
+					{@const bubbleTop = bubbleTops[section.key]?.[num] ?? DEFAULT_BUBBLE_TOP}
 					<div class="dancer-card">
 						<div class="image-container">
 							<div class="reference-line"></div>
+							<div class="bubble-preview" style:bottom="{REF_HEIGHT * scale * bubbleTop}px">
+								<div class="bubble-preview-card">Name</div>
+								<div class="bubble-preview-pointer"></div>
+							</div>
 							<img
 								src={imgPath(section, num)}
 								alt="Dancer {section.suffix}{num}"
@@ -114,20 +164,50 @@
 						</div>
 						<div class="controls">
 							<span class="num">#{num}</span>
-							<input
-								type="range"
-								min="0.5"
-								max="1.5"
-								step="0.001"
-								value={scale}
-								oninput={(e) => {
-									scales[section.key][num] = parseFloat(e.currentTarget.value)
-								}}
-							/>
-							<span class="value">{scale.toFixed(3)}</span>
-							<button class="reset-btn" onclick={() => resetOne(section.key, num)}>
-								&#8634;
-							</button>
+							<label class="slider-row">
+								<span class="slider-label">S</span>
+								<input
+									type="range"
+									min="0.5"
+									max="2.0"
+									step="0.001"
+									value={scale}
+									oninput={(e) => {
+										scales[section.key][num] = parseFloat(e.currentTarget.value)
+									}}
+								/>
+								<span class="value">{scale.toFixed(3)}</span>
+							</label>
+							<label class="slider-row bubble-row">
+								<span class="slider-label">B</span>
+								<input
+									type="range"
+									min="0.5"
+									max="1.2"
+									step="0.005"
+									value={bubbleTop}
+									oninput={(e) => {
+										bubbleTops[section.key][num] = parseFloat(e.currentTarget.value)
+									}}
+								/>
+								<span class="value">{bubbleTop.toFixed(3)}</span>
+							</label>
+							<div class="reset-buttons">
+								<button
+									class="reset-btn"
+									onclick={() => resetOne(section.key, num)}
+									title="Reset scale"
+								>
+									S&#8634;
+								</button>
+								<button
+									class="reset-btn"
+									onclick={() => resetBubbleOne(section.key, num)}
+									title="Reset bubble"
+								>
+									B&#8634;
+								</button>
+							</div>
 						</div>
 					</div>
 				{/each}
@@ -231,6 +311,35 @@
 		pointer-events: none;
 	}
 
+	.bubble-preview {
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		z-index: 2;
+		pointer-events: none;
+	}
+
+	.bubble-preview-card {
+		background: $blue-6;
+		color: white;
+		font-size: 9px;
+		font-weight: 600;
+		border-radius: 4px;
+		padding: 2px 6px;
+		white-space: nowrap;
+	}
+
+	.bubble-preview-pointer {
+		width: 0;
+		height: 0;
+		border-left: 5px solid transparent;
+		border-right: 5px solid transparent;
+		border-top: 6px solid $blue-6;
+	}
+
 	.dancer-card {
 		display: flex;
 		flex-direction: column;
@@ -266,11 +375,6 @@
 			color: $gray-3;
 		}
 
-		input[type='range'] {
-			width: 100%;
-			accent-color: $blue-5;
-		}
-
 		.value {
 			font-family: $font-mono;
 			font-size: $font-size-0;
@@ -296,6 +400,41 @@
 				color: $gray-1;
 			}
 		}
+	}
+
+	.slider-row {
+		display: flex;
+		align-items: center;
+		gap: $size-1;
+		width: 100%;
+
+		.slider-label {
+			font-size: 9px;
+			font-weight: $font-weight-7;
+			color: $gray-5;
+			width: 10px;
+			flex-shrink: 0;
+		}
+
+		input[type='range'] {
+			flex: 1;
+			min-width: 0;
+		}
+
+		&.bubble-row {
+			.slider-label {
+				color: $green-5;
+			}
+
+			input[type='range'] {
+				accent-color: $green-5;
+			}
+		}
+	}
+
+	.reset-buttons {
+		display: flex;
+		gap: $size-1;
 	}
 
 	.export-section {
