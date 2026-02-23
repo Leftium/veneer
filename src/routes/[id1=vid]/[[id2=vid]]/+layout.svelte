@@ -49,7 +49,12 @@
 	import { isOk } from 'wellcrafted/result'
 	import FooterSection from '$lib/components/FooterSection.svelte'
 	import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte'
-	import { segmentBilingualContent, type ContentSegment } from '$lib/locale-content'
+	import {
+		segmentBilingualContent,
+		localeText,
+		type ContentSegment,
+		type BilingualText,
+	} from '$lib/locale-content'
 	import { getLocale } from '$lib/paraglide/runtime.js'
 	import { m } from '$lib/paraglide/messages.js'
 
@@ -73,6 +78,16 @@
 	let swiperContainer = $state<SwiperContainer>()
 	let activeTab = $state(untrack(() => params.tid))
 	let notificationBoxHidden = $state(false)
+	let headerTitleToggled = $state(false)
+	let headerTitleHovered = $state(false)
+	let headerTitleSuppressed = $state(false)
+
+	const locale = $derived(getLocale())
+
+	/** Get the "other" language text from a BilingualText */
+	function otherLang(bilingual: BilingualText): string {
+		return locale === 'ko' ? bilingual.en : bilingual.ko
+	}
 
 	let tid = $state(untrack(() => params.tid) || 'info')
 
@@ -351,7 +366,29 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 
 		<fi-spacer style:height={data.header.height}></fi-spacer>
 
-		<h1 class="title">{data.title}</h1>
+		<h1 class="title">
+			{localeText(data.bilingualTitle, locale, data.title)}{#if data.bilingualTitle}<button
+					type="button"
+					class="lang-toggle"
+					onmouseenter={() => {
+						headerTitleHovered = true
+						headerTitleSuppressed = false
+					}}
+					onmouseleave={() => (headerTitleHovered = false)}
+					onclick={() => {
+						const showing = headerTitleToggled || (headerTitleHovered && !headerTitleSuppressed)
+						if (showing) {
+							headerTitleToggled = false
+							headerTitleSuppressed = true
+						} else {
+							headerTitleToggled = true
+							headerTitleSuppressed = false
+						}
+					}}>🌐</button
+				>{#if headerTitleToggled || (headerTitleHovered && !headerTitleSuppressed)}<span
+						class="lang-alt">{otherLang(data.bilingualTitle)}</span
+					>{/if}{/if}
+		</h1>
 
 		{#if data.numTabs > 1}
 			<nav-buttons>
@@ -825,6 +862,31 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 			top: $size-2;
 			right: $size-2;
 			z-index: 2;
+		}
+
+		.lang-toggle {
+			all: unset;
+			display: inline;
+			cursor: pointer;
+			font-size: 0.5em;
+			vertical-align: middle;
+			opacity: 0.5;
+			margin-left: 0.3em;
+			transition: opacity 0.15s;
+			user-select: none;
+
+			&:hover,
+			&:focus-visible {
+				opacity: 1;
+			}
+		}
+
+		.lang-alt {
+			display: block;
+			font-size: 0.5em;
+			opacity: 0.7;
+			font-style: italic;
+			font-weight: normal;
 		}
 	}
 

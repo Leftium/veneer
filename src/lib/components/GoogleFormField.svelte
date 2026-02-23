@@ -40,10 +40,25 @@
 	// Per-item bilingual toggles: title and each option have independent toggles
 	let titleToggled = $state(false)
 	let optionToggles = new SvelteSet<number>()
+	// Suppressed items: clicking while visible (via hover) suppresses hover until next mouseenter
+	let suppressed = new SvelteSet<string>()
 
 	/** Get the "other" language text from a BilingualText */
 	function otherLang(bilingual: BilingualText): string {
 		return locale === 'ko' ? bilingual.en : bilingual.ko
+	}
+
+	/** Handle globe click: if currently visible (toggled or hovered), dismiss and suppress hover */
+	function handleToggleClick(key: string, isToggled: boolean, setToggled: (v: boolean) => void) {
+		if (isToggled || !suppressed.has(key)) {
+			// Currently showing — dismiss
+			setToggled(false)
+			suppressed.add(key)
+		} else {
+			// Currently hidden — turn on
+			setToggled(true)
+			suppressed.delete(key)
+		}
 	}
 
 	// Bindings:
@@ -127,7 +142,10 @@
 						type="button"
 						class="lang-toggle"
 						class:toggled={titleToggled}
-						onclick={() => (titleToggled = !titleToggled)}>🌐</button
+						class:suppressed={suppressed.has('title')}
+						onmouseenter={() => suppressed.delete('title')}
+						onclick={() => handleToggleClick('title', titleToggled, (v) => (titleToggled = v))}
+						>🌐</button
 					><span class="lang-alt">{otherLang(field.bilingualTitle)}</span>{/if}
 			</h3>
 		</center>
@@ -142,7 +160,10 @@
 								type="button"
 								class="lang-toggle"
 								class:toggled={titleToggled}
-								onclick={() => (titleToggled = !titleToggled)}>🌐</button
+								class:suppressed={suppressed.has('title')}
+								onmouseenter={() => suppressed.delete('title')}
+								onclick={() => handleToggleClick('title', titleToggled, (v) => (titleToggled = v))}
+								>🌐</button
 							><span class="lang-alt">{otherLang(field.bilingualTitle)}</span>{/if}
 					</h1>
 				</center>
@@ -172,9 +193,11 @@
 					type="button"
 					class="lang-toggle"
 					class:toggled={titleToggled}
+					class:suppressed={suppressed.has('title')}
+					onmouseenter={() => suppressed.delete('title')}
 					onclick={(e) => {
 						e.stopPropagation()
-						titleToggled = !titleToggled
+						handleToggleClick('title', titleToggled, (v) => (titleToggled = v))
 					}}>🌐</button
 				><span class="lang-alt">{otherLang(field.bilingualTitle)}</span>{/if}
 			<div>
@@ -218,9 +241,11 @@
 					type="button"
 					class="lang-toggle"
 					class:toggled={titleToggled}
+					class:suppressed={suppressed.has('title')}
+					onmouseenter={() => suppressed.delete('title')}
 					onclick={(e) => {
 						e.stopPropagation()
-						titleToggled = !titleToggled
+						handleToggleClick('title', titleToggled, (v) => (titleToggled = v))
 					}}>🌐</button
 				><span class="lang-alt">{otherLang(field.bilingualTitle)}</span>{/if}
 			<div>
@@ -259,9 +284,11 @@
 					type="button"
 					class="lang-toggle"
 					class:toggled={titleToggled}
+					class:suppressed={suppressed.has('title')}
+					onmouseenter={() => suppressed.delete('title')}
 					onclick={(e) => {
 						e.stopPropagation()
-						titleToggled = !titleToggled
+						handleToggleClick('title', titleToggled, (v) => (titleToggled = v))
 					}}>🌐</button
 				><span class="lang-alt">{otherLang(field.bilingualTitle)}</span>{/if}
 			<div>
@@ -306,9 +333,13 @@
 						type="button"
 						class="lang-toggle"
 						class:toggled={optionToggles.has(i)}
+						class:suppressed={suppressed.has(`option-${i}`)}
+						onmouseenter={() => suppressed.delete(`option-${i}`)}
 						onclick={(e) => {
 							e.stopPropagation()
-							optionToggles.has(i) ? optionToggles.delete(i) : optionToggles.add(i)
+							handleToggleClick(`option-${i}`, optionToggles.has(i), (v) =>
+								v ? optionToggles.add(i) : optionToggles.delete(i),
+							)
 						}}>🌐</button
 					><span class="lang-alt">{otherLang(field.bilingualOptions[i]!)}</span>{/if}
 			</label>
@@ -412,7 +443,7 @@
 		margin-left: 0;
 	}
 
-	.lang-toggle:hover + .lang-alt,
+	.lang-toggle:hover:not(.suppressed) + .lang-alt,
 	.lang-toggle.toggled + .lang-alt {
 		display: inline;
 	}

@@ -26,7 +26,7 @@ import type {
 import type { Result } from 'wellcrafted/result'
 import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-with-id'
 import { getLocale } from '$lib/paraglide/runtime.js'
-import { addBilingualData } from '$lib/locale-content'
+import { addBilingualData, splitBilingualLabel } from '$lib/locale-content'
 
 type DocumentResult = Result<GoogleSheet | GoogleFormDocument, GoogleDocumentError>
 
@@ -253,6 +253,7 @@ export const load = async ({ cookies, locals, params, url }) => {
 	}
 
 	const title = isOk(form) ? form.data.title : isOk(sheet) ? sheet.data.title : ''
+	const bilingualTitle = splitBilingualLabel(title) ?? undefined
 
 	// Phase 3b: resolve headerImage after form is loaded
 	// absent param defaults to 'form' (use the Google Form's own header image)
@@ -339,6 +340,7 @@ export const load = async ({ cookies, locals, params, url }) => {
 		numTabs,
 		skipSheetIdScan,
 		title,
+		bilingualTitle,
 		form,
 		sheet,
 		header: {
