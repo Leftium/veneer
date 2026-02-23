@@ -20,7 +20,13 @@
  *
  * If any term has unrecognized definitions or the definition text isn't a URL,
  * the original block is kept and a console.warn is emitted.
+ *
+ * When a `locale` is provided, bilingual labels like `카톡 송금 (KakaoPay)` are
+ * split: the locale-appropriate text is shown as the link label, and the other
+ * language is shown as a native tooltip (title attribute).
  */
+
+import { splitBilingualLabel, localeText } from '$lib/locale-content'
 
 const ICON_STYLE = 'vertical-align: -0.125em; margin-left: -20px; margin-right: 4px;'
 
@@ -31,7 +37,18 @@ function makeIconTag(iconName: string): string {
 	return `<iconify-icon icon="${iconName}" width="16" height="16" style="${ICON_STYLE}"></iconify-icon>`
 }
 
-export function linkListifyDefinitionList(markdown: string): string {
+/** Get the locale-appropriate label and a tooltip for the other language. */
+function localizeTerm(term: string, locale?: string): { label: string; tooltip: string | null } {
+	if (!locale) return { label: term, tooltip: null }
+	const bilingual = splitBilingualLabel(term)
+	if (!bilingual) return { label: term, tooltip: null }
+	const label = localeText(bilingual, locale, term)
+	const other = locale === 'ko' ? bilingual.en : bilingual.ko
+	// Escape double quotes for markdown link title syntax: [text](url "title")
+	return { label, tooltip: other.replace(/"/g, '&quot;') }
+}
+
+export function linkListifyDefinitionList(markdown: string, locale?: string): string {
 	const lines = markdown.split(/\r?\n/)
 	const out: string[] = []
 	let i = 0
@@ -53,7 +70,9 @@ export function linkListifyDefinitionList(markdown: string): string {
 			if (defs.length === 1) {
 				const m = defs[0].match(URL_RE)
 				if (m) {
-					out.push(`- [${term}](${m[1]})`)
+					const { label, tooltip } = localizeTerm(term, locale)
+					const titlePart = tooltip ? ` "${tooltip}"` : ''
+					out.push(`- [${label}](${m[1]}${titlePart})`)
 					i = j
 					continue
 				}
@@ -65,7 +84,9 @@ export function linkListifyDefinitionList(markdown: string): string {
 				const iconMatch = defs[1].match(/^~\s*icon:(\S+)\s*$/)
 				if (urlMatch && iconMatch) {
 					const icon = makeIconTag(iconMatch[1])
-					out.push(`- [${icon}${term}](${urlMatch[1]})`)
+					const { label, tooltip } = localizeTerm(term, locale)
+					const titlePart = tooltip ? ` "${tooltip}"` : ''
+					out.push(`- [${icon}${label}](${urlMatch[1]}${titlePart})`)
 					i = j
 					continue
 				}
