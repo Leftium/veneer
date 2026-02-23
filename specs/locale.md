@@ -235,11 +235,28 @@ Future: locale-keyed pattern maps, or a more general NLP-based column detection.
 
 ---
 
-## Phase 5: GroupRegistration Widget Strings — TODO
+## Phase 5: GroupRegistration Widget Strings — DONE
 
-GroupRegistration is now ported (see `specs/port-temp-branch.md` § 4). Its UI strings are
-currently hardcoded in Korean (`단체 N명`, `단체 취소`, `신청자 추가`, etc.). These need
-translating via Paraglide messages for English-language visitors.
+Replaced 5 hardcoded Korean UI strings in `GroupRegistration.svelte` with Paraglide message
+calls, so they render in the visitor's locale.
+
+| Key             | en                     | ko                   | Usage                         |
+| --------------- | ---------------------- | -------------------- | ----------------------------- |
+| `group_count`   | Group of {count}       | 단체 {count}명       | Group size label              |
+| `cancel_group`  | Cancel group           | 단체 취소            | Cancel button                 |
+| `delete_member` | Delete member {number} | 신청자 {number} 삭제 | Delete button aria-label      |
+| `optional`      | (optional)             | (선택)               | Extra member name placeholder |
+| `add_member`    | + Add member           | + 신청자 추가        | Add member button             |
+
+### Implementation
+
+Changed files:
+
+- `messages/en.json` — added 5 new message keys
+- `messages/ko.json` — added 5 new message keys (Korean originals)
+- `src/lib/components/GroupRegistration.svelte` — imported `m` from Paraglide messages,
+  replaced hardcoded strings with `m.group_count()`, `m.cancel_group()`, `m.delete_member()`,
+  `m.optional()`, `m.add_member()`
 
 ---
 
@@ -271,6 +288,6 @@ Phase 1: preferredLanguage strategy   ← DONE
 Phase 2: Language switcher UI         ← DONE (header only; footer deferred)
 Phase 3: Locale-aware form content    ← DONE (Option D: convention-based bilingual parsing)
 Phase 4: Locale-aware column regex    ← after port-temp-branch infra
-Phase 5: GroupRegistration strings    ← after group registration ported
+Phase 5: GroupRegistration strings    ← DONE
 Phase 6: internalizeLinks() refactor  ← future
 ```
