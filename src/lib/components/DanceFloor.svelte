@@ -43,6 +43,13 @@
 	// Truncated when units.length decreases to avoid stale refs.
 	let wrapperEls: HTMLElement[] = []
 
+	/** Cached reference to the <gh> sticky ancestor (looked up once on first scrub). */
+	let ghAncestor: HTMLElement | null | undefined = undefined // undefined = not yet looked up
+
+	/** Cached reference to the ancestor swiper-container (looked up once on first scrub). */
+	let swiperAncestor: (HTMLElement & { swiper?: { allowTouchMove: boolean } }) | null | undefined =
+		undefined
+
 	$effect(() => {
 		// When units array shrinks, trim stale refs
 		if (wrapperEls.length > units.length) {
@@ -63,10 +70,19 @@
 	function applyDockTransforms(scrubX: number) {
 		if (!containerEl || units.length === 0) return
 
-		// Detect sticky state: if the dance floor container is near the viewport top,
-		// the header is stuck and we cap magnification to avoid overflow.
-		const rect = containerEl.getBoundingClientRect()
-		const isSticky = rect.top < 10
+		// Detect sticky state: compare the <gh> ancestor's viewport position
+		// against its CSS `top` value. When stuck, rect.top ≈ computed top.
+		if (ghAncestor === undefined) {
+			ghAncestor = containerEl.closest('gh') as HTMLElement | null
+		}
+		let isSticky = false
+		if (ghAncestor) {
+			const ghRect = ghAncestor.getBoundingClientRect()
+			const computedTop = parseFloat(getComputedStyle(ghAncestor).top) || 0
+			// When stuck, ghRect.top is pinned at the CSS top value.
+			// When not stuck, ghRect.top > computedTop (element is further down the page).
+			isSticky = ghRect.top <= computedTop + 1
+		}
 		const effectiveMaxScale = isSticky
 			? Math.min(dockConfig.maxScale, STICKY_MAX_SCALE)
 			: dockConfig.maxScale
@@ -166,6 +182,13 @@
 		if (containerEl) {
 			containerEl.style.cursor = 'pointer'
 		}
+		// Prevent swiper from intercepting horizontal gestures during scrub
+		if (swiperAncestor === undefined) {
+			swiperAncestor = (containerEl?.closest('swiper-container') as typeof swiperAncestor) ?? null
+		}
+		if (swiperAncestor?.swiper) {
+			swiperAncestor.swiper.allowTouchMove = false
+		}
 	}
 
 	function handleScrubEnd() {
@@ -176,6 +199,10 @@
 		document.body.style.webkitUserSelect = ''
 		if (containerEl) {
 			containerEl.style.cursor = ''
+		}
+		// Re-enable swiper touch after scrub ends
+		if (swiperAncestor?.swiper) {
+			swiperAncestor.swiper.allowTouchMove = true
 		}
 	}
 
