@@ -6,7 +6,6 @@
 	interface Props {
 		data: any
 		gridTemplateColumns: string
-		onToggle: (() => void) | void
 		header: Snippet
 		rowSummary: Snippet<
 			[{ title: string; isNumeric: boolean }[], string | any[], number, (arg0: number) => void]
@@ -14,7 +13,7 @@
 		rowDetails: Snippet<[string | any[], number]>
 	}
 
-	let { data, gridTemplateColumns, onToggle, header, rowSummary, rowDetails }: Props = $props()
+	let { data, gridTemplateColumns, header, rowSummary, rowDetails }: Props = $props()
 
 	let gridTableElement = $state<HTMLElement>()
 	let headerHeight = $derived((gridTableElement?.children[0] as HTMLElement)?.offsetHeight || 0)
@@ -30,9 +29,6 @@
 
 			// ✅ Proceed with toggle
 			detailsOpened = detailsOpened === index ? -1 : index
-			if (onToggle) {
-				onToggle()
-			}
 		}
 	}
 </script>

@@ -18,10 +18,9 @@
 	interface Props {
 		data: any
 		title?: string
-		onToggle?: () => void
 	}
 
-	let { data, title = '', onToggle }: Props = $props()
+	let { data, title = '' }: Props = $props()
 
 	let extra = $derived(data.extra)
 	let columns = $derived(data.columns)
@@ -64,7 +63,7 @@
 <div class={extra.type}>
 	{#if !extra.type}
 		{@const gridTemplateColumns = `auto repeat(${columns.length - 1}, minmax(120px, 1fr))`}
-		<StickyHeaderGrid {gridTemplateColumns} data={{ columns, rows }} {onToggle} {rowDetails}>
+		<StickyHeaderGrid {gridTemplateColumns} data={{ columns, rows }} {rowDetails}>
 			{#snippet header()}
 				{#each columns as column (column.title)}
 					<gh>{column.title}</gh>
@@ -81,7 +80,7 @@
 			{/snippet}
 		</StickyHeaderGrid>
 	{:else if extra.type === 'dance-event'}
-		<StickyHeaderGrid gridTemplateColumns="1fr" data={{ columns, rows }} {onToggle} {rowDetails}>
+		<StickyHeaderGrid gridTemplateColumns="1fr" data={{ columns, rows }} {rowDetails}>
 			{#snippet header()}
 				{@const count = extra.count}
 				<gh>

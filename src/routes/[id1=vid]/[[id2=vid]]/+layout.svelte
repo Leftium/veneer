@@ -79,8 +79,6 @@
 	let activeTab = $state(untrack(() => params.tid))
 	let notificationBoxHidden = $state(false)
 	let headerTitleToggled = $state(false)
-	let headerTitleHovered = $state(false)
-	let headerTitleSuppressed = $state(false)
 
 	const locale = $derived(getLocale())
 
@@ -219,6 +217,9 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 
 			const { swiper } = swiperContainer
 			swiper.on('slideChange', () => {
+				// Re-observe the new active slide's children for height changes
+				observeActiveSlide()
+
 				const tid = swiper.slides[swiper.activeIndex].dataset.tid
 				if (!tid || activeTab === tid) return
 
@@ -231,16 +232,12 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 				}
 			})
 		}
-		// Listen for GroupRegistration height changes to update swiper slide height
-		document.addEventListener('groupresize', handleGroupResize)
+		// Set up ResizeObserver for automatic swiper height updates
+		setupSlideResizeObserver()
 	})
 
-	const handleGroupResize = () => callSwiperUpdateAutoHeight()
-
 	onDestroy(() => {
-		if (browser) {
-			document.removeEventListener('groupresize', handleGroupResize)
-		}
+		slideResizeObserver?.disconnect()
 		swiperContainer?.swiper?.destroy(true, true)
 	})
 
@@ -333,18 +330,28 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 		return out.join('\n')
 	}
 
-	function callSwiperUpdateAutoHeight() {
-		const endTime = performance.now() + 1000
+	// ResizeObserver: automatically update swiper autoHeight when the active slide's content changes size.
+	// This replaces manual callSwiperUpdateAutoHeight() / groupresize / ontoggle callbacks.
+	let slideResizeObserver: ResizeObserver | undefined
 
-		function tick(currentTime: number) {
-			if (currentTime < endTime) {
-				if (swiperContainer) {
-					swiperContainer.swiper.updateAutoHeight()
-				}
-				requestAnimationFrame(tick)
+	function setupSlideResizeObserver() {
+		slideResizeObserver?.disconnect()
+		slideResizeObserver = new ResizeObserver(() => {
+			swiperContainer?.swiper?.updateAutoHeight()
+		})
+		observeActiveSlide()
+	}
+
+	function observeActiveSlide() {
+		if (!slideResizeObserver || !swiperContainer?.swiper) return
+		slideResizeObserver.disconnect()
+		const activeSlide = swiperContainer.swiper.slides[swiperContainer.swiper.activeIndex]
+		if (activeSlide) {
+			// Observe all direct children so we catch any height change within the slide
+			for (const child of activeSlide.children) {
+				slideResizeObserver.observe(child)
 			}
 		}
-		requestAnimationFrame(tick)
 	}
 </script>
 
@@ -370,24 +377,9 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 			{localeText(data.bilingualTitle, locale, data.title)}{#if data.bilingualTitle}<button
 					type="button"
 					class="lang-toggle"
-					onmouseenter={() => {
-						headerTitleHovered = true
-						headerTitleSuppressed = false
-					}}
-					onmouseleave={() => (headerTitleHovered = false)}
-					onclick={() => {
-						const showing = headerTitleToggled || (headerTitleHovered && !headerTitleSuppressed)
-						if (showing) {
-							headerTitleToggled = false
-							headerTitleSuppressed = true
-						} else {
-							headerTitleToggled = true
-							headerTitleSuppressed = false
-						}
-					}}>🌐</button
-				>{#if headerTitleToggled || (headerTitleHovered && !headerTitleSuppressed)}<span
-						class="lang-alt">{otherLang(data.bilingualTitle)}</span
-					>{/if}{/if}
+					class:toggled={headerTitleToggled}
+					onclick={() => (headerTitleToggled = !headerTitleToggled)}>🌐</button
+				><span class="lang-alt">{otherLang(data.bilingualTitle)}</span>{/if}
 		</h1>
 
 		{#if data.numTabs > 1}
@@ -470,7 +462,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 								{:else}
 									{@const label = segment.lang === 'ko' ? 'Korean hidden' : 'English hidden'}
 									<content class="markdown">
-										<details ontoggle={callSwiperUpdateAutoHeight}>
+										<details>
 											<summary>{label}</summary>
 											{@html md`${segment.text}`}
 										</details>
@@ -507,8 +499,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 			{#if data.navTabs.list.icon}
 				<swiper-slide data-tid="list" hidden={!hasJS && tid !== 'list'}>
 					{#if isOk(data.sheet)}
-						<Sheet data={finalData} title={data.title} onToggle={callSwiperUpdateAutoHeight}
-						></Sheet>
+						<Sheet data={finalData} title={data.title}></Sheet>
 
 						<pre hidden>{stringify(data.sheet.data)}}</pre>
 					{:else}
@@ -520,7 +511,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 			{#if data.navTabs.raw.icon}
 				<swiper-slide data-tid="raw" hidden={!hasJS && tid !== 'raw'}>
 					{#if isOk(data.sheet)}
-						<Sheet data={raw} title={data.title} onToggle={callSwiperUpdateAutoHeight}></Sheet>
+						<Sheet data={raw} title={data.title}></Sheet>
 					{/if}
 					<pre hidden>{stringify(raw)}</pre>
 				</swiper-slide>
@@ -882,11 +873,22 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 		}
 
 		.lang-alt {
-			display: block;
+			display: none;
 			font-size: 0.5em;
-			opacity: 0.7;
 			font-style: italic;
 			font-weight: normal;
+		}
+
+		/* Hover: faint preview */
+		.lang-toggle:hover + .lang-alt {
+			display: block;
+			opacity: 0.4;
+		}
+
+		/* Pinned: full display, wins over hover */
+		.lang-toggle.toggled + .lang-alt {
+			display: block;
+			opacity: 0.7;
 		}
 	}
 

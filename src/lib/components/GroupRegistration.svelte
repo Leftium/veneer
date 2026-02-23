@@ -44,25 +44,9 @@
 	// Additional-member bilingual toggles: composite keys "name-{key}" / "option-{key}-{j}"
 	let extraToggles = new SvelteSet<string>()
 
-	// Suppressed items: clicking while visible (via hover) suppresses hover until next mouseenter
-	let suppressed = new SvelteSet<string>()
-
 	/** Get the "other" language text from a BilingualText */
 	function otherLang(bilingual: BilingualText): string {
 		return locale === 'ko' ? bilingual.en : bilingual.ko
-	}
-
-	/** Handle globe click: if currently visible (toggled or hovered), dismiss and suppress hover */
-	function handleToggleClick(key: string, isToggled: boolean, setToggled: (v: boolean) => void) {
-		if (isToggled || !suppressed.has(key)) {
-			// Currently showing — dismiss
-			setToggled(false)
-			suppressed.add(key)
-		} else {
-			// Currently hidden — turn on
-			setToggled(true)
-			suppressed.delete(key)
-		}
 	}
 
 	const isCheckboxes = $derived(roleField?.type === 'CHECKBOXES')
@@ -109,16 +93,6 @@
 
 	// --- Actions ---
 
-	let containerEl: HTMLDivElement = undefined!
-
-	/** Dispatch a bubbling event so ancestor layouts (e.g. swiper autoHeight) can react. */
-	function notifyHeightChange() {
-		// Fire after a microtask so the DOM has updated.
-		queueMicrotask(() => {
-			containerEl?.dispatchEvent(new CustomEvent('groupresize', { bubbles: true, composed: true }))
-		})
-	}
-
 	function addMember() {
 		additionalMembers.push({
 			key: nextKey++,
@@ -126,7 +100,6 @@
 			selectedRole: '',
 			selectedRoles: [],
 		})
-		notifyHeightChange()
 	}
 
 	let removedLast = $state(false)
@@ -134,7 +107,6 @@
 	function removeMember(index: number) {
 		removedLast = index === additionalMembers.length - 1
 		additionalMembers.splice(index, 1)
-		notifyHeightChange()
 	}
 
 	let clearing = $state(false)
@@ -146,7 +118,6 @@
 	function onClearOutroEnd() {
 		clearing = false
 		additionalMembers.length = 0
-		notifyHeightChange()
 	}
 
 	/** Slide for individual fieldsets, but instant when removing the last item. */
@@ -296,7 +267,7 @@
 	restoreFromLocalStorage()
 </script>
 
-<div class="group-registration" bind:this={containerEl}>
+<div class="group-registration">
 	{#if additionalMembers.length > 0 && !clearing}
 		<div class="group-header" transition:slide={{ duration: 300 }}>
 			<p class="group-count">{m.group_count({ count: additionalMembers.length + 1 })}</p>
@@ -316,11 +287,9 @@
 					type="button"
 					class="lang-toggle"
 					class:toggled={nameTitleToggled}
-					class:suppressed={suppressed.has('name')}
-					onmouseenter={() => suppressed.delete('name')}
 					onclick={(e) => {
 						e.stopPropagation()
-						handleToggleClick('name', nameTitleToggled, (v) => (nameTitleToggled = v))
+						nameTitleToggled = !nameTitleToggled
 					}}>🌐</button
 				><span class="lang-alt">{otherLang(bNameField.bilingualTitle)}</span>{/if}
 		</label>
@@ -344,11 +313,9 @@
 						type="button"
 						class="lang-toggle"
 						class:toggled={roleTitleToggled}
-						class:suppressed={suppressed.has('role')}
-						onmouseenter={() => suppressed.delete('role')}
 						onclick={(e) => {
 							e.stopPropagation()
-							handleToggleClick('role', roleTitleToggled, (v) => (roleTitleToggled = v))
+							roleTitleToggled = !roleTitleToggled
 						}}>🌐</button
 					><span class="lang-alt">{otherLang(bRoleField.bilingualTitle)}</span>{/if}
 			</label>
@@ -380,13 +347,9 @@
 							type="button"
 							class="lang-toggle"
 							class:toggled={optionToggles.has(i)}
-							class:suppressed={suppressed.has(`option-${i}`)}
-							onmouseenter={() => suppressed.delete(`option-${i}`)}
 							onclick={(e) => {
 								e.stopPropagation()
-								handleToggleClick(`option-${i}`, optionToggles.has(i), (v) =>
-									v ? optionToggles.add(i) : optionToggles.delete(i),
-								)
+								optionToggles.has(i) ? optionToggles.delete(i) : optionToggles.add(i)
 							}}>🌐</button
 						><span class="lang-alt">{otherLang(bRoleField.bilingualOptions![i]!)}</span>{/if}
 				</label>
@@ -424,19 +387,13 @@
 							bNameField.bilingualTitle,
 							locale,
 							nameField.title,
-						)}{#if bNameField.bilingualTitle}<button
+						)}{#if bNameField.bilingualTitle}{@const k = `name-${member.key}`}<button
 								type="button"
 								class="lang-toggle"
-								class:toggled={extraToggles.has(`name-${member.key}`)}
-								class:suppressed={suppressed.has(`ename-${member.key}`)}
-								onmouseenter={() => suppressed.delete(`ename-${member.key}`)}
+								class:toggled={extraToggles.has(k)}
 								onclick={(e) => {
 									e.stopPropagation()
-									const k = `name-${member.key}`
-									const sk = `ename-${member.key}`
-									handleToggleClick(sk, extraToggles.has(k), (v) =>
-										v ? extraToggles.add(k) : extraToggles.delete(k),
-									)
+									extraToggles.has(k) ? extraToggles.delete(k) : extraToggles.add(k)
 								}}>🌐</button
 							><span class="lang-alt">{otherLang(bNameField.bilingualTitle)}</span>{/if}
 						<button
@@ -460,19 +417,13 @@
 								bRoleField?.bilingualTitle,
 								locale,
 								roleField.title,
-							)}{#if bRoleField?.bilingualTitle}<button
+							)}{#if bRoleField?.bilingualTitle}{@const k = `role-${member.key}`}<button
 									type="button"
 									class="lang-toggle"
-									class:toggled={extraToggles.has(`role-${member.key}`)}
-									class:suppressed={suppressed.has(`erole-${member.key}`)}
-									onmouseenter={() => suppressed.delete(`erole-${member.key}`)}
+									class:toggled={extraToggles.has(k)}
 									onclick={(e) => {
 										e.stopPropagation()
-										const k = `role-${member.key}`
-										const sk = `erole-${member.key}`
-										handleToggleClick(sk, extraToggles.has(k), (v) =>
-											v ? extraToggles.add(k) : extraToggles.delete(k),
-										)
+										extraToggles.has(k) ? extraToggles.delete(k) : extraToggles.add(k)
 									}}>🌐</button
 								><span class="lang-alt">{otherLang(bRoleField.bilingualTitle)}</span>{/if}</label
 						>
@@ -499,19 +450,13 @@
 									bRoleField?.bilingualOptions?.[j],
 									locale,
 									option,
-								)}{#if bRoleField?.bilingualOptions?.[j]}<button
+								)}{#if bRoleField?.bilingualOptions?.[j]}{@const k = `option-${member.key}-${j}`}<button
 										type="button"
 										class="lang-toggle"
-										class:toggled={extraToggles.has(`option-${member.key}-${j}`)}
-										class:suppressed={suppressed.has(`eoption-${member.key}-${j}`)}
-										onmouseenter={() => suppressed.delete(`eoption-${member.key}-${j}`)}
+										class:toggled={extraToggles.has(k)}
 										onclick={(e) => {
 											e.stopPropagation()
-											const k = `option-${member.key}-${j}`
-											const sk = `eoption-${member.key}-${j}`
-											handleToggleClick(sk, extraToggles.has(k), (v) =>
-												v ? extraToggles.add(k) : extraToggles.delete(k),
-											)
+											extraToggles.has(k) ? extraToggles.delete(k) : extraToggles.add(k)
 										}}>🌐</button
 									><span class="lang-alt">{otherLang(bRoleField.bilingualOptions![j]!)}</span>{/if}
 							</label>
@@ -690,15 +635,21 @@
 
 	.lang-alt {
 		display: none;
-		opacity: 0.6;
 		font-style: italic;
 		font-weight: normal;
 		font-size: 0.85em;
 		margin-left: 0;
 	}
 
-	.lang-toggle:hover:not(.suppressed) + .lang-alt,
+	/* Hover: faint preview */
+	.lang-toggle:hover + .lang-alt {
+		display: inline;
+		opacity: 0.35;
+	}
+
+	/* Pinned: full display, wins over hover */
 	.lang-toggle.toggled + .lang-alt {
 		display: inline;
+		opacity: 0.6;
 	}
 </style>
