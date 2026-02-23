@@ -34,10 +34,24 @@ async function preloadVeneerRoute(event: Parameters<Handle>[0]['event']): Promis
 
 	// Match veneer routes: /[id1=vid]/[[id2=vid]]...
 	const segments = url.pathname.split('/').filter(Boolean)
-	const id1 = segments[0]
-	if (!id1 || !VENEER_ID_REGEX.test(id1)) return
+	let id1: string | undefined = segments[0]
+	let id2: string | undefined = segments[1]
 
-	const id2 = segments[1] && VENEER_ID_REGEX.test(segments[1]) ? segments[1] : undefined
+	// If the URL has no veneer IDs (e.g. root "/" on a preset domain),
+	// resolve default doc IDs from the domain preset — mirrors reroute in hooks.ts.
+	if (!id1 || !VENEER_ID_REGEX.test(id1)) {
+		const hostname = ((dev && url.searchParams.get('hostname')) || url.hostname).replace(
+			/^www\./,
+			'',
+		)
+		const presetName = resolvePresetName(hostname)
+		const preset = presetName ? PRESETS[presetName] : undefined
+		if (!preset?.defaultFormId) return
+		id1 = preset.defaultFormId
+		id2 = preset.defaultSheetId ?? undefined
+	} else {
+		id2 = id2 && VENEER_ID_REGEX.test(id2) ? id2 : undefined
+	}
 
 	// Fetch both documents in parallel (same as +layout.server.ts)
 	const [document1, document2] = await Promise.all([
