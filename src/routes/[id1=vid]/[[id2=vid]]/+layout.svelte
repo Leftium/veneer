@@ -153,12 +153,12 @@
 		!sourceUrlForm && !sourceUrlSheet
 			? ''
 			: `
-# Sources
+# 출처 (Sources)
 <div>
 
-${!sourceUrlForm ? '' : `Google Form\n~ ${sourceUrlForm}\n~ icon:simple-icons:googleforms`}
-${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons:googlesheets`}
-춤으로 전하는 힐링 대화
+${!sourceUrlForm ? '' : `구글 양식 (Google Form)\n~ ${sourceUrlForm}\n~ icon:simple-icons:googleforms`}
+${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ icon:simple-icons:googlesheets`}
+춤으로 전하는 힐링 대화 (Healing Message with Dance)
 ~ https://e.kakao.com/t/healing-message-with-dance
 ~ icon:simple-icons:kakaotalk
 </div>
@@ -166,11 +166,11 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 	)
 
 	let standardFooter = $derived(`
-		# Powered by Veneer
+		# Veneer 기반 (Powered by Veneer)
 
 		<div>
 
-		Make your own!
+		직접 만들어 보세요! (Make your own!)
 		~ https://veneer.leftium.com
 
 		Leftium/veneer

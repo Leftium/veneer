@@ -32,20 +32,20 @@ const RE_KOREAN = /[\uAC00-\uD7AF\u1100-\u11FF\u3130-\u318F]/g
 const RE_LATIN = /[A-Za-z]/g
 
 /**
- * Classify a string as predominantly Korean, English, or mixed/unknown.
+ * Classify a string as Korean, English, or mixed/unknown.
  *
- * Counts Korean characters vs Latin characters. A string is classified as
- * one script if that script accounts for >60% of the total script characters.
- * If neither dominates, returns 'mixed'.
+ * Uses a "has any Korean" heuristic: if the string contains any Hangul
+ * characters, it's classified as Korean. This matches real-world Korean
+ * writing which commonly mixes in English loanwords (e.g. "비비밀 Links",
+ * "카페 Bakery"). Only strings with zero Korean characters and at least
+ * one Latin character are classified as English.
  */
 export function classifyScript(text: string): 'ko' | 'en' | 'mixed' {
 	const koCount = (text.match(RE_KOREAN) || []).length
 	const enCount = (text.match(RE_LATIN) || []).length
-	const total = koCount + enCount
 
-	if (total === 0) return 'mixed'
-	if (koCount / total > 0.6) return 'ko'
-	if (enCount / total > 0.6) return 'en'
+	if (koCount > 0) return 'ko'
+	if (enCount > 0) return 'en'
 	return 'mixed'
 }
 
