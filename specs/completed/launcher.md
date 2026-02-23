@@ -24,7 +24,7 @@ the browser.
 - `btango.com/` → veneer page (domain has a preset with default docs)
 - `veneer.leftium.com/g.abc123` → veneer page (doc ID provided directly)
 
-See `specs/page-options.md` for the full routing architecture.
+See `specs/completed/page-options.md` for the full routing architecture.
 
 ---
 
