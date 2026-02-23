@@ -7,7 +7,8 @@
 		type DancePartyConfig,
 		type PlacedUnit,
 	} from '$lib/dance-party'
-	import DanceFloor from './DanceFloor.svelte'
+	import DanceFloor, { type ActiveUnitInfo } from './DanceFloor.svelte'
+	import SpeechBubble from './SpeechBubble.svelte'
 	import DevTuningPanel from './DevTuningPanel.svelte'
 	import { page } from '$app/state'
 
@@ -49,10 +50,31 @@
 	let placedUnits: PlacedUnit[] = $derived(
 		computeDanceFloor(effectiveDancers, formTitle, songNumber, config),
 	)
+
+	// --- Speech bubble state ---
+	let partyEl: HTMLElement | undefined = $state(undefined)
+	let activeUnitIndex: number | null = $state(null)
+	let bubbleCenterX = $state(0)
+	let bubbleTopY = $state(0)
+	let containerWidth = $state(0)
+
+	function handleActiveUnit(info: ActiveUnitInfo | null) {
+		if (!info || !partyEl) {
+			activeUnitIndex = null
+			return
+		}
+		activeUnitIndex = info.unitIndex
+		const containerRect = partyEl.getBoundingClientRect()
+		bubbleCenterX = info.rect.left + info.rect.width / 2 - containerRect.left
+		bubbleTopY = info.rect.bottom - containerRect.top
+		containerWidth = containerRect.width
+	}
+
+	let activeUnit = $derived(activeUnitIndex != null ? placedUnits[activeUnitIndex] : null)
 </script>
 
 {#if effectiveDancers.length > 0}
-	<div class="dance-party">
+	<div class="dance-party" bind:this={partyEl}>
 		<DanceFloor
 			units={placedUnits}
 			dockConfig={config.dock}
@@ -60,7 +82,11 @@
 			heightMultiplier={viewHeightMultiplier}
 			marginTop={viewMarginTop}
 			anchorPercent={viewAnchorPercent}
+			onActiveUnit={handleActiveUnit}
 		/>
+		{#if activeUnit}
+			<SpeechBubble unit={activeUnit} centerX={bubbleCenterX} topY={bubbleTopY} {containerWidth} />
+		{/if}
 	</div>
 {/if}
 {#if isDev}

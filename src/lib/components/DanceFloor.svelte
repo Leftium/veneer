@@ -10,6 +10,13 @@
 	import { scrubAction } from '$lib/scrubAction'
 	import DancerIcon from './DancerIcon.svelte'
 
+	/** Info about the currently active (nearest) unit during scrub. */
+	export interface ActiveUnitInfo {
+		unitIndex: number
+		/** Bounding rect of the active dancer's icon-wrapper element. */
+		rect: DOMRect
+	}
+
 	interface Props {
 		units: PlacedUnit[]
 		dockConfig?: DockConfig
@@ -20,6 +27,8 @@
 		marginTop?: number
 		/** Icon vertical anchor within container (0 = top, 100 = bottom) */
 		anchorPercent?: number
+		/** Called with active unit info during scrub, or null when scrub ends. */
+		onActiveUnit?: (info: ActiveUnitInfo | null) => void
 	}
 
 	let {
@@ -29,6 +38,7 @@
 		heightMultiplier = 0.8,
 		marginTop = -36,
 		anchorPercent = 0,
+		onActiveUnit,
 	}: Props = $props()
 
 	const containerHeight = $derived(baseIconHeight * heightMultiplier)
@@ -139,6 +149,14 @@
 				iconSpan.style.setProperty('--dancer-shadow-opacity', i === nearestIdx ? '1' : '0')
 			}
 		}
+
+		// Emit active unit info for speech bubble positioning
+		if (onActiveUnit && nearestIdx >= 0 && wrapperEls[nearestIdx]) {
+			onActiveUnit({
+				unitIndex: nearestIdx,
+				rect: wrapperEls[nearestIdx].getBoundingClientRect(),
+			})
+		}
 	}
 
 	function resetTransforms() {
@@ -195,6 +213,7 @@
 		trackedElement = null
 		isScrubbing = false
 		resetTransforms()
+		onActiveUnit?.(null)
 		document.body.style.userSelect = ''
 		document.body.style.webkitUserSelect = ''
 		if (containerEl) {
