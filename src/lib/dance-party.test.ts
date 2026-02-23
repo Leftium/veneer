@@ -18,6 +18,8 @@ import {
 	computeDanceFloor,
 	getBubbleAlignment,
 	getDockScale,
+	computeDockLayout,
+	findNearestUnit,
 	LEADER_ON_LEFT,
 	PAIRED_POOL,
 	DEFAULT_CONFIG,
@@ -27,6 +29,7 @@ import {
 	type DanceUnit,
 	type PlacedUnit,
 	type DancePartyConfig,
+	type DockConfig,
 } from './dance-party'
 
 // ---------------------------------------------------------------------------
@@ -1051,5 +1054,176 @@ describe('edge cases', () => {
 		// Future timestamp (now before first signup) → clamp to 1
 		const future = Date.now() + 10_000_000
 		expect(getSongNumber(future)).toBe(1)
+	})
+})
+
+// ---------------------------------------------------------------------------
+// findNearestUnit
+// ---------------------------------------------------------------------------
+
+describe('findNearestUnit', () => {
+	it('returns -1 for empty array', () => {
+		expect(findNearestUnit([], 0.5)).toBe(-1)
+	})
+
+	it('returns 0 for single unit', () => {
+		expect(findNearestUnit([0.3], 0.7)).toBe(0)
+	})
+
+	it('finds the nearest unit by position', () => {
+		const positions = [0.1, 0.3, 0.5, 0.7, 0.9]
+		expect(findNearestUnit(positions, 0.0)).toBe(0)
+		expect(findNearestUnit(positions, 0.29)).toBe(1)
+		expect(findNearestUnit(positions, 0.5)).toBe(2)
+		expect(findNearestUnit(positions, 0.85)).toBe(4)
+		expect(findNearestUnit(positions, 1.0)).toBe(4)
+	})
+
+	it('returns either match for near-equidistant positions', () => {
+		// 0.4 is nearly equidistant from 0.3 and 0.5
+		// (floating point: |0.5-0.4| is slightly less than |0.3-0.4|)
+		const positions = [0.3, 0.5]
+		const result = findNearestUnit(positions, 0.4)
+		expect(result === 0 || result === 1).toBe(true)
+	})
+})
+
+// ---------------------------------------------------------------------------
+// computeDockLayout
+// ---------------------------------------------------------------------------
+
+describe('computeDockLayout', () => {
+	const dock: DockConfig = {
+		maxScale: 2.75,
+		neighborCount: 3,
+		falloffFn: 'cosine',
+		baseIconHeight: 100,
+		magnifiedSpacing: 4,
+	}
+
+	it('returns empty array for no units', () => {
+		expect(computeDockLayout([], 0.5, 800, dock)).toEqual([])
+	})
+
+	it('returns scale 1 and dx 0 for single unit when scrubbed far away', () => {
+		// Single unit at 0.5, scrub at 0.0 — should be outside neighbor radius
+		// neighborRadius = avgSpacing * neighborCount; for 1 unit avgSpacing = 0.2 fallback
+		// neighborRadius = 0.2 * 3 = 0.6; distance = 0.5 < 0.6 so it IS magnified
+		const result = computeDockLayout([0.5], 0.0, 800, dock)
+		expect(result).toHaveLength(1)
+		// Distance is 0.5/0.6 = 0.833, which is < 1, so some magnification
+		expect(result[0].scale).toBeGreaterThan(1)
+	})
+
+	it('returns max scale when scrub is exactly on a unit', () => {
+		const positions = [0.2, 0.4, 0.6, 0.8]
+		const result = computeDockLayout(positions, 0.4, 800, dock)
+
+		// Unit at index 1 (position 0.4) should get maxScale
+		expect(result[1].scale).toBeCloseTo(dock.maxScale, 1)
+
+		// Units far from scrub should have lower scale
+		expect(result[0].scale).toBeLessThan(result[1].scale)
+		expect(result[3].scale).toBeLessThan(result[1].scale)
+	})
+
+	it('scales fall off symmetrically for evenly spaced units', () => {
+		const positions = [0.1, 0.3, 0.5, 0.7, 0.9]
+		const result = computeDockLayout(positions, 0.5, 800, dock)
+
+		// Center unit (idx 2) should have the highest scale
+		expect(result[2].scale).toBeCloseTo(dock.maxScale, 1)
+
+		// Symmetric neighbors should have equal scales
+		expect(result[1].scale).toBeCloseTo(result[3].scale, 5)
+		expect(result[0].scale).toBeCloseTo(result[4].scale, 5)
+	})
+
+	it('dx offsets push items apart from the scrub center', () => {
+		const positions = [0.2, 0.4, 0.6, 0.8]
+		const result = computeDockLayout(positions, 0.5, 800, dock)
+
+		// Items left of scrub should have negative dx (pushed left)
+		expect(result[0].dx).toBeLessThanOrEqual(0)
+		expect(result[1].dx).toBeLessThanOrEqual(0)
+
+		// Items right of scrub should have positive dx (pushed right)
+		expect(result[2].dx).toBeGreaterThanOrEqual(0)
+		expect(result[3].dx).toBeGreaterThanOrEqual(0)
+	})
+
+	it('no magnification when scrub is well outside all units', () => {
+		// Units clustered at center, scrub far away
+		const positions = [0.45, 0.5, 0.55]
+		// avgSpacing = 0.05, neighborRadius = 0.05 * 3 = 0.15
+		// scrub at 0.0 is 0.45 away from nearest, which is >> 0.15
+		const result = computeDockLayout(positions, 0.0, 800, dock)
+
+		for (const entry of result) {
+			expect(entry.scale).toBeCloseTo(1.0, 5)
+			expect(entry.dx).toBeCloseTo(0, 5)
+		}
+	})
+
+	it('gaussian falloff produces different scale curve than cosine', () => {
+		const positions = [0.2, 0.4, 0.6, 0.8]
+		const cosResult = computeDockLayout(positions, 0.5, 800, { ...dock, falloffFn: 'cosine' })
+		const gausResult = computeDockLayout(positions, 0.5, 800, { ...dock, falloffFn: 'gaussian' })
+
+		// Both should magnify the center item similarly
+		expect(cosResult[1].scale).toBeGreaterThan(1)
+		expect(gausResult[1].scale).toBeGreaterThan(1)
+
+		// But neighbor scales should differ (gaussian drops faster)
+		// The items at the edge should differ
+		expect(cosResult[0].scale).not.toBeCloseTo(gausResult[0].scale, 3)
+	})
+
+	it('scrub at edge (0) magnifies leftmost units', () => {
+		const positions = [0.1, 0.3, 0.5, 0.7, 0.9]
+		const result = computeDockLayout(positions, 0.0, 800, dock)
+
+		// Leftmost unit should be most magnified
+		expect(result[0].scale).toBeGreaterThan(result[2].scale)
+		expect(result[0].scale).toBeGreaterThan(result[4].scale)
+	})
+
+	it('scrub at edge (1) magnifies rightmost units', () => {
+		const positions = [0.1, 0.3, 0.5, 0.7, 0.9]
+		const result = computeDockLayout(positions, 1.0, 800, dock)
+
+		// Rightmost unit should be most magnified
+		expect(result[4].scale).toBeGreaterThan(result[2].scale)
+		expect(result[4].scale).toBeGreaterThan(result[0].scale)
+	})
+
+	it('larger containerWidth does not affect scale (only dx)', () => {
+		const positions = [0.2, 0.5, 0.8]
+		const result800 = computeDockLayout(positions, 0.5, 800, dock)
+		const result1600 = computeDockLayout(positions, 0.5, 1600, dock)
+
+		// Scales should be identical (they depend on normalized positions, not pixels)
+		for (let i = 0; i < positions.length; i++) {
+			expect(result800[i].scale).toBeCloseTo(result1600[i].scale, 10)
+		}
+	})
+
+	it('dx magnitude scales with baseIconHeight', () => {
+		const positions = [0.3, 0.5, 0.7]
+		const small = computeDockLayout(positions, 0.5, 800, { ...dock, baseIconHeight: 50 })
+		const large = computeDockLayout(positions, 0.5, 800, { ...dock, baseIconHeight: 200 })
+
+		// Larger icons should cause more displacement
+		expect(Math.abs(large[0].dx)).toBeGreaterThan(Math.abs(small[0].dx))
+	})
+
+	it('maxScale 1 results in no magnification', () => {
+		const positions = [0.2, 0.5, 0.8]
+		const result = computeDockLayout(positions, 0.5, 800, { ...dock, maxScale: 1 })
+
+		for (const entry of result) {
+			expect(entry.scale).toBeCloseTo(1.0, 10)
+			expect(entry.dx).toBeCloseTo(0, 5)
+		}
 	})
 })

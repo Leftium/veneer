@@ -63,8 +63,8 @@ export const DEFAULT_LAYOUT: LayoutConfig = {
 
 /** Dock magnification defaults (used in Phase 3, defined here for type completeness). */
 export const DEFAULT_DOCK: DockConfig = {
-	maxScale: 2.75,
-	neighborCount: 3,
+	maxScale: 2,
+	neighborCount: 2,
 	falloffFn: 'cosine',
 	baseIconHeight: 109,
 	magnifiedSpacing: 4,
@@ -796,6 +796,150 @@ export function getDockScale(
 	}
 
 	return 1.0 + (dock.maxScale - 1.0) * t
+}
+
+export interface DockLayoutEntry {
+	/** Scale factor for this unit (1.0 when outside magnification range). */
+	scale: number
+	/** Horizontal pixel offset from idle position (due to magnified region expanding). */
+	dx: number
+}
+
+/**
+ * Compute the dock-style magnification layout for all units.
+ *
+ * Returns per-unit { scale, dx } where:
+ * - `scale` is the magnification factor (1.0 = idle)
+ * - `dx` is the pixel offset from the idle position to accommodate the expanded magnified region
+ *
+ * The "lens" model: magnified units need extra horizontal space proportional to
+ * (scale - 1) * baseWidth. This extra space is accumulated and split so items
+ * to the left of the scrub center shift left, and items to the right shift right.
+ * Items outside the magnification range get a flat shift equal to their side's
+ * total accumulated extra width.
+ *
+ * @param unitPositions - normalized [0,1] x positions of each unit (from PlacedUnit.x)
+ * @param scrubX - normalized [0,1] scrub position
+ * @param containerWidth - pixel width of the dance floor container
+ * @param dock - dock configuration (maxScale, neighborCount, falloffFn, baseIconHeight, magnifiedSpacing)
+ */
+export function computeDockLayout(
+	unitPositions: number[],
+	scrubX: number,
+	containerWidth: number,
+	dock: DockConfig = DEFAULT_DOCK,
+): DockLayoutEntry[] {
+	const n = unitPositions.length
+	if (n === 0) return []
+
+	// Compute neighbor radius: average spacing * neighborCount
+	// This adapts to dancer density — sparse floors get wider radius, dense floors tighter
+	const sorted = [...unitPositions].sort((a, b) => a - b)
+	let avgSpacing: number
+	if (sorted.length <= 1) {
+		avgSpacing = 0.2 // fallback for 0-1 units
+	} else {
+		let totalGap = 0
+		for (let i = 1; i < sorted.length; i++) {
+			totalGap += sorted[i] - sorted[i - 1]
+		}
+		avgSpacing = totalGap / (sorted.length - 1)
+	}
+	const neighborRadius = avgSpacing * dock.neighborCount
+
+	// If radius is effectively zero, no magnification is possible
+	if (neighborRadius <= 0) {
+		return unitPositions.map(() => ({ scale: 1, dx: 0 }))
+	}
+
+	// Step 1: Compute per-unit scale
+	const scales = unitPositions.map((pos) => {
+		const distance = Math.abs(pos - scrubX)
+		return getDockScale(distance, neighborRadius, dock)
+	})
+
+	// Step 2: Compute per-unit extra width in pixels
+	// Each unit's idle width is baseIconHeight (icons are square-ish).
+	// When magnified, it occupies baseIconHeight * scale.
+	// The extra width = baseIconHeight * (scale - 1).
+	const baseWidth = dock.baseIconHeight
+	const extras = scales.map((s) => baseWidth * (s - 1))
+
+	// Step 3: Compute dx offsets using the "lens" model.
+	// We accumulate extra width from the scrub center outward.
+	// Items to the left of scrubX shift leftward (negative dx),
+	// items to the right shift rightward (positive dx).
+	// Each item's own expansion also contributes: it shifts by half its own extra
+	// plus all the extras of items between it and the scrub center.
+
+	// Sort indices by position for the sweep
+	const indices = unitPositions.map((_, i) => i)
+	indices.sort((a, b) => unitPositions[a] - unitPositions[b])
+
+	// Find the split point: last index whose position <= scrubX
+	let splitIdx = -1
+	for (let i = 0; i < indices.length; i++) {
+		if (unitPositions[indices[i]] <= scrubX) splitIdx = i
+	}
+
+	const dx = new Array<number>(n).fill(0)
+
+	// Sweep rightward from the split point: items to the right of scrub center
+	// Each item shifts right by the accumulated extra of items between it and scrubX,
+	// plus half its own extra.
+	let accumulatedRight = 0
+	for (let i = splitIdx + 1; i < indices.length; i++) {
+		const idx = indices[i]
+		// Add half the extra of the previous magnified item (or the item at scrubX)
+		if (i === splitIdx + 1 && splitIdx >= 0) {
+			accumulatedRight += extras[indices[splitIdx]] / 2
+		} else if (i > splitIdx + 1) {
+			accumulatedRight += extras[indices[i - 1]] / 2
+		}
+		accumulatedRight += extras[idx] / 2
+		dx[idx] = accumulatedRight
+	}
+
+	// Sweep leftward from the split point: items to the left shift left (negative dx)
+	let accumulatedLeft = 0
+	for (let i = splitIdx; i >= 0; i--) {
+		const idx = indices[i]
+		if (i === splitIdx && splitIdx + 1 < indices.length) {
+			// The item at/just-left-of scrubX: shift left by half its own extra
+			// plus half the extra of the first right-side item
+			accumulatedLeft += extras[idx] / 2
+			if (splitIdx + 1 < indices.length) {
+				accumulatedLeft += extras[indices[splitIdx + 1]] / 2
+			}
+		} else if (i < splitIdx) {
+			accumulatedLeft += extras[indices[i + 1]] / 2
+			accumulatedLeft += extras[idx] / 2
+		} else {
+			// splitIdx === i and nothing to the right
+			accumulatedLeft += extras[idx] / 2
+		}
+		dx[idx] = -accumulatedLeft
+	}
+
+	return scales.map((scale, i) => ({ scale, dx: dx[i] }))
+}
+
+/**
+ * Find the index of the unit nearest to the given scrub position.
+ * Returns -1 if the array is empty.
+ */
+export function findNearestUnit(unitPositions: number[], scrubX: number): number {
+	if (unitPositions.length === 0) return -1
+	let bestIdx = 0
+	let bestDist = Math.abs(unitPositions[0] - scrubX)
+	for (let i = 1; i < unitPositions.length; i++) {
+		const dist = Math.abs(unitPositions[i] - scrubX)
+		if (dist < bestDist) {
+			bestDist = dist
+			bestIdx = i
+		}
+	}
+	return bestIdx
 }
 
 // ---------------------------------------------------------------------------

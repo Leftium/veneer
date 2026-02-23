@@ -698,7 +698,8 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 		}
 
 		swiper-container {
-			overflow: clip;
+			overflow-x: clip;
+			overflow-y: visible;
 
 			// Hide the now visible overflow with a mask:
 			//mask-image: linear-gradient(to right, transparent 0%, black 0%, black 100%, transparent 100%);
@@ -713,7 +714,8 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 				margin-bottom: 0;
 				///background-color: #00f6;
 
-				overflow: clip;
+				overflow-x: clip;
+				overflow-y: visible;
 
 				pre {
 					width: 100%;

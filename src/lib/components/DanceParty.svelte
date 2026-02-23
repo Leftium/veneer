@@ -55,6 +55,7 @@
 	<div class="dance-party">
 		<DanceFloor
 			units={placedUnits}
+			dockConfig={config.dock}
 			baseIconHeight={config.dock.baseIconHeight}
 			heightMultiplier={viewHeightMultiplier}
 			marginTop={viewMarginTop}

@@ -77,6 +77,7 @@
 		overflow: visible;
 	}
 
+	/* Colored glow behind dancer (used in dancer list) */
 	.dancer-icon::before {
 		content: '';
 		position: absolute;
@@ -85,6 +86,26 @@
 		background: var(--dancer-glow);
 		mask-image: radial-gradient(circle, black 40%, transparent 70%);
 		opacity: var(--dancer-glow-opacity, 1);
+	}
+
+	/* Floor shadow beneath dancer (used on dance floor during scrub) */
+	.dancer-icon::after {
+		content: '';
+		position: absolute;
+		bottom: -4%;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 70%;
+		height: 14%;
+		border-radius: 50%;
+		background: radial-gradient(
+			ellipse at center,
+			rgba(0, 0, 0, 0.45) 0%,
+			rgba(0, 0, 0, 0.2) 40%,
+			transparent 70%
+		);
+		opacity: var(--dancer-shadow-opacity, 0);
+		pointer-events: none;
 	}
 
 	.dancer-icon img {
