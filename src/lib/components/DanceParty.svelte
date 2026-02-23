@@ -39,13 +39,19 @@
 	// Effective song number: use override if set, otherwise the real current song
 	let songNumber = $derived(songNumberOverride ?? currentSongNumber)
 
+	// Synthetic dancer override from dev panel (null means use real data)
+	let dancerOverride: DancerRow[] | null = $state(null)
+
+	// Effective dancers: use override if set, otherwise real prop
+	let effectiveDancers = $derived(dancerOverride ?? dancers)
+
 	// Compute the dance floor layout
 	let placedUnits: PlacedUnit[] = $derived(
-		computeDanceFloor(dancers, formTitle, songNumber, config),
+		computeDanceFloor(effectiveDancers, formTitle, songNumber, config),
 	)
 </script>
 
-{#if dancers.length > 0}
+{#if effectiveDancers.length > 0}
 	<div class="dance-party">
 		<DanceFloor
 			units={placedUnits}
@@ -54,26 +60,29 @@
 			marginTop={viewMarginTop}
 			anchorPercent={viewAnchorPercent}
 		/>
-		{#if isDev}
-			<DevTuningPanel
-				{config}
-				{songNumber}
-				maxSong={currentSongNumber}
-				{viewHeightMultiplier}
-				{viewMarginTop}
-				{viewAnchorPercent}
-				onchange={(newConfig, newSong) => {
-					config = newConfig
-					songNumberOverride = newSong
-				}}
-				onviewchange={(hm, mt, ap) => {
-					viewHeightMultiplier = hm
-					viewMarginTop = mt
-					viewAnchorPercent = ap
-				}}
-			/>
-		{/if}
 	</div>
+{/if}
+{#if isDev}
+	<DevTuningPanel
+		{config}
+		{songNumber}
+		maxSong={currentSongNumber}
+		{viewHeightMultiplier}
+		{viewMarginTop}
+		{viewAnchorPercent}
+		onchange={(newConfig, newSong) => {
+			config = newConfig
+			songNumberOverride = newSong
+		}}
+		onviewchange={(hm, mt, ap) => {
+			viewHeightMultiplier = hm
+			viewMarginTop = mt
+			viewAnchorPercent = ap
+		}}
+		ondancers={(d) => {
+			dancerOverride = d
+		}}
+	/>
 {/if}
 
 <style>

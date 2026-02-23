@@ -2,6 +2,7 @@
 	import { onMount, onDestroy, untrack } from 'svelte'
 	import type { DancePartyConfig } from '$lib/dance-party'
 	import { DEFAULT_WEIGHTS, DEFAULT_LAYOUT, DEFAULT_DOCK } from '$lib/dance-party'
+	import type { DancerRow } from '$lib/util'
 
 	interface Props {
 		config: DancePartyConfig
@@ -12,6 +13,7 @@
 		viewAnchorPercent?: number
 		onchange: (config: DancePartyConfig, songNumber: number) => void
 		onviewchange?: (heightMultiplier: number, marginTop: number, anchorPercent: number) => void
+		ondancers?: (dancers: DancerRow[] | null) => void
 	}
 
 	let {
@@ -23,6 +25,7 @@
 		viewAnchorPercent: initAnchorPct = 0,
 		onchange,
 		onviewchange,
+		ondancers,
 	}: Props = $props()
 
 	const STORAGE_KEY = 'dance-party-dev'
@@ -57,6 +60,11 @@
 	let marginTop = $state(-36)
 	let anchorPercent = $state(0)
 
+	// Synthetic dancers
+	let numLeads = $state(0)
+	let numFollows = $state(0)
+	let numBoth = $state(0)
+
 	// Panel visibility
 	let expanded = $state(false)
 
@@ -86,6 +94,47 @@
 			magnifiedSpacing,
 		},
 	})
+
+	/** Generate a stable list of synthetic dancers. Names and timestamps are
+	 *  deterministic per role, so adding a lead doesn't shift follows/boths. */
+	function generateSyntheticDancers(
+		leads: number,
+		follows: number,
+		both: number,
+	): DancerRow[] | null {
+		if (leads === 0 && follows === 0 && both === 0) return null
+		const dancers: DancerRow[] = []
+		const baseTs = 1_700_000_000_000 // fixed epoch for stability
+		// Each role uses its own offset so adding to one role doesn't shift others
+		for (let i = 1; i <= leads; i++) {
+			dancers.push({
+				name: `Lead-${String(i).padStart(2, '0')}`,
+				role: 'lead',
+				ts: baseTs + (i - 1) * 60_000,
+				wish: i % 3 === 1 ? `Lead ${i} says hi!` : undefined,
+				paid: i % 4 === 0,
+			})
+		}
+		for (let i = 1; i <= follows; i++) {
+			dancers.push({
+				name: `Follow-${String(i).padStart(2, '0')}`,
+				role: 'follow',
+				ts: baseTs + 1_000_000 + (i - 1) * 60_000,
+				wish: i % 3 === 1 ? `Follow ${i} says hi!` : undefined,
+				paid: i % 4 === 0,
+			})
+		}
+		for (let i = 1; i <= both; i++) {
+			dancers.push({
+				name: `Both-${String(i).padStart(2, '0')}`,
+				role: 'both',
+				ts: baseTs + 2_000_000 + (i - 1) * 60_000,
+				wish: i % 3 === 1 ? `Both ${i} says hi!` : undefined,
+				paid: i % 4 === 0,
+			})
+		}
+		return dancers
+	}
 
 	function applyConfig(
 		c: DancePartyConfig,
@@ -121,6 +170,7 @@
 			config: currentConfig,
 			songNumber: localSongNumber,
 			view,
+			dancers: { numLeads, numFollows, numBoth },
 		}
 		try {
 			sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data))
@@ -129,6 +179,11 @@
 		}
 		onchange(currentConfig, localSongNumber)
 		onviewchange?.(heightMultiplier, marginTop, anchorPercent)
+	})
+
+	// Emit synthetic dancers when counts change
+	$effect(() => {
+		ondancers?.(generateSyntheticDancers(numLeads, numFollows, numBoth))
 	})
 
 	// Load from sessionStorage on mount, or fall back to props.
@@ -146,8 +201,14 @@
 					config: DancePartyConfig
 					songNumber: number
 					view?: { heightMultiplier: number; marginTop: number; anchorPercent: number }
+					dancers?: { numLeads: number; numFollows: number; numBoth: number }
 				}
 				applyConfig(data.config, data.songNumber, data.view)
+				if (data.dancers) {
+					numLeads = data.dancers.numLeads ?? 0
+					numFollows = data.dancers.numFollows ?? 0
+					numBoth = data.dancers.numBoth ?? 0
+				}
 				loaded = true
 			}
 		} catch {
@@ -181,6 +242,9 @@
 				anchorPercent: 0,
 			},
 		)
+		numLeads = 0
+		numFollows = 0
+		numBoth = 0
 		try {
 			sessionStorage.removeItem(STORAGE_KEY)
 		} catch {
@@ -415,6 +479,28 @@
 				</div>
 			</fieldset>
 
+			<fieldset>
+				<legend>Dancers</legend>
+				<div class="grid">
+					<label for="dp-numLeads">leads</label>
+					<span class="val">{numLeads}</span>
+					<input id="dp-numLeads" type="number" min="0" max="30" bind:value={numLeads} />
+
+					<label for="dp-numFollows">follows</label>
+					<span class="val">{numFollows}</span>
+					<input id="dp-numFollows" type="number" min="0" max="30" bind:value={numFollows} />
+
+					<label for="dp-numBoth">both</label>
+					<span class="val">{numBoth}</span>
+					<input id="dp-numBoth" type="number" min="0" max="30" bind:value={numBoth} />
+				</div>
+				{#if numLeads > 0 || numFollows > 0 || numBoth > 0}
+					<div class="dancer-summary">
+						{numLeads + numFollows + numBoth} synthetic dancers (overriding real data)
+					</div>
+				{/if}
+			</fieldset>
+
 			<button class="reset-btn" onclick={reset}>Reset All</button>
 		</div>
 	{/if}
@@ -528,6 +614,16 @@
 		&:hover {
 			background: $gray-7;
 		}
+	}
+
+	.dancer-summary {
+		margin-top: 4px;
+		padding: 2px 6px;
+		font-size: 10px;
+		color: $yellow-4;
+		background: rgba(255, 200, 0, 0.08);
+		border-radius: $radius-1;
+		text-align: center;
 	}
 
 	.reset-btn {
