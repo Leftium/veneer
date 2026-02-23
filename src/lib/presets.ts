@@ -30,6 +30,9 @@ export const DOMAIN_PRESETS: Record<string, string | null> = {
 	'vivimil.com': 'vivimil',
 	'xn--pg3bl5ba.com': 'vivimil', // IDN alias (비비블.com)
 
+	// Party site
+	'party.leftium.com': 'party',
+
 	// Veneer home — no preset, shows launcher
 	'veneer.leftium.com': null,
 }
@@ -91,6 +94,16 @@ export const PRESETS: Record<string, Preset> = {
 		tabs: ['info', 'form', 'list'],
 		defaultFormId: 'g.r6eRUz2U9uf5oVFn6',
 		defaultSheetId: 's.13E_wsbrKLEsuV-eDaTKl0a967EdpYgcZrXH0Gq_KK3g',
+		headerImage: '/dance_night.gif',
+		headerColor: '#0b4474',
+		headerHeight: '100px',
+		headerTextColor: 'white',
+		headerImageFit: 'cover',
+	},
+	party: {
+		tabs: ['info', 'form', 'list'],
+		defaultFormId: 'g.DQszzU7SKC7U96hq7',
+		defaultSheetId: 's.1N8Rkj-CLJs_Kx6315odpH0Idnc6xwSQqTry-pCCB9ak',
 		headerImage: '/dance_night.gif',
 		headerColor: '#0b4474',
 		headerHeight: '100px',
