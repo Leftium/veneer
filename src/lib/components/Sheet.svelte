@@ -13,6 +13,7 @@
 	import StickyHeaderGrid from '$lib/components/StickyHeaderSummaryDetailsGrid.svelte'
 	import DancerIcon from '$lib/components/DancerIcon.svelte'
 	import { REGEX_DANCE_LEADER, REGEX_DANCE_FOLLOW } from '$lib/dance-constants'
+	import { m } from '$lib/paraglide/messages.js'
 
 	interface Props {
 		data: any
@@ -84,7 +85,7 @@
 			{#snippet header()}
 				{@const count = extra.count}
 				<gh>
-					<span>{count.total}명 신청</span>
+					<span>{m.people_going({ count: count.total })}</span>
 					<span
 						><DancerIcon role="follow" representative />{count.follows}
 						<DancerIcon role="lead" representative />{count.leaders}</span
