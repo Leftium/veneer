@@ -174,14 +174,11 @@ The role field is optional (2-field pattern: name + group; 3-field: name + role 
 
 ---
 
-### 5. Image Proxy API — TODO (low priority)
+### 5. Image Proxy API — SKIPPED
 
 `/api/image-proxy` proxies `googleusercontent.com` images through the server to avoid CORS issues.
-Currently disabled in `GoogleFormField.svelte` (commented out) because `ssr = false` makes it
-unavailable at first render.
-
-Port the server route as-is; re-enable in `GoogleFormField.svelte` only when SSR is selectively
-re-enabled for veneer routes.
+Was disabled in `GoogleFormField.svelte` (commented out) because `ssr = false` makes it
+unavailable at first render. Skipped — not worth porting without SSR.
 
 Files:
 
@@ -214,7 +211,7 @@ port-2:  Infrastructure     ← DONE (3c29319, bfe315b)
 port-3:  NotificationBox    ← ALREADY ON MAIN (skip)
 port-4:  Group registration ← DONE (7893272)
 remove-picocss              ← DONE (see specs/completed/remove-picocss.md)
-port-5:  Image proxy        ← TODO (low priority, defer until SSR re-enabled)
+port-5:  Image proxy        ← SKIPPED (not worth porting without SSR)
 locale.md (Phase 1)         ← DONE (see specs/locale.md)
 page-options Phase 3b       ← DONE (see specs/page-options.md)
 page-options Phase 3c       ← DONE (see specs/page-options.md)
