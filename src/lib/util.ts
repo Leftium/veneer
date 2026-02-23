@@ -28,7 +28,7 @@ function getTimezoneOffset(timeZone: string): number {
 /**
  * Simple string hash (djb2) → 32-bit unsigned integer.
  */
-function hashString(str: string): number {
+export function hashString(str: string): number {
 	let hash = 5381
 	for (let i = 0; i < str.length; i++) {
 		hash = ((hash << 5) + hash + str.charCodeAt(i)) >>> 0
@@ -44,6 +44,10 @@ export interface DancerRow {
 	role: 'lead' | 'follow' | 'both' | 'unknown'
 	/** Signup timestamp (unix ms) for stable ordering. Older entries get icons first. */
 	ts?: number | null
+	/** Wish/message text from the signup form. */
+	wish?: string
+	/** Whether this dancer has confirmed payment. */
+	paid?: boolean
 }
 
 /**
