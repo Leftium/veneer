@@ -263,7 +263,7 @@ Resolved tabs: parse `tabs` state (dot-separated) filtering to valid `ALL_TABS`,
 
 ---
 
-## Phase 5: Google Form Theme Colors — TODO
+## Phase 5: Google Form Theme Colors — DONE
 
 **Goal:** Extract the form's accent color and background color from `FB_PUBLIC_LOAD_DATA_` and
 surface them as veneer params, so the veneer page can optionally use the form's own color scheme.
@@ -309,7 +309,7 @@ the form, falling back to preset if the form has none.
 - Preview strip shows the background color behind the form card area (below the header)
 - Advanced options panel gains two new rows: **Accent color** and **Background color**
 
-### Files to change
+### Files changed
 
 1. `src/lib/google-document-util/google-form.ts` — extract `accentColor`, `bgColor` from JSON
 2. `src/routes/[id1=vid]/[[id2=vid]]/+layout.server.ts` — resolve `?accentColor=`, `?bgColor=`

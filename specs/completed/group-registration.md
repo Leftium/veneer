@@ -1,8 +1,8 @@
 # Group Registration Widget
 
-> **Status**: Spec draft
+> **Status**: Implemented (commit `7893272`)
 >
-> **Last updated**: 2026-02-17
+> **Last updated**: 2026-02-23
 
 ## Overview
 

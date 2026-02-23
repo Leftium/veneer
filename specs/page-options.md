@@ -210,22 +210,20 @@ Veneer routes use an invisible SvelteKit route group that never appears in URLs:
 ```
 src/routes/
 ├── +page.svelte                              ← launcher page (unknown domains)
-├── (centered)/
-│   ├── +layout.svelte
-│   ├── (veneer)/                             ← invisible route group
-│   │   └── [id1=vid]/
-│   │       └── [[id2=vid]]/
-│   │           ├── +layout.server.ts         ← data loading, preset resolution
-│   │           ├── +layout.svelte            ← main UI: tabs, header, footer
-│   │           └── [[tid=tab]]/
-│   │               ├── +page.server.ts       ← form submission action
-│   │               └── +page.svelte
-│   ├── test-links/
-│   └── [flags]/                              ← legacy (to be removed)
-│       └── ...
+├── +layout.svelte                            ← root layout (sanitize.css, paraglide)
+├── [id1=vid]/
+│   └── [[id2=vid]]/
+│       ├── +layout.server.ts                 ← data loading, preset resolution
+│       ├── +layout.svelte                    ← main UI: tabs, header, footer
+│       └── [[tid=tab]]/
+│           ├── +page.server.ts               ← form submission action
+│           └── +page.svelte
 ├── api/
 ├── demo/
 ```
+
+> **Note:** The `(centered)/` and `(veneer)/` route groups were removed during the PicoCSS migration
+> (see `specs/completed/remove-picocss.md`). Routes are now flat under `src/routes/`.
 
 **Why this works:** The `vid` param matcher is strict (`^[sfgbh]\.\w+$`), so it won't match static routes (`api`, `demo`, `test-links`), random paths (`favicon.ico`), or tab names (`info`, `form`). The `reroute` hook ensures paths always start with a valid doc ID by the time route matching occurs.
 
@@ -581,8 +579,8 @@ Notable decisions:
 
 Files modified:
 
-1. `src/routes/(centered)/(veneer)/[id1=vid]/[[id2=vid]]/+layout.server.ts` — `?tabs=`, wildcard redirect, `?showErrors`, `numTabs` fix
-2. `src/routes/(centered)/(veneer)/[id1=vid]/[[id2=vid]]/+layout.svelte` — unlink raw/dev slides
+1. `src/routes/[id1=vid]/[[id2=vid]]/+layout.server.ts` — `?tabs=`, wildcard redirect, `?showErrors`, `numTabs` fix
+2. `src/routes/[id1=vid]/[[id2=vid]]/+layout.svelte` — unlink raw/dev slides
 
 ### Phase 3b: Header Param Overrides — DONE
 
@@ -635,7 +633,7 @@ Files modified:
 
 The launcher URL builder surfaces all these params as advanced options — see `specs/launcher.md`.
 
-### Phase 3c: Short Tab URLs for Default Docs — TODO
+### Phase 3c: Short Tab URLs for Default Docs — DONE
 
 When viewing a domain's default docs (i.e., `params.id1`/`params.id2` match the preset's
 `defaultFormId`/`defaultSheetId`), tab links should use short URLs instead of full doc-ID paths:
@@ -651,34 +649,14 @@ This applies in **both production and dev** (`?hostname=` simulation). In dev wi
 full routed values), so tab links show the long doc IDs even though the browser URL is short.
 The fix is the same for both environments.
 
-**Implementation:**
+Implemented: `+layout.server.ts` computes `usingDefaultDocs` and passes it to the layout.
+`+layout.svelte` uses it to build short hrefs (`/form`, `/list`) when viewing default docs,
+full hrefs (`/g.abc123/form`) otherwise.
 
-In `+layout.server.ts`, detect whether the current doc IDs match the resolved preset's defaults
-and pass a boolean to the layout:
+Files changed:
 
-```typescript
-const usingDefaultDocs =
-	params.id1 === preset.defaultFormId &&
-	(params.id2 === preset.defaultSheetId || (!params.id2 && !preset.defaultSheetId))
-```
-
-In `+layout.svelte`, use `data.usingDefaultDocs` to build short hrefs:
-
-```typescript
-// Build base path for tab links
-const docPath = data.usingDefaultDocs
-	? '' // short: /form, /list
-	: params.id2
-		? `/${params.id1}/${params.id2}`
-		: `/${params.id1}` // full: /g.abc/s.xyz
-```
-
-Default tab (first in visible tabs) links to `/` (if default docs) or `/g.abc123` (if not).
-
-Files to change:
-
-1. `src/routes/(centered)/(veneer)/[id1=vid]/[[id2=vid]]/+layout.server.ts` — compute `usingDefaultDocs`
-2. `src/routes/(centered)/(veneer)/[id1=vid]/[[id2=vid]]/+layout.svelte` — use it for tab hrefs and `goto()` calls
+1. `src/routes/[id1=vid]/[[id2=vid]]/+layout.server.ts` — compute `usingDefaultDocs`
+2. `src/routes/[id1=vid]/[[id2=vid]]/+layout.svelte` — use it for tab hrefs and `goto()` calls
 
 ### Phase 4: Dynamic Header Image — SUPERSEDED
 
@@ -690,12 +668,12 @@ The remaining work — extracting the form's accent color and background color f
 `FB_PUBLIC_LOAD_DATA_` and surfacing them as veneer params — is tracked in `specs/launcher.md`
 Phase 5 (Google Form Theme Colors).
 
-### Phase 5: Theme System
+### Phase 5: Theme System — PARTIAL
 
-1. Define CSS custom properties for theming
-2. Allow color overrides via params — partially done via Phase 3b header params
-3. Accent color + background color from Google Form — see `specs/launcher.md` Phase 5
-4. Consider light/dark mode support
+1. Define CSS custom properties for theming — done (Open Props + `--app-*` variables)
+2. Allow color overrides via params — done via Phase 3b header params
+3. Accent color + background color from Google Form — done (see `specs/launcher.md` Phase 5)
+4. Consider light/dark mode support — TODO
 
 ## Migration Path
 
@@ -750,10 +728,10 @@ veneer.leftium.com/api/final-url       # API endpoint
 
 1. `src/lib/presets.ts` **(new)** — `DOMAIN_PRESETS`, `PRESETS`, `Preset` interface, `resolvePresetName()`
 2. `src/hooks.ts` — Rewritten: domain lookup, `deLocalizeUrl`, path normalization
-3. `src/routes/(centered)/(veneer)/` **(renamed from `[base=base]/`)** — Invisible route group
-4. `src/routes/(centered)/(veneer)/.../+layout.server.ts` — Preset resolution, tab visibility filtering
-5. `src/routes/(centered)/(veneer)/.../+layout.svelte` — Removed `params.base`, preserved `id2` + search params on navigation
-6. `src/routes/(centered)/(veneer)/.../[[tid=tab]]/+page.server.ts` — Preserved `id2` in post-submit redirect
+3. `src/routes/` **(renamed from `[base=base]/`)** — Invisible route group
+4. `src/routes/.../+layout.server.ts` — Preset resolution, tab visibility filtering
+5. `src/routes/.../+layout.svelte` — Removed `params.base`, preserved `id2` + search params on navigation
+6. `src/routes/.../[[tid=tab]]/+page.server.ts` — Preserved `id2` in post-submit redirect
 7. `src/routes/+page.svelte` **(new)** — Launcher stub with preset links
 8. `src/params/base.ts` **(deleted)**
 
@@ -765,8 +743,8 @@ veneer.leftium.com/api/final-url       # API endpoint
 
 ### Phase 3a
 
-1. `src/routes/(centered)/(veneer)/[id1=vid]/[[id2=vid]]/+layout.server.ts` — `?tabs=` override, `?tabs=*` redirect, `?showErrors`, `numTabs` fix
-2. `src/routes/(centered)/(veneer)/[id1=vid]/[[id2=vid]]/+layout.svelte` — Unlinked `raw` and `dev` slides (each gated by own `navTabs` icon)
+1. `src/routes/[id1=vid]/[[id2=vid]]/+layout.server.ts` — `?tabs=` override, `?tabs=*` redirect, `?showErrors`, `numTabs` fix
+2. `src/routes/[id1=vid]/[[id2=vid]]/+layout.svelte` — Unlinked `raw` and `dev` slides (each gated by own `navTabs` icon)
 
 ## Complete Options Summary
 
