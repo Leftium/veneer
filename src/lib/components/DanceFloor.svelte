@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { PlacedUnit } from '$lib/dance-party'
+	import { getDancerScale, type PlacedUnit } from '$lib/dance-party'
 	import DancerIcon from './DancerIcon.svelte'
 
 	interface Props {
@@ -33,11 +33,16 @@
 				: unit.members[0].role === 'lead' || unit.members[0].role === 'unknown'
 					? 'lead'
 					: 'follow'}
+		{@const scaleFactor =
+			displayRole === 'both' || displayRole === 'lead' || displayRole === 'follow'
+				? getDancerScale(displayRole, unit.imageNum)
+				: 1}
 		<div
 			class="icon-wrapper"
 			style:left="{unit.x * 100}%"
 			style:top="{anchorPercent}%"
-			style:transform="translateX(-50%) translateY({unit.yOffset}px)"
+			style:transform="translateX(-50%) translateY({unit.yOffset}px) scale({scaleFactor})"
+			style:transform-origin="bottom center"
 			style:--dancer-icon-size="{baseIconHeight}px"
 			style:--dancer-glow-size="{glowSize}px"
 		>

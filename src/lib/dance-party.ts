@@ -74,6 +74,76 @@ export const DEFAULT_CONFIG: DancePartyConfig = {
 }
 
 // ---------------------------------------------------------------------------
+// Image Scale Normalization
+// ---------------------------------------------------------------------------
+
+/**
+ * Per-image scale factors to normalize visual height.
+ * Auto-computed from content bounding boxes (median-targeted), then hand-tunable.
+ * Applied as CSS transform: scale() in the rendering layer.
+ */
+export const DANCER_SCALES = {
+	"both": {
+		"1": 1.103,
+		"2": 1.133,
+		"3": 1.146,
+		"4": 1.075,
+		"5": 1.061,
+		"6": 1.09,
+		"7": 1.082,
+		"8": 1.02,
+		"9": 0.964,
+		"10": 0.882,
+		"11": 1.251,
+		"12": 1.111,
+		"13": 0.901,
+		"14": 1.201,
+		"15": 1.003,
+		"16": 1.026,
+		"17": 0.988,
+		"18": 1.166,
+		"19": 1.285,
+		"20": 0.929,
+		"21": 0.992,
+		"22": 1.057,
+		"23": 1.051,
+		"24": 1.223,
+		"25": 0.949,
+		"26": 1.169,
+		"27": 1.009,
+		"28": 1.158,
+		"29": 1.169,
+		"30": 1.131,
+		"31": 1.025,
+		"32": 0.981
+	},
+	"lead": {
+		"1": 1.038,
+		"2": 1.018,
+		"3": 0.982,
+		"4": 0.938,
+		"5": 0.982,
+		"6": 1.057
+	},
+	"follow": {
+		"1": 1.071,
+		"2": 1.01,
+		"3": 1.003,
+		"4": 0.991,
+		"5": 0.901,
+		"6": 0.997
+	}
+} as const
+
+/**
+ * Look up the scale factor for a dancer image.
+ * Returns 1.0 for unknown images.
+ */
+export function getDancerScale(role: 'both' | 'lead' | 'follow', imageNum: number): number {
+	return DANCER_SCALES[role]?.[imageNum] ?? 1.0
+}
+
+// ---------------------------------------------------------------------------
 // Image Metadata
 // ---------------------------------------------------------------------------
 
