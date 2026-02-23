@@ -107,22 +107,31 @@ Files to change:
 
 ---
 
-## Phase 2: Language Switcher UI — TODO
+## Phase 2: Language Switcher UI — DONE
 
-Currently there's no UI for users to switch languages. The only way is via the demo page
-(`/demo/paraglide`) or a direct `setLocale()` call.
+### Design decisions
 
-Add a language switcher to the header or footer. Options:
+- **`en | 한` text-only toggle** in the upper-right corner of the header, absolutely positioned
+- Active locale: **bold + full opacity**; inactive: **normal weight + opacity 0.7** (opacity 1 on hover)
+- Pipe separator at reduced opacity (0.7) for subtlety
+- Inherits header text color + text-shadow (same treatment as title text) so it stands out on
+  complex background images
+- Calls `setLocale(locale)` which sets `PARAGLIDE_LOCALE` cookie + **hard page reload** (avoids
+  client-side reactivity glitches)
+- Reusable `LanguageSwitcher` component — no props, reads locale from Paraglide directly
+- Header only for now; footer placement deferred to a future pass
+- Launcher page (`+page.svelte`) not included — veneer pages only
 
-- Simple `en | 한국어` toggle in the header nav area
-- Dropdown if more locales are added later
+### Implementation
 
-The switcher calls `setLocale(locale)` which sets the `PARAGLIDE_LOCALE` cookie and reloads.
+New file:
 
-Files to change:
+- `src/lib/components/LanguageSwitcher.svelte` — reusable switcher component
 
-- `src/routes/(centered)/(veneer)/[id1=vid]/[[id2=vid]]/+layout.svelte` — add switcher to header
-- `src/routes/+page.svelte` — add switcher to launcher page
+Changed file:
+
+- `src/routes/[id1=vid]/[[id2=vid]]/+layout.svelte` — import + `<lang-switch>` wrapper inside
+  `<d-header>`, positioned `absolute; top; right` with `z-index: 2` (above the gradient scrim)
 
 ---
 
@@ -215,7 +224,7 @@ locale-aware or keyword-configurable via preset.
 
 ```
 Phase 1: preferredLanguage strategy   ← DONE
-Phase 2: Language switcher UI         ← after remove-picocss (header CSS stable)
+Phase 2: Language switcher UI         ← DONE (header only; footer deferred)
 Phase 3: Locale-aware form content    ← future, Option C (defer) for now
 Phase 4: Locale-aware column regex    ← after port-temp-branch infra
 Phase 5: GroupRegistration strings    ← after group registration ported

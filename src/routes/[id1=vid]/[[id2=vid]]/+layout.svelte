@@ -48,6 +48,7 @@
 	import { slide } from 'svelte/transition'
 	import { isOk } from 'wellcrafted/result'
 	import FooterSection from '$lib/components/FooterSection.svelte'
+	import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte'
 
 	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
 		[markdownitDeflist],
@@ -348,6 +349,10 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 		style:background-size={data.header.imageFit}
 		style:--header-text-color={data.header.textColor}
 	>
+		<lang-switch>
+			<LanguageSwitcher />
+		</lang-switch>
+
 		<fi-spacer style:height={data.header.height}></fi-spacer>
 
 		<h1 class="title">{data.title}</h1>
@@ -779,6 +784,13 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 		& > * {
 			position: relative;
 			z-index: 1;
+		}
+
+		lang-switch {
+			position: absolute;
+			top: $size-2;
+			right: $size-2;
+			z-index: 2;
 		}
 	}
 
