@@ -16,8 +16,17 @@ import {
 
 import { getGoogleDocumentId } from '$lib/google-document-util/url-id.js'
 import { stripHidden } from '$lib/google-document-util/google-sheets.js'
-import type { ResultGoogleForm, ResultGoogleSheet } from '$lib/google-document-util/types'
+import type {
+	GoogleSheet,
+	GoogleFormDocument,
+	GoogleDocumentError,
+	ResultGoogleForm,
+	ResultGoogleSheet,
+} from '$lib/google-document-util/types'
+import type { Result } from 'wellcrafted/result'
 import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-with-id'
+
+type DocumentResult = Result<GoogleSheet | GoogleFormDocument, GoogleDocumentError>
 
 const ALL_TABS = ['info', 'form', 'list', 'raw', 'dev']
 
@@ -33,7 +42,7 @@ function contrastText(hex: string | null): string | null {
 	return L > 0.179 ? '#212529' : 'white' // #212529 = Open Props $gray-9
 }
 
-export const load = async ({ cookies, params, url }) => {
+export const load = async ({ cookies, locals, params, url }) => {
 	// Flash cookie set by the form action on successful submission — consume it once.
 	const successParty = cookies.get('yay') === '1'
 	if (successParty) cookies.delete('yay', { path: '/' })
@@ -68,6 +77,9 @@ export const load = async ({ cookies, params, url }) => {
 	const headerImageFit = url.searchParams.get('headerImageFit') ?? preset.headerImageFit
 	// headerImage resolved after form is loaded (needed for 'form' sentinel)
 
+	// ?ogImage= override: 'header' | 'first' | 'none' | <url>
+	const ogImageParam = url.searchParams.get('ogImage')
+
 	// Phase 5: accent/background color param overrides
 	const accentColorParam = url.searchParams.get('accentColor')
 	const bgColorParam = url.searchParams.get('bgColor')
@@ -96,12 +108,14 @@ export const load = async ({ cookies, params, url }) => {
 
 	let form: ResultGoogleForm = Err({ message: `Initial form` })
 	let sheet: ResultGoogleSheet = Err({ message: `Initial sheet` })
+	let markedOgImage: string | null = null
 	let firstFormImage: string | null = null
 
-	const [document1, document2] = await Promise.all([
-		fetchWithDocumentId(params.id1),
-		fetchWithDocumentId(params.id2),
-	])
+	// Use pre-fetched documents from hooks.server.ts if available (avoids double-fetch
+	// when ssr=false, since the hook already fetched them for OG metadata).
+	const [document1, document2]: [DocumentResult, DocumentResult] = locals.documents
+		? [locals.documents.document1, locals.documents.document2]
+		: await Promise.all([fetchWithDocumentId(params.id1), fetchWithDocumentId(params.id2)])
 
 	if (isOk(document1)) {
 		if (document1.data.type === 'form') {
@@ -175,7 +189,13 @@ export const load = async ({ cookies, params, url }) => {
 			return result
 		}, [] as string[])
 
-		// OG image: first IMAGE field from the form, used as fallback when no header image
+		// OG image: check for an IMAGE field whose title starts with "og:" (case-insensitive)
+		markedOgImage =
+			form.data.fields
+				.find((f) => f.type === 'IMAGE' && /^og:/i.test(f.title))
+				?.imgUrl?.replace(/=w\d+$/i, '') ?? null
+
+		// Fallback: first IMAGE field from the form
 		firstFormImage =
 			form.data.fields.find((f) => f.type === 'IMAGE')?.imgUrl?.replace(/=w\d+$/i, '') ?? null
 
@@ -282,6 +302,18 @@ export const load = async ({ cookies, params, url }) => {
 		(params.id2 === preset.defaultSheetId || (!params.id2 && !preset.defaultSheetId))
 	const defaultTab = tabs[0] || 'info'
 
+	// OG image priority: ?ogImage= param > og:-marked image > first form image > header image
+	const ogImage =
+		ogImageParam === 'none'
+			? null
+			: ogImageParam === 'header'
+				? headerImage || null
+				: ogImageParam === 'first'
+					? firstFormImage || null
+					: ogImageParam
+						? ogImageParam // explicit URL
+						: markedOgImage || firstFormImage || headerImage || null
+
 	return {
 		successParty,
 		document1,
@@ -307,6 +339,6 @@ export const load = async ({ cookies, params, url }) => {
 		accentColor,
 		accentText,
 		bgColor,
-		ogImage: headerImage || firstFormImage,
+		ogImage,
 	}
 }

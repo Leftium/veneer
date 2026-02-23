@@ -492,14 +492,10 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 	</d-footer>
 </d-article>
 
+<!-- OG meta tags are injected into app.html by hooks.server.ts via transformPageChunk,
+     so they work even with ssr=false. Do NOT duplicate them here. -->
 <svelte:head>
 	<title>{data.title}</title>
-	<meta property="og:title" content={data.title} />
-	<meta property="og:type" content="website" />
-	<meta property="og:url" content={page.url.href} />
-	{#if data.ogImage}
-		<meta property="og:image" content={data.ogImage} />
-	{/if}
 </svelte:head>
 
 {#if false}

@@ -1,1 +1,1 @@
-export const ssr = false
+// ssr = false is set globally in +layout.ts
