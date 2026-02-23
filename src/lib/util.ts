@@ -36,69 +36,103 @@ function hashString(str: string): number {
 	return hash
 }
 
+/** Pool sizes per role (lead/follow use 1-indexed image numbers; both uses 0-indexed into bothPool). */
+const POOL_SIZE: Record<string, number> = { lead: 6, follow: 6, both: 18 }
+
+export interface DancerRow {
+	name: string
+	role: 'lead' | 'follow' | 'both' | 'unknown'
+	/** Signup timestamp (unix ms) for stable ordering. Older entries get icons first. */
+	ts?: number | null
+}
+
 /**
- * Mulberry32 — a fast 32-bit seeded PRNG.
- * Returns a function that produces deterministic floats in [0, 1).
+ * Assign dancer image numbers using a two-layer approach:
+ *
+ * Layer 1 — Stable identity: hash(formTitle, name) → base icon per person.
+ *   Same person on the same form always gets the same base icon, regardless
+ *   of row order, merges, or garbage collection.
+ *
+ * Layer 2 — Render-time variety: walk rows oldest-first, per-role "used" set.
+ *   If the base icon collides with a recently-used icon for that role, offset
+ *   to the next available. When the pool is exhausted, reset the used set but
+ *   carry the last 2 icons forward to prevent repeats at the boundary.
+ *
+ * For lead/follow: returns 1-indexed image numbers (1–6).
+ * For both: returns 0-indexed pool indices (0–17), mapped through bothPool by DancerIcon.
+ * For unknown: returns 0 (no image).
  */
-function mulberry32(seed: number): () => number {
-	let t = seed >>> 0
-	return () => {
-		t = (t + 0x6d2b79f5) >>> 0
-		let r = Math.imul(t ^ (t >>> 15), t | 1)
-		r ^= r + Math.imul(r ^ (r >>> 7), r | 61)
-		return ((r ^ (r >>> 14)) >>> 0) / 0x100000000
+export function assignDancerImages(formTitle: string, dancers: DancerRow[]): number[] {
+	if (dancers.length === 0) return []
+
+	// Sort indices by timestamp (oldest first) so earlier signups get icons
+	// first and stay stable when new rows are added. Rows without timestamps
+	// fall back to their display order (index) to maintain determinism.
+	const sortedIndices = dancers
+		.map((_, i) => i)
+		.sort((a, b) => (dancers[a].ts ?? Infinity) - (dancers[b].ts ?? Infinity))
+
+	// Per-role tracking: which icons have been used in the current "bag"
+	const used: Record<string, Set<number>> = {
+		lead: new Set(),
+		follow: new Set(),
+		both: new Set(),
 	}
-}
 
-/**
- * Create a deterministic PRNG from a string seed.
- * Usage: `const rand = seededRandom('formTitle::dancerName'); rand() // 0..1`
- */
-export function seededRandom(seed: string): () => number {
-	return mulberry32(hashString(seed))
-}
-
-/**
- * Fisher-Yates shuffle using a seeded PRNG. Returns a new array.
- */
-function seededShuffle<T>(arr: readonly T[], rand: () => number): T[] {
-	const out = arr.slice()
-	for (let i = out.length - 1; i > 0; i--) {
-		const j = Math.floor(rand() * (i + 1))
-		;[out[i], out[j]] = [out[j], out[i]]
+	// Per-role: last 2 assigned icons (for boundary overlap when resetting)
+	const recentByRole: Record<string, number[]> = {
+		lead: [],
+		follow: [],
+		both: [],
 	}
-	return out
-}
 
-/**
- * Assign dancer image numbers (1–numImages) to `count` slots using a
- * shuffle-bag approach seeded by `seed`. Guarantees no adjacent repeats,
- * even across bag boundaries.
- */
-export function assignDancerImages(seed: string, count: number, numImages = 6): number[] {
-	if (count === 0) return []
-	const rand = seededRandom(seed)
-	const pool = Array.from({ length: numImages }, (_, i) => i + 1)
-	const result: number[] = []
+	// Assign in timestamp order, then scatter results back to display order
+	const result = new Array<number>(dancers.length)
 
-	while (result.length < count) {
-		const bag = seededShuffle(pool, rand)
+	for (const idx of sortedIndices) {
+		const { name, role } = dancers[idx]
 
-		// Avoid repeat at bag boundary: if first element of new bag matches
-		// last assigned, rotate it to a later position.
-		if (result.length > 0 && bag[0] === result[result.length - 1]) {
-			// Find the first element that differs and swap it to front
-			for (let i = 1; i < bag.length; i++) {
-				if (bag[i] !== bag[0]) {
-					;[bag[0], bag[i]] = [bag[i], bag[0]]
+		if (role === 'unknown') {
+			result[idx] = 0
+			continue
+		}
+
+		const poolSize = POOL_SIZE[role]
+		const usedSet = used[role]
+		const recent = recentByRole[role]
+
+		// Layer 1: stable base icon from hash
+		const baseIndex = hashString(formTitle + '\0' + name) % poolSize
+
+		// Layer 2: if base collides with used set, find next available
+		let chosen = baseIndex
+		if (usedSet.has(chosen)) {
+			// Walk forward from baseIndex to find first unused slot
+			for (let offset = 1; offset < poolSize; offset++) {
+				const candidate = (baseIndex + offset) % poolSize
+				if (!usedSet.has(candidate)) {
+					chosen = candidate
 					break
 				}
 			}
+			// If all are used (shouldn't happen since we reset below), just use base
 		}
 
-		for (const img of bag) {
-			if (result.length >= count) break
-			result.push(img)
+		usedSet.add(chosen)
+		recent.push(chosen)
+
+		// Convert to expected output format
+		// lead/follow: 1-indexed (1–6); both: 0-indexed (0–17)
+		result[idx] = role === 'both' ? chosen : chosen + 1
+
+		// Reset bag when pool is exhausted, carrying last 2 forward
+		if (usedSet.size >= poolSize) {
+			usedSet.clear()
+			// Carry last 2 into new bag to prevent repeats at boundary
+			const tail = recent.slice(-2)
+			for (const t of tail) {
+				usedSet.add(t)
+			}
 		}
 	}
 

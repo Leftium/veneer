@@ -8,8 +8,6 @@
 	let { role, representative = false, imageNum }: Props = $props()
 
 	const bothPool = [7, 9, 10, 11, 12, 13, 15, 16, 17, 20, 21, 22, 23, 24, 25, 27, 30, 32] as const
-	const fallbackNum = Math.ceil(Math.random() * 6)
-	const fallbackBothNum = bothPool[Math.floor(Math.random() * bothPool.length)]
 
 	const glowMap = {
 		follow:
@@ -28,10 +26,8 @@
 		representative
 			? (representativeMap[role as keyof typeof representativeMap] ?? 6)
 			: role === 'both'
-				? imageNum != null
-					? bothPool[imageNum % bothPool.length]
-					: fallbackBothNum
-				: (imageNum ?? fallbackNum),
+				? bothPool[(imageNum ?? 0) % bothPool.length]
+				: (imageNum ?? 1),
 	)
 	const paddedForRole = $derived(String(numForRole).padStart(2, '0'))
 

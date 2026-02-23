@@ -8,7 +8,7 @@
 	dayjs.extend(isBetween)
 	dayjs.extend(utc)
 
-	import { stringify, assignDancerImages } from '$lib/util'
+	import { stringify, assignDancerImages, type DancerRow } from '$lib/util'
 
 	import StickyHeaderGrid from '$lib/components/StickyHeaderSummaryDetailsGrid.svelte'
 	import DancerIcon from '$lib/components/DancerIcon.svelte'
@@ -25,7 +25,26 @@
 	let extra = $derived(data.extra)
 	let columns = $derived(data.columns)
 	let rows = $derived(data.rows)
-	let imageNums = $derived(assignDancerImages(title, rows.length))
+
+	function detectRole(roleText: string): DancerRow['role'] {
+		const isLead = REGEX_DANCE_LEADER.test(roleText)
+		const isFollow = REGEX_DANCE_FOLLOW.test(roleText)
+		if (isLead && isFollow) return 'both'
+		if (isLead) return 'lead'
+		if (isFollow) return 'follow'
+		return 'unknown'
+	}
+
+	let dancers = $derived.by(() => {
+		const ci = extra?.ci
+		if (!ci) return [] as DancerRow[]
+		return rows.map((row: any) => ({
+			name: row[ci.name]?.render ?? '',
+			role: detectRole(row[ci.role]?.render ?? ''),
+			ts: row.find((cell: any) => cell?.ts != null)?.ts ?? null,
+		})) as DancerRow[]
+	})
+	let imageNums = $derived(assignDancerImages(title, dancers))
 </script>
 
 {#snippet rowDetails(row: string | any[], _r: any)}
@@ -91,17 +110,7 @@
 							<div>{row[ci.paid]?.render ? '💰' : ''}</div>
 						</fi-index>
 						<fi-role>
-							<DancerIcon
-								role={REGEX_DANCE_LEADER.test(row[ci.role]?.render) &&
-								REGEX_DANCE_FOLLOW.test(row[ci.role]?.render)
-									? 'both'
-									: REGEX_DANCE_LEADER.test(row[ci.role]?.render)
-										? 'lead'
-										: REGEX_DANCE_FOLLOW.test(row[ci.role]?.render)
-											? 'follow'
-											: 'unknown'}
-								imageNum={imageNums[r]}
-							/>
+							<DancerIcon role={dancers[r]?.role ?? 'unknown'} imageNum={imageNums[r]} />
 						</fi-role>
 						<fi-info>
 							<h4>{row[ci.name]?.render}</h4>
