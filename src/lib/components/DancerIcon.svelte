@@ -3,9 +3,20 @@
 		role: 'lead' | 'follow' | 'both' | 'unknown'
 		representative?: boolean
 		imageNum?: number
+		/** When set, use this image number directly (bypass bothPool mapping). Used by DanceFloor. */
+		directImageNum?: number
+		glow?: boolean
+		flipped?: boolean
 	}
 
-	let { role, representative = false, imageNum }: Props = $props()
+	let {
+		role,
+		representative = false,
+		imageNum,
+		directImageNum,
+		glow: showGlow = true,
+		flipped = false,
+	}: Props = $props()
 
 	const bothPool = [7, 9, 10, 11, 12, 13, 15, 16, 17, 20, 21, 22, 23, 24, 25, 27, 30, 32] as const
 
@@ -23,15 +34,17 @@
 	const representativeMap = { lead: 6, follow: 6, both: 20 } as const
 
 	const numForRole = $derived(
-		representative
-			? (representativeMap[role as keyof typeof representativeMap] ?? 6)
-			: role === 'both'
-				? bothPool[(imageNum ?? 0) % bothPool.length]
-				: (imageNum ?? 1),
+		directImageNum != null
+			? directImageNum
+			: representative
+				? (representativeMap[role as keyof typeof representativeMap] ?? 6)
+				: role === 'both'
+					? bothPool[(imageNum ?? 0) % bothPool.length]
+					: (imageNum ?? 1),
 	)
 	const paddedForRole = $derived(String(numForRole).padStart(2, '0'))
 
-	const glow = $derived(glowMap[role])
+	const glowBg = $derived(glowMap[role])
 	const src = $derived(
 		role !== 'unknown'
 			? `/dancers/${dirMap[role as keyof typeof dirMap]}/${paddedForRole}-${suffixMap[role as keyof typeof suffixMap]}.png`
@@ -39,7 +52,12 @@
 	)
 </script>
 
-<span class="dancer-icon" style:--dancer-glow={glow}>
+<span
+	class="dancer-icon"
+	style:--dancer-glow={glowBg}
+	style:--dancer-glow-opacity={showGlow ? 1 : 0}
+	style:transform={flipped ? 'scaleX(-1)' : undefined}
+>
 	{#if src}
 		<img {src} alt="{role} dancer" />
 	{:else}
@@ -66,6 +84,7 @@
 		border-radius: 50%;
 		background: var(--dancer-glow);
 		mask-image: radial-gradient(circle, black 40%, transparent 70%);
+		opacity: var(--dancer-glow-opacity, 1);
 	}
 
 	.dancer-icon img {

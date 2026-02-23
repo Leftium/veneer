@@ -12,6 +12,7 @@
 
 	import StickyHeaderGrid from '$lib/components/StickyHeaderSummaryDetailsGrid.svelte'
 	import DancerIcon from '$lib/components/DancerIcon.svelte'
+	import DanceParty from '$lib/components/DanceParty.svelte'
 	import { REGEX_DANCE_LEADER, REGEX_DANCE_FOLLOW } from '$lib/dance-constants'
 	import { m } from '$lib/paraglide/messages.js'
 
@@ -42,9 +43,20 @@
 			name: row[ci.name]?.render ?? '',
 			role: detectRole(row[ci.role]?.render ?? ''),
 			ts: row.find((cell: any) => cell?.ts != null)?.ts ?? null,
+			wish: row[ci.wish]?.render || undefined,
+			paid: !!row[ci.paid]?.render,
 		})) as DancerRow[]
 	})
 	let imageNums = $derived(assignDancerImages(title, dancers))
+
+	// First signup timestamp for song numbering (earliest ts among all dancers)
+	let firstSignupTs = $derived.by(() => {
+		let earliest = Infinity
+		for (const d of dancers) {
+			if (d.ts != null && d.ts < earliest) earliest = d.ts
+		}
+		return earliest === Infinity ? null : earliest
+	})
 </script>
 
 {#snippet rowDetails(row: string | any[], _r: any)}
@@ -89,6 +101,9 @@
 						><DancerIcon role="follow" representative />{count.follows}
 						<DancerIcon role="lead" representative />{count.leaders}</span
 					>
+					<dance-floor-wrap>
+						<DanceParty {dancers} formTitle={title} {firstSignupTs} />
+					</dance-floor-wrap>
 				</gh>
 			{/snippet}
 
@@ -202,6 +217,11 @@
 			flex-wrap: wrap;
 			justify-content: center;
 			font-size: 188%;
+
+			dance-floor-wrap {
+				flex-basis: 100%;
+				font-size: initial;
+			}
 		}
 
 		gd {
