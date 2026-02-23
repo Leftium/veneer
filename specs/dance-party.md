@@ -1,6 +1,6 @@
 # Virtual Dance Party
 
-> **Status**: Draft
+> **Status**: Phase 3 complete
 >
 > **Last updated**: 2026-02-24
 
@@ -14,7 +14,7 @@ The visualization lives inside the existing sticky header of the list tab (`<gh>
 
 ## Implementation Phases
 
-### Phase 1 — Core Engine (`dance-party.ts`)
+### Phase 1 — Core Engine (`dance-party.ts`) ✓
 
 Pure TypeScript module with no DOM dependencies. Fully unit-testable.
 
@@ -27,8 +27,9 @@ Pure TypeScript module with no DOM dependencies. Fully unit-testable.
 
 **Deliverable**: `src/lib/dance-party.ts` + vitest tests
 **Depends on**: nothing
+**Committed**: `8ae8075`
 
-### Phase 2 — Static Dance Floor
+### Phase 2 — Static Dance Floor ✓
 
 Render positioned dancer icons as a non-interactive strip. No scrub, no magnification — just the idle-state layout.
 
@@ -36,21 +37,30 @@ Render positioned dancer icons as a non-interactive strip. No scrub, no magnific
 - `DancerIcon.svelte` modifications: `glow` prop, `flipped` prop
 - Integrate into `Sheet.svelte` `<gh>` header (dance-event mode)
 - Dev tuning panel (sliders for all configurable parameters)
+- Per-image scale normalization (auto-computed, `/dancer-scales` tuning page)
+- Min-spacing sweep (`enforceMinSpacing`) + image deduplication (`assignUniqueImage`)
+- Synthetic dancer generator in dev panel (leads/follows/both inputs)
 
 **Deliverable**: visible dance floor with correct pairing, placement, image assignment
 **Depends on**: Phase 1
+**Committed**: `ce21ea7`, `5c4c281`, `6165890`, `cd2c03f`
 
-### Phase 3 — Scrub Interaction + Dock Magnification
+### Phase 3 — Scrub Interaction + Dock Magnification ✓
 
 Make the dance floor interactive.
 
-- Port `trackable.ts` from weather-sense
-- Dock-style magnification (scale computation, lens layout, direct DOM transforms)
-- Glow activation on scrubbed dancer
-- Performance: `will-change`, `pointer-events: none`, skip-unchanged, RAF throttle
+- Ported `trackable.ts` from weather-sense as `scrubAction.ts` (adapted API: `getPosition` → normalized 0–1, `onScrubChange/Start/End`)
+- Scale-only magnification — dancers grow in place, no positional dx shifts (avoids pushing edge dancers off-screen; overlapping neighbors is fine for the crowded dance floor aesthetic)
+- `neighborRadius` adapts to dancer density (average spacing × `neighborCount`)
+- Floor shadow (`::after` elliptical shadow) on active dancer instead of colored glow
+- Sticky-aware maxScale cap (1.5 when header is stuck, prevents overflow past viewport top)
+- `user-select: none` on `document.body` during scrub to prevent text selection
+- Split overflow (`overflow-x: clip; overflow-y: visible`) on `swiper-container` and `swiper-slide` so magnified dancers aren't clipped vertically
+- Performance: `will-change: transform`, `pointer-events: none` during scrub, `touch-action: pan-y`, RAF throttle at 60fps
 
 **Deliverable**: scrubbing through dancers with smooth magnification
 **Depends on**: Phase 2
+**Committed**: `913bda0`
 
 ### Phase 4 — Speech Bubbles
 
@@ -367,10 +377,10 @@ The magnification effect follows the macOS Dock model:
 
 ```ts
 const DOCK_CONFIG = {
-	maxScale: 2.75, // scale of the active (nearest) item
-	neighborCount: 3, // how many neighbors on each side are affected
+	maxScale: 2, // scale of the active (nearest) item (capped to 1.5 when sticky)
+	neighborCount: 2, // how many neighbors on each side are affected
 	falloffFn: 'cosine', // 'cosine' | 'gaussian' — shape of scale falloff
-	baseIconHeight: 32, // px, un-magnified icon height
+	baseIconHeight: 109, // px, un-magnified icon height
 	magnifiedSpacing: 4, // px, gap between items when magnified region expands
 }
 ```
@@ -396,11 +406,13 @@ function getScale(unitIndex: number, scrubPosition: number, unitPositions: numbe
 
 ### Layout During Magnification
 
-When magnification is active, dancers in the affected region need extra horizontal space. Rather than repositioning all dancers, only the magnified region expands:
+Scale-only approach: dancers magnify in place with no positional shifts. The original spec called for a "lens" model with dx offsets pushing neighbors apart, but in practice this pushed edge dancers off-screen. Instead:
 
-- The magnified region acts as a "lens" — items within it spread apart proportionally to their scale
-- Items outside the region stay fixed
-- This is achieved via CSS transforms (translateX + scale), not layout changes — GPU-friendly
+- Dancers grow from `transform-origin: bottom center` — they enlarge upward in place
+- Overlapping neighbors during magnification is acceptable (crowded dance floor aesthetic)
+- When the sticky header is active (`getBoundingClientRect().top < 10`), maxScale is capped to 1.5 to prevent dancers from overflowing past the viewport top
+- `computeDockLayout()` (lens model with dx) exists in `dance-party.ts` for potential future use but is not wired into the render path
+- All transforms are applied via direct DOM manipulation (`element.style.transform`), not Svelte reactivity — GPU-friendly
 
 ---
 
@@ -540,21 +552,22 @@ The horizontal-scrub vs. vertical-scroll gesture discrimination is identical. RA
 
 All visual updates during active scrub use **direct DOM manipulation** (not Svelte reactivity) for performance:
 
-- `element.style.transform = \`scale(${s}) translateX(${dx}px) translateY(${dy}px)\`` on each dancer
-- Speech bubble positioned via `style.transform`
-- Glow toggled via `style.opacity` on the `::before` pseudo-element
+- `element.style.transform = \`translateX(-50%) translateY(${yOffset}px) scale(${combinedScale})\`` on each dancer wrapper
+- Floor shadow toggled via `--dancer-shadow-opacity` CSS variable on the nearest dancer's `::after` pseudo-element
+- `user-select: none` set on `document.body` during scrub to prevent text selection across the page
 
-When scrub ends, reactive state catches up (e.g., for accessibility, for URL update).
+When scrub ends, all transforms reset to idle state (clean reset). Future phases will add reactive state catch-up (URL update, accessibility).
 
 ### Performance Targets
 
 Following the weather-sense performance patterns:
 
-- `will-change: transform` on all dancer icon containers
-- `pointer-events: none` on non-interactive children during scrub
-- Skip-unchanged guard: don't re-render if scrub position hasn't meaningfully changed
-- `touch-action: pan-y` default, switched to `none` during horizontal scrub
-- `overflow: clip` on the dance floor container
+- `will-change: transform` on all dancer icon containers (`.icon-wrapper`)
+- `pointer-events: none` on `.icon-wrapper` children during scrub
+- RAF-throttled updates at 60fps (via `scrubAction.ts`)
+- `touch-action: pan-y` default, switched to `none` during horizontal touch scrub
+- `overflow: visible` on the dance floor container (magnified dancers must not be clipped)
+- `overflow-x: clip; overflow-y: visible` on `swiper-container` and `swiper-slide` (horizontal containment for swiper, vertical freedom for magnification)
 
 ---
 
@@ -606,14 +619,15 @@ During development, a floating panel provides real-time control over key paramet
 | **Priority** | `jitterWeight`       | slider       | 2.0       | 0–5               |
 | **Priority** | `centerBias` max     | slider       | 0.8       | 0–1               |
 | **Pairing**  | `messageBalanceRate` | slider       | 0.5       | 0–1               |
-| **Dock**     | `maxScale`           | slider       | 2.75      | 1–5               |
-| **Dock**     | `neighborCount`      | slider       | 3         | 1–6               |
-| **Dock**     | `baseIconHeight`     | slider       | 32        | 16–64             |
+| **Dock**     | `maxScale`           | slider       | 2         | 1–5               |
+| **Dock**     | `neighborCount`      | slider       | 2         | 1–6               |
+| **Dock**     | `baseIconHeight`     | slider       | 109       | 16–120            |
 | **Dock**     | `magnifiedSpacing`   | slider       | 4         | 0–16              |
 | **Dock**     | `falloffFn`          | toggle       | cosine    | cosine / gaussian |
 | **Layout**   | `verticalJitter`     | slider       | 4         | 0–16              |
 | **Layout**   | `overlapTolerance`   | slider       | 0.3       | 0–1               |
 | **Layout**   | `soloAffinity`       | slider       | 0.3       | 0–1               |
+| **Layout**   | `minSpacing`         | slider       | 0.1       | 0–0.15            |
 | **Song**     | song number override | number input | (current) | 1–N               |
 
 Changes take effect immediately (no reload). Values are stored in `sessionStorage` so they persist across hot reloads during development.
@@ -624,20 +638,20 @@ Changes take effect immediately (no reload). Values are stored in `sessionStorag
 
 ### New Files
 
-| File                                   | Role                                                                                                                                                                  |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/lib/components/DanceParty.svelte` | Top-level component. Receives dancer data + form title. Computes pairing, placement, song seed. Renders `DanceFloor` + speech bubble overlay. Can be used standalone. |
-| `src/lib/components/DanceFloor.svelte` | The interactive strip. Manages scrub state, renders positioned dancer icons, applies dock magnification. Uses `trackable` action.                                     |
-| `src/lib/dance-party.ts`               | Pure functions: pairing algorithm, placement algorithm, priority scoring, hash utilities, dock scale computation, image metadata. Fully testable without DOM.         |
-| `src/lib/trackable.ts`                 | Ported from weather-sense. Svelte `use:trackable` action for pointer/touch gesture detection.                                                                         |
+| File                                   | Role                                                                                                                                                                   |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/lib/components/DanceParty.svelte` | Top-level component. Receives dancer data + form title. Computes pairing, placement, song seed. Renders `DanceFloor` + speech bubble overlay. Can be used standalone.  |
+| `src/lib/components/DanceFloor.svelte` | The interactive strip. Manages scrub state, renders positioned dancer icons, applies dock magnification. Uses `scrubAction` action.                                    |
+| `src/lib/dance-party.ts`               | Pure functions: pairing, placement, priority scoring, hash utilities, dock scale computation, dock layout, image metadata, scale normalization. Fully testable.        |
+| `src/lib/scrubAction.ts`               | Ported from weather-sense `trackable.ts`. Svelte `use:scrubAction` action for pointer/touch gesture detection with horizontal-scrub vs vertical-scroll discrimination. |
 
 ### Modified Files
 
-| File                                   | Change                                                                                                                     |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `src/lib/components/Sheet.svelte`      | Import `DanceParty`, render it inside the `<gh>` header (dance-event mode). Extend header height.                          |
-| `src/lib/components/DancerIcon.svelte` | Add optional `glow` prop (default `true` to preserve current behavior). Add optional `flipped` prop for horizontal mirror. |
-| `src/lib/util.ts`                      | `hashString` already exported — may add additional hash utilities to `dance-party.ts` instead.                             |
+| File                                   | Change                                                                                                                          |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `src/lib/components/Sheet.svelte`      | Import `DanceParty`, render it inside the `<gh>` header (dance-event mode). Extend header height.                               |
+| `src/lib/components/DancerIcon.svelte` | `glow` prop, `flipped` prop, `::after` floor shadow pseudo-element (`--dancer-shadow-opacity` CSS variable, used during scrub). |
+| `src/lib/util.ts`                      | `hashString` already exported — may add additional hash utilities to `dance-party.ts` instead.                                  |
 
 ### Data Flow
 
@@ -654,10 +668,11 @@ Sheet.svelte
   └── DanceParty.svelte
         ├── computes songNumber, pairings, placements (via dance-party.ts)
         ├── renders DanceFloor.svelte
-        │     ├── use:trackable for scrub input
+        │     ├── use:scrubAction for pointer/touch scrub input
         │     ├── renders DancerIcon instances via absolute positioning + CSS transforms
-        │     ├── applies dock magnification via direct DOM manipulation during scrub
-        │     └── emits activeUnit changes
+        │     ├── applies scale-only dock magnification via direct DOM manipulation during scrub
+        │     ├── toggles floor shadow on nearest unit via --dancer-shadow-opacity
+        │     └── caps maxScale to 1.5 when sticky header is active
         ├── renders speech bubble overlay (positioned relative to active dancer)
         └── manages URL state (?song=&dancer=)
 ```
