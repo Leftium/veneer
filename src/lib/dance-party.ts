@@ -26,6 +26,8 @@ export interface LayoutConfig {
 	verticalJitter: number
 	soloAffinity: number
 	messageBalanceRate: number
+	/** Minimum horizontal spacing between adjacent units (normalized [0,1]). 0 = no enforcement. */
+	minSpacing: number
 }
 
 export interface DockConfig {
@@ -56,6 +58,7 @@ export const DEFAULT_LAYOUT: LayoutConfig = {
 	verticalJitter: 4, // ±px
 	soloAffinity: 0.3, // 0 = scatter, 1 = collapse
 	messageBalanceRate: 0.5, // probability of swap attempt per messageless pair
+	minSpacing: 0.1, // minimum horizontal gap between adjacent units (normalized)
 }
 
 /** Dock magnification defaults (used in Phase 3, defined here for type completeness). */
@@ -83,56 +86,56 @@ export const DEFAULT_CONFIG: DancePartyConfig = {
  * Applied as CSS transform: scale() in the rendering layer.
  */
 export const DANCER_SCALES = {
-	"both": {
-		"1": 1.103,
-		"2": 1.133,
-		"3": 1.146,
-		"4": 1.075,
-		"5": 1.061,
-		"6": 1.09,
-		"7": 1.082,
-		"8": 1.02,
-		"9": 0.964,
-		"10": 0.882,
-		"11": 1.251,
-		"12": 1.111,
-		"13": 0.901,
-		"14": 1.201,
-		"15": 1.003,
-		"16": 1.026,
-		"17": 0.988,
-		"18": 1.166,
-		"19": 1.285,
-		"20": 0.929,
-		"21": 0.992,
-		"22": 1.057,
-		"23": 1.051,
-		"24": 1.223,
-		"25": 0.949,
-		"26": 1.169,
-		"27": 1.009,
-		"28": 1.158,
-		"29": 1.169,
-		"30": 1.131,
-		"31": 1.025,
-		"32": 0.981
+	both: {
+		'1': 1.103,
+		'2': 1.133,
+		'3': 1.146,
+		'4': 1.075,
+		'5': 1.061,
+		'6': 1.09,
+		'7': 1.082,
+		'8': 1.02,
+		'9': 0.964,
+		'10': 0.882,
+		'11': 1.251,
+		'12': 1.111,
+		'13': 0.901,
+		'14': 1.201,
+		'15': 1.003,
+		'16': 1.026,
+		'17': 0.988,
+		'18': 1.166,
+		'19': 1.285,
+		'20': 0.929,
+		'21': 0.992,
+		'22': 1.057,
+		'23': 1.051,
+		'24': 1.223,
+		'25': 0.949,
+		'26': 1.169,
+		'27': 1.009,
+		'28': 1.158,
+		'29': 1.169,
+		'30': 1.131,
+		'31': 1.025,
+		'32': 0.981,
 	},
-	"lead": {
-		"1": 1.038,
-		"2": 1.018,
-		"3": 0.982,
-		"4": 0.938,
-		"5": 0.982,
-		"6": 1.057
+	lead: {
+		'1': 1.038,
+		'2': 1.018,
+		'3': 0.982,
+		'4': 0.938,
+		'5': 0.982,
+		'6': 1.057,
 	},
-	"follow": {
-		"1": 1.071,
-		"2": 1.01,
-		"3": 1.003,
-		"4": 0.991,
-		"5": 0.901,
-		"6": 0.997
-	}
+	follow: {
+		'1': 1.071,
+		'2': 1.01,
+		'3': 1.003,
+		'4': 0.991,
+		'5': 0.901,
+		'6': 0.997,
+	},
 } as const
 
 /**
@@ -510,6 +513,46 @@ export function buildUnitKey(members: DancerRow[], allNames: string[]): string {
 }
 
 /**
+ * Pick an image from a pool, avoiding already-used images when possible.
+ *
+ * Hashes to pick an initial candidate; if it collides with `usedImages`,
+ * re-hashes with incrementing seeds (up to pool size attempts).
+ * Falls back to the original hash pick if all images are used.
+ */
+export function assignUniqueImage(
+	songSlot: string,
+	unitKey: string,
+	pool: readonly number[],
+	usedImages: Set<number>,
+): number {
+	const baseHash = hashString(songSlot + '\0img\0' + unitKey)
+	const firstChoice = pool[baseHash % pool.length]
+
+	// If the pool is fully exhausted, just return the hash pick (allow repeats)
+	if (usedImages.size >= pool.length) return firstChoice
+
+	// If first choice is free, use it
+	if (!usedImages.has(firstChoice)) return firstChoice
+
+	// Re-hash with incrementing seeds to find an unused image
+	for (let attempt = 1; attempt < pool.length; attempt++) {
+		const candidate =
+			pool[hashString(songSlot + '\0img\0' + unitKey + '\0' + attempt) % pool.length]
+		if (!usedImages.has(candidate)) return candidate
+	}
+
+	// Fallback: linear scan for any unused image (guarantees a result if pool isn't exhausted)
+	const startIdx = baseHash % pool.length
+	for (let offset = 0; offset < pool.length; offset++) {
+		const candidate = pool[(startIdx + offset) % pool.length]
+		if (!usedImages.has(candidate)) return candidate
+	}
+
+	// All used (shouldn't reach here if usedImages.size < pool.length, but safety)
+	return firstChoice
+}
+
+/**
  * Full pairing pipeline: classify → shuffle → match → balance → build units.
  */
 export function buildDanceUnits(
@@ -541,14 +584,20 @@ export function buildDanceUnits(
 	// Step 5: Build DanceUnit[]
 	const units: DanceUnit[] = []
 
+	// Track used images per pool to avoid duplicates within a song
+	const usedPairImages = new Set<number>()
+	const usedLeadImages = new Set<number>()
+	const usedFollowImages = new Set<number>()
+
 	for (const [leader, follower] of balancedPairs) {
 		const unitKey = buildUnitKey([leader, follower], allNames)
 		const leaderScore = computePriority(leader, timestamps, config.weights)
 		const followerScore = computePriority(follower, timestamps, config.weights)
 		const priorityScore = Math.max(leaderScore, followerScore)
 
-		// Assign a both-image from the paired pool
-		const imageNum = PAIRED_POOL[hashString(songSlot + '\0img\0' + unitKey) % PAIRED_POOL.length]
+		// Assign a both-image from the paired pool, avoiding duplicates
+		const imageNum = assignUniqueImage(songSlot, unitKey, PAIRED_POOL, usedPairImages)
+		usedPairImages.add(imageNum)
 
 		units.push({
 			type: 'pair',
@@ -559,13 +608,17 @@ export function buildDanceUnits(
 		})
 	}
 
+	const SOLO_POOL = [1, 2, 3, 4, 5, 6] as const
+
 	for (const solo of solos) {
 		const unitKey = buildUnitKey([solo], allNames)
 		const priorityScore = computePriority(solo, timestamps, config.weights)
 
-		// Solo image: lead images 1-6, follow images 1-6
+		// Solo image: lead images 1-6, follow images 1-6 (deduped per role)
 		const role = solo.role === 'lead' || solo.role === 'unknown' ? 'lead' : 'follow'
-		const imageNum = (hashString(songSlot + '\0img\0' + unitKey) % 6) + 1
+		const usedPool = role === 'lead' ? usedLeadImages : usedFollowImages
+		const imageNum = assignUniqueImage(songSlot, unitKey, SOLO_POOL, usedPool)
+		usedPool.add(imageNum)
 
 		units.push({
 			type: 'solo',
@@ -584,6 +637,79 @@ export function buildDanceUnits(
 // ---------------------------------------------------------------------------
 
 /**
+ * Enforce minimum horizontal spacing between adjacent placed units.
+ *
+ * Algorithm:
+ * 1. Sort units by their hash-derived x positions
+ * 2. Sweep left→right, pushing any unit that's too close to its left neighbor
+ * 3. If the sweep pushes units past x=1, re-center the entire spread within
+ *    [margin, 1-margin] so everything fits
+ *
+ * This preserves the relative ordering from hashing (no scramble) while
+ * eliminating clumps. Adding a dancer only shifts immediate neighbors.
+ */
+export function enforceMinSpacing(units: PlacedUnit[], minSpacing: number): PlacedUnit[] {
+	if (units.length <= 1 || minSpacing <= 0) return units
+
+	// Sort indices by x position (stable: break ties by unitKey)
+	const indices = units.map((_, i) => i)
+	indices.sort(
+		(a, b) => units[a].x - units[b].x || units[a].unitKey.localeCompare(units[b].unitKey),
+	)
+
+	// Work with a mutable copy of x values in sorted order
+	const sortedX = indices.map((i) => units[i].x)
+
+	// Sweep left→right: enforce minimum gap
+	for (let i = 1; i < sortedX.length; i++) {
+		const gap = sortedX[i] - sortedX[i - 1]
+		if (gap < minSpacing) {
+			sortedX[i] = sortedX[i - 1] + minSpacing
+		}
+	}
+
+	// Check if the spread exceeds [0, 1] and re-center if needed
+	const margin = minSpacing / 2
+	const totalSpread = sortedX[sortedX.length - 1] - sortedX[0]
+	const available = 1 - 2 * margin
+
+	if (totalSpread > available) {
+		// Spread is wider than the available range — compress proportionally
+		// while maintaining min spacing as best we can
+		const scale = available / totalSpread
+		const base = sortedX[0]
+		for (let i = 0; i < sortedX.length; i++) {
+			sortedX[i] = margin + (sortedX[i] - base) * scale
+		}
+	} else {
+		// Shift so the spread is centered in [margin, 1-margin]
+		const currentCenter = (sortedX[0] + sortedX[sortedX.length - 1]) / 2
+		const targetCenter = 0.5
+		const shift = targetCenter - currentCenter
+
+		// Clamp the shift so we don't push past margins
+		const leftOverflow = margin - (sortedX[0] + shift)
+		const rightOverflow = sortedX[sortedX.length - 1] + shift - (1 - margin)
+		const clampedShift = shift + Math.max(0, leftOverflow) - Math.max(0, rightOverflow)
+
+		for (let i = 0; i < sortedX.length; i++) {
+			sortedX[i] = clamp(sortedX[i] + clampedShift, margin, 1 - margin)
+		}
+	}
+
+	// Write adjusted x values back to a new array of PlacedUnits
+	const result = [...units]
+	for (let i = 0; i < indices.length; i++) {
+		const origIdx = indices[i]
+		if (result[origIdx].x !== sortedX[i]) {
+			result[origIdx] = { ...result[origIdx], x: sortedX[i] }
+		}
+	}
+
+	return result
+}
+
+/**
  * Compute placed units with x position, y jitter, and flip state.
  */
 export function placeDanceUnits(
@@ -600,7 +726,7 @@ export function placeDanceUnits(
 	// Compute solo cluster center for this song
 	const soloClusterCenter = hashString(songSlot + '\0soloCenter') / MAX_HASH
 
-	return units.map((unit) => {
+	const placed = units.map((unit) => {
 		// Raw position via hash
 		let rawPos = hashString(songSlot + '\0pos\0' + unit.unitKey) / MAX_HASH
 
@@ -622,8 +748,11 @@ export function placeDanceUnits(
 		// Horizontal flip
 		const flipped = hashString(songSlot + '\0flip\0' + unit.unitKey) % 2 === 1
 
-		return { ...unit, x, yOffset, flipped }
+		return { ...unit, x, yOffset, flipped } as PlacedUnit
 	})
+
+	// Enforce minimum spacing to prevent clumping
+	return enforceMinSpacing(placed, config.layout.minSpacing)
 }
 
 // ---------------------------------------------------------------------------

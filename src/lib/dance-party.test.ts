@@ -12,7 +12,9 @@ import {
 	balanceMessages,
 	buildUnitKey,
 	buildDanceUnits,
+	assignUniqueImage,
 	placeDanceUnits,
+	enforceMinSpacing,
 	computeDanceFloor,
 	getBubbleAlignment,
 	getDockScale,
@@ -23,6 +25,7 @@ import {
 	DEFAULT_LAYOUT,
 	DEFAULT_DOCK,
 	type DanceUnit,
+	type PlacedUnit,
 	type DancePartyConfig,
 } from './dance-party'
 
@@ -503,6 +506,130 @@ describe('buildDanceUnits', () => {
 })
 
 // ---------------------------------------------------------------------------
+// Image Deduplication
+// ---------------------------------------------------------------------------
+
+describe('assignUniqueImage', () => {
+	const pool = [7, 8, 9, 10, 11] as const
+
+	it('returns an image from the pool', () => {
+		const img = assignUniqueImage('slot', 'unit1', pool, new Set())
+		expect(pool).toContain(img)
+	})
+
+	it('avoids already-used images', () => {
+		const used = new Set([7, 8, 9])
+		const img = assignUniqueImage('slot', 'unit1', pool, used)
+		expect(used.has(img)).toBe(false)
+		expect(pool).toContain(img)
+	})
+
+	it('falls back to hash pick when pool is fully exhausted', () => {
+		const used = new Set([7, 8, 9, 10, 11])
+		const img = assignUniqueImage('slot', 'unit1', pool, used)
+		// Should still return something from the pool (the original hash pick)
+		expect(pool).toContain(img)
+	})
+
+	it('is deterministic', () => {
+		const used = new Set([7])
+		const img1 = assignUniqueImage('slot', 'unitA', pool, used)
+		const img2 = assignUniqueImage('slot', 'unitA', pool, used)
+		expect(img1).toBe(img2)
+	})
+
+	it('assigns all unique images when pool is large enough', () => {
+		const bigPool = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const
+		const used = new Set<number>()
+		const assigned: number[] = []
+
+		for (let i = 0; i < bigPool.length; i++) {
+			const img = assignUniqueImage('slot', `unit${i}`, bigPool, used)
+			assigned.push(img)
+			used.add(img)
+		}
+
+		// All should be unique (no repeats)
+		expect(new Set(assigned).size).toBe(bigPool.length)
+	})
+})
+
+describe('buildDanceUnits image dedup', () => {
+	it('assigns unique images to pairs when fewer pairs than pool size', () => {
+		// Create 10 lead-follow pairs = 10 pairs, PAIRED_POOL has 26 images
+		const dancers: DancerRow[] = []
+		for (let i = 0; i < 10; i++) {
+			dancers.push(makeDancer(`L${i}`, 'lead', { ts: 1000 + i }))
+			dancers.push(makeDancer(`F${i}`, 'follow', { ts: 2000 + i }))
+		}
+
+		const units = buildDanceUnits(dancers, FORM, 1)
+		const pairImages = units.filter((u) => u.type === 'pair').map((u) => u.imageNum)
+
+		// All pair images should be unique
+		expect(new Set(pairImages).size).toBe(pairImages.length)
+	})
+
+	it('assigns unique images to solos of the same role (up to pool size)', () => {
+		// 5 lead solos — pool has 6 images, so all should be unique
+		const dancers = Array.from({ length: 5 }, (_, i) =>
+			makeDancer(`L${i}`, 'lead', { ts: 1000 + i }),
+		)
+
+		const units = buildDanceUnits(dancers, FORM, 1)
+		const images = units.map((u) => u.imageNum)
+
+		expect(new Set(images).size).toBe(images.length)
+	})
+
+	it('allows repeats when units exceed pool size', () => {
+		// 8 lead solos — pool has only 6, so at least 2 repeats
+		const dancers = Array.from({ length: 8 }, (_, i) =>
+			makeDancer(`L${i}`, 'lead', { ts: 1000 + i }),
+		)
+
+		const units = buildDanceUnits(dancers, FORM, 1)
+		const images = units.map((u) => u.imageNum)
+
+		// Should still assign valid images
+		for (const img of images) {
+			expect(img).toBeGreaterThanOrEqual(1)
+			expect(img).toBeLessThanOrEqual(6)
+		}
+		// At most 6 unique values
+		expect(new Set(images).size).toBeLessThanOrEqual(6)
+	})
+
+	it('dedup is per-role for solos (lead vs follow tracked separately)', () => {
+		// 5 leads + 5 follows = 10 solos, each role should be deduped independently
+		const dancers: DancerRow[] = [
+			...Array.from({ length: 5 }, (_, i) => makeDancer(`L${i}`, 'lead', { ts: 1000 + i })),
+			...Array.from({ length: 5 }, (_, i) => makeDancer(`F${i}`, 'follow', { ts: 2000 + i })),
+		]
+
+		const units = buildDanceUnits(dancers, FORM, 1)
+		const leadImages = units.filter((u) => u.members[0].role === 'lead').map((u) => u.imageNum)
+		const followImages = units.filter((u) => u.members[0].role === 'follow').map((u) => u.imageNum)
+
+		// Each role's images should be unique (5 of each, pool has 6)
+		expect(new Set(leadImages).size).toBe(leadImages.length)
+		expect(new Set(followImages).size).toBe(followImages.length)
+	})
+
+	it('determinism preserved with dedup', () => {
+		const dancers = [
+			makeDancer('L1', 'lead', { ts: 1000, wish: 'hi' }),
+			makeDancer('F1', 'follow', { ts: 2000 }),
+			makeDancer('L2', 'lead', { ts: 3000 }),
+			makeDancer('F2', 'follow', { ts: 4000 }),
+		]
+		const u1 = buildDanceUnits(dancers, FORM, 1)
+		const u2 = buildDanceUnits(dancers, FORM, 1)
+		expect(u1.map((u) => u.imageNum)).toEqual(u2.map((u) => u.imageNum))
+	})
+})
+
+// ---------------------------------------------------------------------------
 // Placement
 // ---------------------------------------------------------------------------
 
@@ -579,10 +706,12 @@ describe('placeDanceUnits', () => {
 		const highAffinity = { ...DEFAULT_CONFIG, layout: { ...DEFAULT_LAYOUT, soloAffinity: 0.9 } }
 		const placed = placeDanceUnits(units, FORM, 1, highAffinity)
 
-		// With 0.9 affinity, all solos should be close to each other
+		// With 0.9 affinity, solos cluster together before spacing enforcement.
+		// After min-spacing (5 units × 0.1 default = 0.4 spread), they stay compact
+		// but not as tight as without spacing. Verify they're still in the inner half.
 		const xs = placed.map((p) => p.x)
 		const range = Math.max(...xs) - Math.min(...xs)
-		expect(range).toBeLessThan(0.3) // tightly clustered
+		expect(range).toBeLessThan(0.6) // clustered (but spread by minSpacing)
 	})
 
 	it('is deterministic', () => {
@@ -594,6 +723,134 @@ describe('placeDanceUnits', () => {
 		expect(p1.map((p) => p.x)).toEqual(p2.map((p) => p.x))
 		expect(p1.map((p) => p.yOffset)).toEqual(p2.map((p) => p.yOffset))
 		expect(p1.map((p) => p.flipped)).toEqual(p2.map((p) => p.flipped))
+	})
+})
+
+// ---------------------------------------------------------------------------
+// Minimum Spacing Enforcement
+// ---------------------------------------------------------------------------
+
+describe('enforceMinSpacing', () => {
+	/** Helper: make a minimal PlacedUnit at a given x position. */
+	function makePlaced(unitKey: string, x: number): PlacedUnit {
+		return {
+			type: 'pair',
+			members: [makeDancer(unitKey, 'lead')],
+			unitKey,
+			priorityScore: 0,
+			imageNum: 7,
+			x,
+			yOffset: 0,
+			flipped: false,
+		}
+	}
+
+	it('returns empty array for empty input', () => {
+		expect(enforceMinSpacing([], 0.05)).toEqual([])
+	})
+
+	it('returns unchanged for single unit', () => {
+		const units = [makePlaced('A', 0.5)]
+		const result = enforceMinSpacing(units, 0.05)
+		expect(result[0].x).toBe(0.5)
+	})
+
+	it('does nothing when minSpacing is 0', () => {
+		const units = [makePlaced('A', 0.3), makePlaced('B', 0.3)]
+		const result = enforceMinSpacing(units, 0)
+		expect(result[0].x).toBe(0.3)
+		expect(result[1].x).toBe(0.3)
+	})
+
+	it('pushes apart two overlapping units', () => {
+		const units = [makePlaced('A', 0.5), makePlaced('B', 0.5)]
+		const result = enforceMinSpacing(units, 0.1)
+
+		const xs = result.map((u) => u.x).sort((a, b) => a - b)
+		expect(xs[1] - xs[0]).toBeGreaterThanOrEqual(0.1 - 1e-10)
+	})
+
+	it('preserves relative order of units', () => {
+		const units = [makePlaced('C', 0.7), makePlaced('A', 0.1), makePlaced('B', 0.3)]
+		const result = enforceMinSpacing(units, 0.05)
+
+		// A was at 0.1, B at 0.3, C at 0.7 — order should be preserved
+		const aX = result.find((u) => u.unitKey === 'A')!.x
+		const bX = result.find((u) => u.unitKey === 'B')!.x
+		const cX = result.find((u) => u.unitKey === 'C')!.x
+		expect(aX).toBeLessThan(bX)
+		expect(bX).toBeLessThan(cX)
+	})
+
+	it('enforces minimum gap between all adjacent units', () => {
+		// 10 units all at the same x position — maximum clumping
+		const units = Array.from({ length: 10 }, (_, i) => makePlaced(`U${i}`, 0.5))
+		const minSpacing = 0.05
+		const result = enforceMinSpacing(units, minSpacing)
+
+		const xs = result.map((u) => u.x).sort((a, b) => a - b)
+		for (let i = 1; i < xs.length; i++) {
+			expect(xs[i] - xs[i - 1]).toBeGreaterThanOrEqual(minSpacing - 1e-10)
+		}
+	})
+
+	it('keeps all positions within [0, 1]', () => {
+		// Many units that will need compression
+		const units = Array.from({ length: 30 }, (_, i) => makePlaced(`U${i}`, 0.5))
+		const result = enforceMinSpacing(units, 0.05)
+
+		for (const u of result) {
+			expect(u.x).toBeGreaterThanOrEqual(0)
+			expect(u.x).toBeLessThanOrEqual(1)
+		}
+	})
+
+	it('centers the spread when units are bunched to one side', () => {
+		const units = [makePlaced('A', 0.01), makePlaced('B', 0.02), makePlaced('C', 0.03)]
+		const result = enforceMinSpacing(units, 0.1)
+
+		// Should be centered roughly around 0.5
+		const xs = result.map((u) => u.x)
+		const center = (Math.min(...xs) + Math.max(...xs)) / 2
+		expect(center).toBeGreaterThan(0.3)
+		expect(center).toBeLessThan(0.7)
+	})
+
+	it('does not mutate input array', () => {
+		const units = [makePlaced('A', 0.5), makePlaced('B', 0.5)]
+		const origX = units.map((u) => u.x)
+		enforceMinSpacing(units, 0.1)
+		expect(units.map((u) => u.x)).toEqual(origX)
+	})
+
+	it('handles already well-spaced units', () => {
+		const units = [makePlaced('A', 0.1), makePlaced('B', 0.5), makePlaced('C', 0.9)]
+		const result = enforceMinSpacing(units, 0.05)
+
+		// Positions should not change significantly (just re-centering)
+		const aX = result.find((u) => u.unitKey === 'A')!.x
+		const bX = result.find((u) => u.unitKey === 'B')!.x
+		const cX = result.find((u) => u.unitKey === 'C')!.x
+		// Relative order preserved, no big shifts needed
+		expect(aX).toBeLessThan(bX)
+		expect(bX).toBeLessThan(cX)
+	})
+
+	it('compresses proportionally when spread exceeds available space', () => {
+		// 50 units at same position with large spacing = requires compression
+		const units = Array.from({ length: 50 }, (_, i) =>
+			makePlaced(`U${String(i).padStart(2, '0')}`, 0.5),
+		)
+		const result = enforceMinSpacing(units, 0.05)
+
+		const xs = result.map((u) => u.x).sort((a, b) => a - b)
+		// All within bounds
+		expect(xs[0]).toBeGreaterThanOrEqual(0)
+		expect(xs[xs.length - 1]).toBeLessThanOrEqual(1)
+		// Even compressed, there should be some spacing
+		for (let i = 1; i < xs.length; i++) {
+			expect(xs[i]).toBeGreaterThanOrEqual(xs[i - 1])
+		}
 	})
 })
 

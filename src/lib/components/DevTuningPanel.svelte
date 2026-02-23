@@ -40,6 +40,7 @@
 	let verticalJitter = $state(DEFAULT_LAYOUT.verticalJitter)
 	let soloAffinity = $state(DEFAULT_LAYOUT.soloAffinity)
 	let messageBalanceRate = $state(DEFAULT_LAYOUT.messageBalanceRate)
+	let minSpacing = $state(DEFAULT_LAYOUT.minSpacing)
 
 	// Dock
 	let dockMaxScale = $state(DEFAULT_DOCK.maxScale)
@@ -75,6 +76,7 @@
 			verticalJitter,
 			soloAffinity,
 			messageBalanceRate,
+			minSpacing,
 		},
 		dock: {
 			maxScale: dockMaxScale,
@@ -98,6 +100,7 @@
 		verticalJitter = c.layout.verticalJitter
 		soloAffinity = c.layout.soloAffinity
 		messageBalanceRate = c.layout.messageBalanceRate
+		minSpacing = c.layout.minSpacing ?? DEFAULT_LAYOUT.minSpacing
 		dockMaxScale = c.dock.maxScale
 		neighborCount = c.dock.neighborCount
 		falloffFn = c.dock.falloffFn
@@ -333,6 +336,17 @@
 						max="1"
 						step="0.05"
 						bind:value={soloAffinity}
+					/>
+
+					<label for="dp-minSpacing">minSpacing</label>
+					<span class="val">{minSpacing.toFixed(3)}</span>
+					<input
+						id="dp-minSpacing"
+						type="range"
+						min="0"
+						max="0.15"
+						step="0.005"
+						bind:value={minSpacing}
 					/>
 				</div>
 			</fieldset>
