@@ -21,15 +21,6 @@ export interface BilingualText {
 	original: string
 }
 
-/** @deprecated Use ContentSegment[] from segmentBilingualContent() instead */
-export interface BilingualContent {
-	ko: string
-	en: string
-	delimiter: string
-	original: string
-	firstScript: 'ko' | 'en'
-}
-
 // ---------------------------------------------------------------------------
 // Script classification
 // ---------------------------------------------------------------------------
@@ -263,15 +254,4 @@ export function localeText(
 ): string {
 	if (!bilingual) return fallback
 	return locale === 'ko' ? bilingual.ko : bilingual.en
-}
-
-/**
- * Get the "other" locale text for use as a tooltip.
- */
-export function localeTooltip(
-	bilingual: BilingualText | undefined | null,
-	locale: string,
-): string | undefined {
-	if (!bilingual) return undefined
-	return locale === 'ko' ? bilingual.en : bilingual.ko
 }
