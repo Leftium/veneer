@@ -7,6 +7,10 @@
 		type Role,
 	} from '$lib/group-registration/serialization'
 	import { REGEX_DANCE_LEADER, REGEX_DANCE_FOLLOW } from '$lib/dance-constants'
+	import type { BilingualQuestion } from '$lib/locale-content'
+	import { localeText } from '$lib/locale-content'
+	import { getLocale } from '$lib/paraglide/runtime.js'
+	import { SvelteSet } from 'svelte/reactivity'
 	import { slide } from 'svelte/transition'
 	import { flip } from 'svelte/animate'
 	import store from 'store'
@@ -22,6 +26,27 @@
 	const nameField = $derived(match.nameField)
 	const roleField = $derived(match.roleField)
 	const groupField = $derived(match.groupField)
+
+	const locale = $derived(getLocale())
+
+	// Cast to BilingualQuestion for bilingual label/option support
+	const bNameField = $derived(nameField as BilingualQuestion)
+	const bRoleField = $derived(roleField as BilingualQuestion | undefined)
+
+	import type { BilingualText } from '$lib/locale-content'
+
+	// Per-item bilingual toggles
+	let nameTitleToggled = $state(false)
+	let roleTitleToggled = $state(false)
+	let optionToggles = new SvelteSet<number>()
+
+	// Additional-member bilingual toggles: composite keys "name-{key}" / "option-{key}-{j}"
+	let extraToggles = new SvelteSet<string>()
+
+	/** Get the "other" language text from a BilingualText */
+	function otherLang(bilingual: BilingualText): string {
+		return locale === 'ko' ? bilingual.en : bilingual.ko
+	}
 
 	const isCheckboxes = $derived(roleField?.type === 'CHECKBOXES')
 
@@ -269,7 +294,16 @@
 			{#if additionalMembers.length > 0 && !clearing}
 				<span class="member-number">1.</span>
 			{/if}
-			{nameField.title}
+			{localeText(bNameField.bilingualTitle, locale, nameField.title)}
+			{#if bNameField.bilingualTitle}<button
+					type="button"
+					class="lang-toggle"
+					class:toggled={nameTitleToggled}
+					onclick={(e) => {
+						e.stopPropagation()
+						nameTitleToggled = !nameTitleToggled
+					}}>🌐</button
+				><span class="lang-alt">{otherLang(bNameField.bilingualTitle)}</span>{/if}
 		</label>
 		<input
 			id="entry.{nameField.id}"
@@ -286,9 +320,18 @@
 				{:else}
 					<span class="required-mark" aria-hidden="true" style="visibility:hidden">*</span>
 				{/if}
-				{roleField.title}
+				{localeText(bRoleField?.bilingualTitle, locale, roleField.title)}
+				{#if bRoleField?.bilingualTitle}<button
+						type="button"
+						class="lang-toggle"
+						class:toggled={roleTitleToggled}
+						onclick={(e) => {
+							e.stopPropagation()
+							roleTitleToggled = !roleTitleToggled
+						}}>🌐</button
+					><span class="lang-alt">{otherLang(bRoleField.bilingualTitle)}</span>{/if}
 			</label>
-			{#each roleField.options as option (option)}
+			{#each roleField.options as option, i (option)}
 				<label>
 					{#if isCheckboxes}
 						<input
@@ -308,7 +351,19 @@
 							onchange={handleChange}
 						/>
 					{/if}
-					{option}
+					{localeText(
+						bRoleField?.bilingualOptions?.[i],
+						locale,
+						option,
+					)}{#if bRoleField?.bilingualOptions?.[i]}<button
+							type="button"
+							class="lang-toggle"
+							class:toggled={optionToggles.has(i)}
+							onclick={(e) => {
+								e.stopPropagation()
+								optionToggles.has(i) ? optionToggles.delete(i) : optionToggles.add(i)
+							}}>🌐</button
+						><span class="lang-alt">{otherLang(bRoleField.bilingualOptions![i]!)}</span>{/if}
 				</label>
 			{/each}
 			{#if isCheckboxes && roleField.required}
@@ -340,7 +395,20 @@
 					<label for="extra-name-{member.key}" class="name-label">
 						<span class="required-mark" aria-hidden="true" style="visibility:hidden">*</span>
 						<span class="member-number">{i + 2}.</span>
-						{nameField.title}
+						{localeText(
+							bNameField.bilingualTitle,
+							locale,
+							nameField.title,
+						)}{#if bNameField.bilingualTitle}<button
+								type="button"
+								class="lang-toggle"
+								class:toggled={extraToggles.has(`name-${member.key}`)}
+								onclick={(e) => {
+									e.stopPropagation()
+									const k = `name-${member.key}`
+									extraToggles.has(k) ? extraToggles.delete(k) : extraToggles.add(k)
+								}}>🌐</button
+							><span class="lang-alt">{otherLang(bNameField.bilingualTitle)}</span>{/if}
 						<button
 							type="button"
 							class="delete-btn"
@@ -358,9 +426,22 @@
 					{#if roleField}
 						<label for=""
 							><span class="required-mark" aria-hidden="true" style="visibility:hidden">*</span>
-							{roleField.title}</label
+							{localeText(
+								bRoleField?.bilingualTitle,
+								locale,
+								roleField.title,
+							)}{#if bRoleField?.bilingualTitle}<button
+									type="button"
+									class="lang-toggle"
+									class:toggled={extraToggles.has(`role-${member.key}`)}
+									onclick={(e) => {
+										e.stopPropagation()
+										const k = `role-${member.key}`
+										extraToggles.has(k) ? extraToggles.delete(k) : extraToggles.add(k)
+									}}>🌐</button
+								><span class="lang-alt">{otherLang(bRoleField.bilingualTitle)}</span>{/if}</label
 						>
-						{#each roleField.options as option (option)}
+						{#each roleField.options as option, j (option)}
 							<label>
 								{#if isCheckboxes}
 									<input
@@ -379,7 +460,20 @@
 										onchange={handleChange}
 									/>
 								{/if}
-								{option}
+								{localeText(
+									bRoleField?.bilingualOptions?.[j],
+									locale,
+									option,
+								)}{#if bRoleField?.bilingualOptions?.[j]}<button
+										type="button"
+										class="lang-toggle"
+										class:toggled={extraToggles.has(`option-${member.key}-${j}`)}
+										onclick={(e) => {
+											e.stopPropagation()
+											const k = `option-${member.key}-${j}`
+											extraToggles.has(k) ? extraToggles.delete(k) : extraToggles.add(k)
+										}}>🌐</button
+									><span class="lang-alt">{otherLang(bRoleField.bilingualOptions![j]!)}</span>{/if}
 							</label>
 						{/each}
 					{/if}
@@ -534,5 +628,37 @@
 	// Remove bottom margin from last element in fieldset to avoid double-spacing
 	fieldset > :last-child {
 		margin-bottom: 0;
+	}
+
+	.lang-toggle {
+		all: unset;
+		display: inline;
+		cursor: pointer;
+		font-size: 0.7em;
+		vertical-align: middle;
+		opacity: 0.5;
+		margin-left: 0.3em;
+		transition: opacity 0.15s;
+		user-select: none;
+		filter: grayscale(1);
+
+		&:hover,
+		&:focus-visible {
+			opacity: 1;
+		}
+	}
+
+	.lang-alt {
+		display: none;
+		opacity: 0.6;
+		font-style: italic;
+		font-weight: normal;
+		font-size: 0.85em;
+		margin-left: 0;
+	}
+
+	.lang-toggle:hover + .lang-alt,
+	.lang-toggle.toggled + .lang-alt {
+		display: inline;
 	}
 </style>

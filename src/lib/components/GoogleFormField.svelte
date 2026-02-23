@@ -1,5 +1,8 @@
 <script lang="ts">
-	import type { Question } from '$lib'
+	import type { BilingualQuestion } from '$lib/locale-content'
+	import { localeText } from '$lib/locale-content'
+	import { getLocale } from '$lib/paraglide/runtime.js'
+	import { SvelteSet } from 'svelte/reactivity'
 	import MarkdownIt from 'markdown-it'
 	import easyTables from 'markdown-it-easy-tables'
 	import sup from 'markdown-it-sup'
@@ -25,10 +28,23 @@
 
 	interface Props {
 		// Props:
-		field: Question
+		field: BilingualQuestion
 	}
 
 	let { field }: Props = $props()
+
+	const locale = $derived(getLocale())
+
+	import type { BilingualText } from '$lib/locale-content'
+
+	// Per-item bilingual toggles: title and each option have independent toggles
+	let titleToggled = $state(false)
+	let optionToggles = new SvelteSet<number>()
+
+	/** Get the "other" language text from a BilingualText */
+	function otherLang(bilingual: BilingualText): string {
+		return locale === 'ko' ? bilingual.en : bilingual.ko
+	}
 
 	// Bindings:
 	let value = $state('')
@@ -105,14 +121,30 @@
 <d-section class:has-input={!!field.inputIndex}>
 	{#if field.type === 'TITLE_AND_DESCRIPTION'}
 		<center>
-			<h3>{@html parseMarkdown(field.title)}</h3>
+			<h3>
+				{@html parseMarkdown(localeText(field.bilingualTitle, locale, field.title))}
+				{#if field.bilingualTitle}<button
+						type="button"
+						class="lang-toggle"
+						class:toggled={titleToggled}
+						onclick={() => (titleToggled = !titleToggled)}>🌐</button
+					><span class="lang-alt">{otherLang(field.bilingualTitle)}</span>{/if}
+			</h3>
 		</center>
-		{@html parseMarkdown(field.description)}
+		{@html parseMarkdown(localeText(field.bilingualDescription, locale, field.description ?? ''))}
 	{:else if field.type === 'IMAGE'}
 		{#key field.title}
 			{#if field.title && field.title !== 'hero'}
 				<center>
-					<h1>{@html parseMarkdown(field.title)}</h1>
+					<h1>
+						{@html parseMarkdown(localeText(field.bilingualTitle, locale, field.title))}
+						{#if field.bilingualTitle}<button
+								type="button"
+								class="lang-toggle"
+								class:toggled={titleToggled}
+								onclick={() => (titleToggled = !titleToggled)}>🌐</button
+							><span class="lang-alt">{otherLang(field.bilingualTitle)}</span>{/if}
+					</h1>
 				</center>
 			{/if}
 			<center>
@@ -135,10 +167,21 @@
 			{#if field.required}
 				<span class="required-mark">*</span>
 			{/if}
-			{@html parseMarkdown(field.title)}
+			{@html parseMarkdown(localeText(field.bilingualTitle, locale, field.title))}
+			{#if field.bilingualTitle}<button
+					type="button"
+					class="lang-toggle"
+					class:toggled={titleToggled}
+					onclick={(e) => {
+						e.stopPropagation()
+						titleToggled = !titleToggled
+					}}>🌐</button
+				><span class="lang-alt">{otherLang(field.bilingualTitle)}</span>{/if}
 			<div>
 				<small>
-					{@html parseMarkdown(field.description)}
+					{@html parseMarkdown(
+						localeText(field.bilingualDescription, locale, field.description ?? ''),
+					)}
 				</small>
 			</div>
 		</label>
@@ -170,10 +213,21 @@
 			{#if field.required}
 				<span class="required-mark">*</span>
 			{/if}
-			{@html parseMarkdown(field.title)}
+			{@html parseMarkdown(localeText(field.bilingualTitle, locale, field.title))}
+			{#if field.bilingualTitle}<button
+					type="button"
+					class="lang-toggle"
+					class:toggled={titleToggled}
+					onclick={(e) => {
+						e.stopPropagation()
+						titleToggled = !titleToggled
+					}}>🌐</button
+				><span class="lang-alt">{otherLang(field.bilingualTitle)}</span>{/if}
 			<div>
 				<small>
-					{@html parseMarkdown(field.description)}
+					{@html parseMarkdown(
+						localeText(field.bilingualDescription, locale, field.description ?? ''),
+					)}
 				</small>
 			</div>
 		</label>
@@ -191,8 +245,8 @@
 			onchange={handleChange}
 		>
 			<option value="">Choose</option>
-			{#each field.options as option (option)}
-				<option value={option}>{option}</option>
+			{#each field.options as option, i (option)}
+				<option value={option}>{localeText(field.bilingualOptions?.[i], locale, option)}</option>
 			{/each}
 		</select>
 	{:else if ['MULTIPLE_CHOICE', 'CHECKBOXES'].includes(field.type)}
@@ -200,10 +254,21 @@
 			{#if field.required}
 				<span class="required-mark">*</span>
 			{/if}
-			{@html parseMarkdown(field.title)}
+			{@html parseMarkdown(localeText(field.bilingualTitle, locale, field.title))}
+			{#if field.bilingualTitle}<button
+					type="button"
+					class="lang-toggle"
+					class:toggled={titleToggled}
+					onclick={(e) => {
+						e.stopPropagation()
+						titleToggled = !titleToggled
+					}}>🌐</button
+				><span class="lang-alt">{otherLang(field.bilingualTitle)}</span>{/if}
 			<div>
 				<small>
-					{@html parseMarkdown(field.description)}
+					{@html parseMarkdown(
+						localeText(field.bilingualDescription, locale, field.description ?? ''),
+					)}
 				</small>
 			</div>
 		</label>
@@ -213,7 +278,7 @@
 			</center>
 		{/if}
 
-		{#each field.options as option (option)}
+		{#each field.options as option, i (option)}
 			<label>
 				{#if field.type === 'CHECKBOXES' || field.options.length === 1}
 					<input
@@ -233,7 +298,19 @@
 						bind:group={value}
 						onchange={handleChange}
 					/>
-				{/if}{option}
+				{/if}{localeText(
+					field.bilingualOptions?.[i],
+					locale,
+					option,
+				)}{#if field.bilingualOptions?.[i]}<button
+						type="button"
+						class="lang-toggle"
+						class:toggled={optionToggles.has(i)}
+						onclick={(e) => {
+							e.stopPropagation()
+							optionToggles.has(i) ? optionToggles.delete(i) : optionToggles.add(i)
+						}}>🌐</button
+					><span class="lang-alt">{otherLang(field.bilingualOptions[i]!)}</span>{/if}
 			</label>
 		{/each}
 		{#if field.type === 'CHECKBOXES' && field.required}
@@ -306,5 +383,37 @@
 
 	:global(a[role='button']) {
 		width: 100%;
+	}
+
+	.lang-toggle {
+		all: unset;
+		display: inline;
+		cursor: pointer;
+		font-size: 0.7em;
+		vertical-align: middle;
+		opacity: 0.5;
+		margin-left: 0.3em;
+		transition: opacity 0.15s;
+		user-select: none;
+		filter: grayscale(1);
+
+		&:hover,
+		&:focus-visible {
+			opacity: 1;
+		}
+	}
+
+	.lang-alt {
+		display: none;
+		opacity: 0.6;
+		font-style: italic;
+		font-weight: normal;
+		font-size: 0.85em;
+		margin-left: 0;
+	}
+
+	.lang-toggle:hover + .lang-alt,
+	.lang-toggle.toggled + .lang-alt {
+		display: inline;
 	}
 </style>

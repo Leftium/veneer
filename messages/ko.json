@@ -6,5 +6,8 @@
 	"list": "확인",
 	"dev": "DEV",
 	"submit": "신청",
-	"required": "필수항목"
+	"required": "필수항목",
+	"sign_up": "신청 ➡️",
+	"check_list": "확인 👀",
+	"people_going": "{count}명 신청!"
 }

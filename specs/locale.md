@@ -135,43 +135,87 @@ Changed file:
 
 ---
 
-## Phase 3: Locale-Aware Google Form Content — TODO (large)
+## Phase 3: Locale-Aware Google Form Content — DONE (Option D)
 
-The hardest part. Google Forms are authored in a single language — there's no native multilingual
-support. Options:
+Korean Google Forms commonly include bilingual content using conventions: labels use
+`한국어 (English)` or `English (한국어)` parenthetical patterns, and longer content sections
+use explicit markers to tag Korean-only and English-only blocks.
 
-### Option A: Separate forms per locale (simplest)
+### Design decisions
 
-Add locale-keyed doc IDs to presets:
+- **Option D: Convention-based bilingual parsing** — parse existing dual-language patterns in
+  Google Forms rather than maintaining separate forms (A), external translations (B), or accepting
+  monolingual content (C)
+- **Two independent features:**
+  - **Feature A: Label/option splitting** — `Primary (Secondary)` where one part is mostly Korean
+    and the other mostly English. Display locale-matching text with 🌐 toggle for the other.
+    Graceful degradation: if pattern doesn't match or both parts are the same script, show as-is.
+  - **Feature B: Content section markers** — explicit markers in form description text tag
+    language-specific sections. Content outside markers is always visible; non-locale sections
+    collapse into `<details><summary>` in their original document position.
+- **Feature B marker format:**
 
-```typescript
-export interface Preset {
-    defaultFormId?: string
-    localizedFormIds?: Record<string, string>  // locale → doc ID
-    // ...
-}
+  ```
+  ~~ begin Korean ~~
+  (Korean-only content here)
+  ~~ end Korean ~~
 
-btango: {
-    defaultFormId: 'g.4EKt4Vyz...',          // Korean (default)
-    localizedFormIds: { en: 'g.english...' }, // English variant
-}
-```
+  (shared content — always visible)
 
-`+layout.server.ts` picks the right form ID based on resolved locale. Requires maintaining separate
-forms per language — high operational cost, but zero code complexity in rendering.
+  ~~ begin English ~~
+  (English-only content here)
+  ~~ end English ~~
+  ```
 
-### Option B: Translation layer (complex)
+  Markers are case-insensitive. They look like decorative dividers in plain Google Forms.
+  Content between matching begin/end pairs is tagged with that language. Content outside
+  any markers is "shared" (always visible regardless of locale).
 
-Store translations separately (e.g., in a Sheet, or a JSON in the repo), apply at render time.
-Custom translation format would need to map Google Form field IDs to localized strings.
+- **No reordering** — segments render in document order. Non-locale segments collapse in-place.
+  `internalizeLinks()` runs on shared and locale-matching segments, so special buttons
+  ("Sign up", "Check who's going") work regardless of which language section they appear in.
+- **Script classification** (Feature A only) uses Unicode ranges (Hangul `\uAC00-\uD7AF` + Jamo)
+  vs Latin `A-Za-z`. A string is classified as one script if it accounts for >60% of characters.
+- **Parenthetical disambiguation** — `리드 (선택)` (both Korean) is NOT split; only splits when
+  the two parts are different scripts.
+- **Server-side label transforms** — bilingual label parsing happens in `+layout.server.ts` after
+  `adjustGoogleFormData()`. Components receive pre-processed data and pick text by locale.
+- **Client-side content segmentation** — `segmentBilingualContent()` runs in `+layout.svelte`
+  on the raw info markdown, producing an ordered array of `ContentSegment` objects. Each segment
+  renders in order: shared/locale-matching shown directly, others collapsed in `<details>`.
+- **Submission values preserved** — form inputs always submit the original full string
+  (e.g. `리드 (Lead)`) to Google Forms. Only the displayed text changes.
+- **Forms can mix orderings** — `Korean (English)` and `English (Korean)` in the same form both work.
+- **Summary labels** — `"Korean hidden"` / `"English hidden"` — simple text readable by both.
 
-### Option C: Accept monolingual content (pragmatic, for now)
+### Implementation
 
-Korean dance community forms are authored in Korean — that's the intended audience. English
-speakers using these forms are a small minority. Document this as a known limitation. Phase 1
-(browser language detection) still helps for veneer UI strings.
+New file:
 
-**Recommendation:** Option C now, Option A later if demand warrants it.
+- `src/lib/locale-content.ts` — pure parsing functions: `classifyScript()`, `splitBilingualLabel()`,
+  `segmentBilingualContent()`, `addBilingualData()`, `localeText()`
+- `BilingualText` interface: `{ ko, en, original }`
+- `BilingualQuestion` interface: extends `Question` with optional `bilingualTitle`,
+  `bilingualDescription`, `bilingualOptions`
+- `ContentSegment` interface: `{ lang: 'ko' | 'en' | 'shared', text: string }`
+
+Changed files:
+
+- `src/lib/index.ts` — re-exports `BilingualText`, `BilingualQuestion` types
+- `src/routes/[id1=vid]/[[id2=vid]]/+layout.server.ts` — calls `addBilingualData()` on form fields
+  after info extraction; passes resolved `locale` to client
+- `src/routes/[id1=vid]/[[id2=vid]]/+layout.svelte` — calls `segmentBilingualContent()` on info
+  markdown; renders segments in order with non-locale segments in `<details>`; `internalizeLinks()`
+  runs on shared + locale-matching segments
+- `src/lib/components/GoogleFormField.svelte` — uses `localeText()` for titles, descriptions, and
+  options; per-item 🌐 toggle buttons; prop type changed to `BilingualQuestion`
+- `src/lib/components/GroupRegistration.svelte` — same bilingual treatment for name/role field
+  titles and role options
+
+### Not yet handled (future)
+
+- Info tab footer sections — only the main info block is segmented, not `=== Footer ===` sections
+- `<option>` elements in dropdowns can't have toggle icons — show locale text only (acceptable)
 
 ---
 
@@ -225,7 +269,7 @@ locale-aware or keyword-configurable via preset.
 ```
 Phase 1: preferredLanguage strategy   ← DONE
 Phase 2: Language switcher UI         ← DONE (header only; footer deferred)
-Phase 3: Locale-aware form content    ← future, Option C (defer) for now
+Phase 3: Locale-aware form content    ← DONE (Option D: convention-based bilingual parsing)
 Phase 4: Locale-aware column regex    ← after port-temp-branch infra
 Phase 5: GroupRegistration strings    ← after group registration ported
 Phase 6: internalizeLinks() refactor  ← future

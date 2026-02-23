@@ -49,6 +49,9 @@
 	import { isOk } from 'wellcrafted/result'
 	import FooterSection from '$lib/components/FooterSection.svelte'
 	import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte'
+	import { segmentBilingualContent, type ContentSegment } from '$lib/locale-content'
+	import { getLocale } from '$lib/paraglide/runtime.js'
+	import { m } from '$lib/paraglide/messages.js'
 
 	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
 		[markdownitDeflist],
@@ -289,8 +292,8 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 						const count = finalData.extra.count
 						const callout = !count
 							? ''
-							: `<div class="tooltip">${count.total} people going! <span class="dancer-icon dancer-follow"><img src="/dancers/follows/06-F.png" alt="follow"></span>${count.follows} <span class="dancer-icon dancer-lead"><img src="/dancers/leads/06-L.png" alt="lead"></span>${count.leaders}</div>`
-						const button = `<a href="${internalLink}" role=button class=outline>Sign up ➡️</a>`
+							: `<div class="tooltip">${m.people_going({ count: count.total })} <span class="dancer-icon dancer-follow"><img src="/dancers/follows/06-F.png" alt="follow"></span>${count.follows} <span class="dancer-icon dancer-lead"><img src="/dancers/leads/06-L.png" alt="lead"></span>${count.leaders}</div>`
+						const button = `<a href="${internalLink}" role=button class=outline>${m.sign_up()}</a>`
 						out.push(callout)
 						out.push(button)
 						continue
@@ -308,7 +311,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 
 					if (/확인/.test(line)) {
 						internalLink = `${docPath}/list${search}`
-						const button = `<a href="${internalLink}" role=button class=outline>Check who's going 👀</a>`
+						const button = `<a href="${internalLink}" role=button class=outline>${m.check_list()}</a>`
 						out.push(button)
 						continue
 					}
@@ -426,9 +429,27 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 
 		<swiper-container init="false" bind:this={swiperContainer}>
 			{#if data.navTabs.info.icon}
+				{@const segments = segmentBilingualContent(data.info)}
+				{@const infoLocale = getLocale()}
 				<swiper-slide data-tid="info" hidden={!hasJS && tid !== 'info'}>
 					{#if data.info}
-						<content class="markdown">{@html md`${internalizeLinks(data.info)}`}</content>
+						{#if segments}
+							{#each segments as segment, i (i)}
+								{#if segment.lang === 'shared' || segment.lang === infoLocale}
+									<content class="markdown">{@html md`${internalizeLinks(segment.text)}`}</content>
+								{:else}
+									{@const label = segment.lang === 'ko' ? 'Korean hidden' : 'English hidden'}
+									<content class="markdown">
+										<details ontoggle={callSwiperUpdateAutoHeight}>
+											<summary>{label}</summary>
+											{@html md`${segment.text}`}
+										</details>
+									</content>
+								{/if}
+							{/each}
+						{:else}
+							<content class="markdown">{@html md`${internalizeLinks(data.info)}`}</content>
+						{/if}
 						<pre hidden>{data.info}</pre>
 					{/if}
 				</swiper-slide>
@@ -712,6 +733,26 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 				//border-top-right-radius: $size-1;
 				border-top-left-radius: $size-2;
 				border-bottom-right-radius: $size-2;
+			}
+
+			// Bilingual collapsible content
+			details {
+				margin-block: $size-3;
+				border: 1px solid var(--app-muted-border-color, #dcdcdc);
+				border-radius: $radius-2;
+				padding: $size-2 $size-3;
+
+				summary {
+					cursor: pointer;
+					font-weight: $font-weight-6;
+					color: var(--app-muted-color);
+					font-size: 90%;
+					user-select: none;
+				}
+
+				> div {
+					padding-top: $size-2;
+				}
 			}
 
 			// Render definition lists as simple table:

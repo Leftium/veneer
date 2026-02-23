@@ -6,5 +6,8 @@
 	"list": "List",
 	"dev": "DEV",
 	"submit": "Submit",
-	"required": "Required"
+	"required": "Required",
+	"sign_up": "Sign up ➡️",
+	"check_list": "Check who's going 👀",
+	"people_going": "{count} people going!"
 }
