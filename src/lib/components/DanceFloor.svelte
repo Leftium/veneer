@@ -40,7 +40,7 @@
 		dockConfig = DEFAULT_DOCK,
 		baseIconHeight = 109,
 		heightMultiplier = 0.8,
-		marginTop = -36,
+		marginTop = -2,
 		anchorPercent = 0,
 		onActiveUnit,
 		bubbleHeightFraction = 1.0,
@@ -148,6 +148,9 @@
 
 			el.style.transform = `translateX(-50%) translateY(${unit.yOffset}px) scale(${combinedScale})`
 
+			// Active dancer gets highest z-index; others revert to priority order
+			el.style.zIndex = i === nearestIdx ? String(units.length + 1) : String(units.length - i)
+
 			// Floor shadow: activate on nearest unit, deactivate on others
 			const iconSpan = el.querySelector('.dancer-icon') as HTMLElement | null
 			if (iconSpan) {
@@ -204,6 +207,9 @@
 					: 1
 
 			el.style.transform = `translateX(-50%) translateY(${unit.yOffset}px) scale(${scaleFactor})`
+
+			// Reset z-index to priority order
+			el.style.zIndex = String(units.length - i)
 
 			// Reset floor shadow
 			const iconSpan = el.querySelector('.dancer-icon') as HTMLElement | null
@@ -296,6 +302,7 @@
 			class="icon-wrapper"
 			style:left="{unit.x * 100}%"
 			style:top="{anchorPercent}%"
+			style:z-index={units.length - i}
 			style:transform="translateX(-50%) translateY({unit.yOffset}px) scale({scaleFactor})"
 			style:transform-origin="bottom center"
 			style:--dancer-icon-size="{baseIconHeight}px"

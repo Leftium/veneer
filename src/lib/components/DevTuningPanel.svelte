@@ -27,7 +27,7 @@
 		songNumber,
 		maxSong,
 		viewHeightMultiplier: initHeightMult = 0.8,
-		viewMarginTop: initMarginTop = -36,
+		viewMarginTop: initMarginTop = -2,
 		viewAnchorPercent: initAnchorPct = 0,
 		viewBubbleHeightFraction: initBubbleHF = 1.0,
 		onchange,
@@ -64,7 +64,7 @@
 
 	// View layout
 	let heightMultiplier = $state(0.8)
-	let marginTop = $state(-36)
+	let marginTop = $state(-2)
 	let anchorPercent = $state(0)
 	let bubbleHeightFraction = $state(1.0)
 
@@ -258,7 +258,7 @@
 			untrack(() => songNumber),
 			{
 				heightMultiplier: 0.8,
-				marginTop: -36,
+				marginTop: -2,
 				anchorPercent: 0,
 				bubbleHeightFraction: 1.0,
 			},

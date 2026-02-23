@@ -66,7 +66,7 @@ export const DEFAULT_DOCK: DockConfig = {
 	maxScale: 2,
 	neighborCount: 2,
 	falloffFn: 'cosine',
-	baseIconHeight: 109,
+	baseIconHeight: 75,
 	magnifiedSpacing: 4,
 }
 

@@ -28,7 +28,7 @@
 
 	// View layout params (not part of engine config — purely visual)
 	let viewHeightMultiplier = $state(0.8)
-	let viewMarginTop = $state(-36)
+	let viewMarginTop = $state(-2)
 	let viewAnchorPercent = $state(0)
 	let viewBubbleHeightFraction = $state(1.0)
 

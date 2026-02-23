@@ -131,16 +131,20 @@
 		border-right: 6px solid transparent;
 	}
 
-	// Shared bubble base
+	// Shared bubble base — frosted glass effect
 	.bubble {
 		position: absolute;
 		width: fit-content;
-		background: var(--app-accent-color, #{$blue-6});
+		background: color-mix(in srgb, var(--app-accent-color, #{$blue-6}) 55%, transparent);
 		color: var(--app-accent-text, white);
 		font-size: 0.75rem;
 		border-radius: 6px;
 		padding: 6px 10px;
 		max-width: min($size-content-2, 100%);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+		border: 1px solid color-mix(in srgb, var(--app-accent-text, white) 20%, transparent);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 	}
 
 	// Above: bubble first, then pointer below it pointing down
@@ -152,7 +156,7 @@
 
 	.above .pointer {
 		top: var(--bubble-h);
-		border-top: 8px solid var(--app-accent-color, #{$blue-6});
+		border-top: 8px solid color-mix(in srgb, var(--app-accent-color, #{$blue-6}) 70%, transparent);
 	}
 
 	// Below: pointer first pointing up, then bubble below it
@@ -160,7 +164,8 @@
 	// so: pointer at top:0, bubble at top:pointerHeight
 	.below .pointer {
 		top: 0;
-		border-bottom: 8px solid var(--app-accent-color, #{$blue-6});
+		border-bottom: 8px solid
+			color-mix(in srgb, var(--app-accent-color, #{$blue-6}) 70%, transparent);
 	}
 
 	.below .bubble {
