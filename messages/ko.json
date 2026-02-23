@@ -9,5 +9,10 @@
 	"required": "필수항목",
 	"sign_up": "신청 ➡️",
 	"check_list": "확인 👀",
-	"people_going": "{count}명 신청!"
+	"people_going": "{count}명 신청!",
+	"group_count": "단체 {count}명",
+	"cancel_group": "단체 취소",
+	"delete_member": "신청자 {number} 삭제",
+	"optional": "(선택)",
+	"add_member": "+ 신청자 추가"
 }

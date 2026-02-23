@@ -9,5 +9,10 @@
 	"required": "Required",
 	"sign_up": "Sign up ➡️",
 	"check_list": "Check who's going 👀",
-	"people_going": "{count} people going!"
+	"people_going": "{count} people going!",
+	"group_count": "Group of {count}",
+	"cancel_group": "Cancel group",
+	"delete_member": "Delete member {number}",
+	"optional": "(optional)",
+	"add_member": "+ Add member"
 }

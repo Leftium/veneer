@@ -10,6 +10,7 @@
 	import type { BilingualQuestion } from '$lib/locale-content'
 	import { localeText } from '$lib/locale-content'
 	import { getLocale } from '$lib/paraglide/runtime.js'
+	import * as m from '$lib/paraglide/messages.js'
 	import { SvelteSet } from 'svelte/reactivity'
 	import { slide } from 'svelte/transition'
 	import { flip } from 'svelte/animate'
@@ -282,8 +283,8 @@
 <div class="group-registration" bind:this={containerEl}>
 	{#if additionalMembers.length > 0 && !clearing}
 		<div class="group-header" transition:slide={{ duration: 300 }}>
-			<p class="group-count">단체 {additionalMembers.length + 1}명</p>
-			<button type="button" class="clear-btn" onclick={clearGroup}>단체 취소</button>
+			<p class="group-count">{m.group_count({ count: additionalMembers.length + 1 })}</p>
+			<button type="button" class="clear-btn" onclick={clearGroup}>{m.cancel_group()}</button>
 		</div>
 	{/if}
 
@@ -413,12 +414,12 @@
 							type="button"
 							class="delete-btn"
 							onclick={() => removeMember(i)}
-							aria-label="신청자 {i + 2} 삭제">✕</button
+							aria-label={m.delete_member({ number: i + 2 })}>✕</button
 						>
 					</label>
 					<input
 						id="extra-name-{member.key}"
-						placeholder="(선택)"
+						placeholder={m.optional()}
 						bind:value={member.name}
 						oninput={handleChange}
 					/>
@@ -488,7 +489,7 @@
 
 	<!-- Actions -->
 	<div class="actions">
-		<button type="button" class="outline" onclick={addMember}>+ 신청자 추가</button>
+		<button type="button" class="outline" onclick={addMember}>{m.add_member()}</button>
 	</div>
 </div>
 
