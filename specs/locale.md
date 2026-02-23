@@ -219,19 +219,23 @@ Changed files:
 
 ---
 
-## Phase 4: Locale-Aware Column Headers and Regex — TODO
+## Phase 4: Locale-Aware Column Headers and Regex — DONE
 
-`src/lib/dance-constants.ts` uses bilingual regex patterns:
+Added English alternations to the two Korean-only regexes in `src/lib/dance-constants.ts`.
+Only two locales (en + ko) are supported, so bilingual regex alternation is sufficient.
 
-```typescript
-export const REGEX_DANCE_NAME = /name|닉네임/i
-export const REGEX_DANCE_ROLE = /role|역할|리드|리더/i
-// etc.
-```
+| Regex              | Before              | After                              |
+| ------------------ | ------------------- | ---------------------------------- |
+| `REGEX_DANCE_WISH` | `/말씀\|한마디/i`   | `/message\|wish\|말씀\|한마디/i`   |
+| `REGEX_DANCE_PAID` | `/입금여\|입금확/i` | `/paid\|payment\|입금여\|입금확/i` |
 
-This works but isn't structured i18n. If more locales are added, these patterns grow unwieldy.
+The other 5 regexes already had English alternations — no changes needed.
 
-Future: locale-keyed pattern maps, or a more general NLP-based column detection.
+### Implementation
+
+Changed file:
+
+- `src/lib/dance-constants.ts` — added English alternations to `REGEX_DANCE_WISH` and `REGEX_DANCE_PAID`
 
 ---
 
@@ -260,24 +264,25 @@ Changed files:
 
 ---
 
-## Phase 6: `internalizeLinks()` Refactor — TODO
+## Phase 6: `internalizeLinks()` Refactor — DONE
 
-`+layout.svelte` contains hardcoded Korean keyword detection for link internalization:
+Added English keyword alternations to the two functional keyword checks in `internalizeLinks()`,
+and removed two dead-code branches (`/home/i` and `/오시는 길|수칙/i`) that were no-ops
+(assigned the same default value).
 
-```typescript
-if (/신청/.test(line)) {
-	/* form link */
-}
-if (/확인/.test(line)) {
-	/* list link */
-}
-if (/오시는 길|수칙/i.test(line)) {
-	/* info link */
-}
-```
+| Check            | Before               | After                         |
+| ---------------- | -------------------- | ----------------------------- |
+| Form link        | `/신청/`             | `/sign.?up\|register\|신청/i` |
+| List link        | `/확인/`             | `/check\|list\|확인/i`        |
+| Home link        | `/home/i`            | **Removed** (no-op)           |
+| Directions/rules | `/오시는 길\|수칙/i` | **Removed** (no-op)           |
 
-This is locale-specific logic hardcoded in a general function. Needs refactoring to be either
-locale-aware or keyword-configurable via preset.
+### Implementation
+
+Changed file:
+
+- `src/routes/[id1=vid]/[[id2=vid]]/+layout.svelte` — bilingual keyword regexes in
+  `internalizeLinks()`, removed dead `home` and `오시는 길|수칙` branches
 
 ---
 
@@ -287,7 +292,7 @@ locale-aware or keyword-configurable via preset.
 Phase 1: preferredLanguage strategy   ← DONE
 Phase 2: Language switcher UI         ← DONE (header only; footer deferred)
 Phase 3: Locale-aware form content    ← DONE (Option D: convention-based bilingual parsing)
-Phase 4: Locale-aware column regex    ← after port-temp-branch infra
+Phase 4: Locale-aware column regex    ← DONE
 Phase 5: GroupRegistration strings    ← DONE
-Phase 6: internalizeLinks() refactor  ← future
+Phase 6: internalizeLinks() refactor  ← DONE
 ```

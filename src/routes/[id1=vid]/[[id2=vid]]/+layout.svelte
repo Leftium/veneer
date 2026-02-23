@@ -279,14 +279,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 
 					let internalLink = `/${id}`
 
-					if (/home/i.test(line)) {
-						internalLink = `/${id}`
-					}
-					if (/오시는 길|수칙/i.test(line)) {
-						internalLink = `/${id}`
-					}
-
-					if (/신청/.test(line)) {
+					if (/sign.?up|register|신청/i.test(line)) {
 						internalLink = `${docPath}/form${search}`
 						//@ts-expect-error: TODO
 						const count = finalData.extra.count
@@ -309,7 +302,7 @@ ${!sourceUrlSheet ? '' : `Google Sheet\n~ ${sourceUrlSheet}\n~ icon:simple-icons
 
 					let internalLink = `/${id}`
 
-					if (/확인/.test(line)) {
+					if (/check|list|확인/i.test(line)) {
 						internalLink = `${docPath}/list${search}`
 						const button = `<a href="${internalLink}" role=button class=outline>${m.check_list()}</a>`
 						out.push(button)
