@@ -9,10 +9,10 @@ This spec documents all options that affect page rendering, the domain-based pre
 ```
 Browser URL                    reroute hook                    File-system route
 ─────────────                  ────────────                    ─────────────────
-btango.com/                 → /g.rzQ.../s.1bY...            → (veneer)/[id1=vid]/[[id2=vid]]/[[tid=tab]]
-btango.com/form             → /g.rzQ.../s.1bY.../form       → (veneer)/[id1=vid]/[[id2=vid]]/[[tid=tab]]
-btango.com/g.abc123/info    → /g.abc123/info                 → (veneer)/[id1=vid]/[[tid=tab]]
-btango.com/?preset=kiosk    → /g.rzQ.../s.1bY...            → (veneer)/... (kiosk preset applied)
+btango.com/                 → /g.rzQ.../s.1bY...            → [id1=vid]/[[id2=vid]]/[[tid=tab]]
+btango.com/form             → /g.rzQ.../s.1bY.../form       → [id1=vid]/[[id2=vid]]/[[tid=tab]]
+btango.com/g.abc123/info    → /g.abc123/info                 → [id1=vid]/[[tid=tab]]
+btango.com/?preset=kiosk    → /g.rzQ.../s.1bY...            → [id1=vid]/... (kiosk preset applied)
 veneer.leftium.com/         → / (no reroute)                 → +page.svelte (launcher)
 veneer.leftium.com/demo     → /demo (no reroute)             → demo/+page.svelte
 ```
@@ -22,7 +22,7 @@ Key principles:
 - **Domain determines default preset** — hostname maps to a preset name, which provides default doc IDs, tab visibility, header styling, etc.
 - **Query param overrides preset** — `?preset=kiosk` overrides the domain default; no preset names in URL path segments.
 - **No prefix segment in URLs** — the `base` segment is removed. First URL segment is either a doc ID or tab name.
-- **`(veneer)` route group** — veneer routes live in an invisible route group; `reroute` normalizes paths before route matching.
+- **Flat veneer routes** — veneer routes live directly under `src/routes/[id1=vid]/`; `reroute` normalizes paths before route matching.
 - **Launcher page for unknown domains** — domains without a preset show a directory/configuration page at `/`.
 
 ## Current State (Legacy)
@@ -442,13 +442,13 @@ The page can display data from up to two Google documents: a Form and/or a Sheet
 
 **Auto-detection:** If only a form is provided, the system scans links in the form description to auto-detect a linked sheet (unless `?skipsheetidscan` is set).
 
-### 6. Theme/Branding (Not Implemented)
+### 6. Theme/Branding
 
-| Option         | Description                     | Potential Use       |
-| -------------- | ------------------------------- | ------------------- |
-| Primary color  | Accent color for buttons, links | Theme customization |
-| Logo           | Custom logo in header           | Branding            |
-| Footer content | Custom footer links             | Site customization  |
+| Option         | Description                     | Status                                                              |
+| -------------- | ------------------------------- | ------------------------------------------------------------------- |
+| Primary color  | Accent color for buttons, links | Done — `?accentColor=` param + `--app-accent-color` CSS property    |
+| Footer content | Custom footer links             | Done — parsed from Google Form content (sections split on `===`)    |
+| Logo           | Custom logo in header           | Not implemented (low priority — not needed for current deployments) |
 
 ## Configuration Passing Methods
 
@@ -668,12 +668,12 @@ The remaining work — extracting the form's accent color and background color f
 `FB_PUBLIC_LOAD_DATA_` and surfacing them as veneer params — is tracked in `specs/launcher.md`
 Phase 5 (Google Form Theme Colors).
 
-### Phase 5: Theme System — PARTIAL
+### Phase 5: Theme System — DONE
 
 1. Define CSS custom properties for theming — done (Open Props + `--app-*` variables)
 2. Allow color overrides via params — done via Phase 3b header params
 3. Accent color + background color from Google Form — done (see `specs/launcher.md` Phase 5)
-4. Consider light/dark mode support — TODO
+4. Dark mode — dropped (not needed for target audience)
 
 ## Migration Path
 
@@ -796,10 +796,9 @@ veneer.leftium.com/api/final-url       # API endpoint
 
 ### Reserved words
 
-Tab names (`info`, `form`, `list`, `raw`, `dev`) are reserved — they are interpreted by `reroute` as tabs on the domain's default docs (for domains with a preset). They cannot be used as top-level static route names under `(centered)/`. Since preset names are no longer in the URL path, they don't create reserved-word conflicts.
+Tab names (`info`, `form`, `list`, `raw`, `dev`) are reserved — they are interpreted by `reroute` as tabs on the domain's default docs (for domains with a preset). They cannot be used as top-level static route names. Since preset names are no longer in the URL path, they don't create reserved-word conflicts.
 
 If a new static route is needed with a name that collides with a tab name, either:
 
 - Choose a name that doesn't collide (preferred)
-- Place it outside `(centered)/`
 - Add it to an explicit check in `reroute` before veneer path resolution
