@@ -28,6 +28,8 @@ export interface LayoutConfig {
 	messageBalanceRate: number
 	/** Minimum horizontal spacing between adjacent units (normalized [0,1]). 0 = no enforcement. */
 	minSpacing: number
+	/** Probability [0,1] that a pair is broken into two solos. 0 = never, 1 = always. */
+	soloChance: number
 }
 
 export interface DockConfig {
@@ -59,6 +61,7 @@ export const DEFAULT_LAYOUT: LayoutConfig = {
 	soloAffinity: 0.3, // 0 = scatter, 1 = collapse
 	messageBalanceRate: 0.5, // probability of swap attempt per messageless pair
 	minSpacing: 0.1, // minimum horizontal gap between adjacent units (normalized)
+	soloChance: 0.15, // probability each pair is broken into two solos
 }
 
 /** Dock magnification defaults (used in Phase 3, defined here for type completeness). */
@@ -641,7 +644,25 @@ export function buildDanceUnits(
 	const shuffledFlex = priorityShuffle(flex, songSlot, timestamps, config.weights)
 
 	// Step 3: Match pairs
-	const { pairs, solos } = matchPairs(shuffledLeaders, shuffledFollowers, shuffledFlex)
+	const { pairs: rawPairs, solos: rawSolos } = matchPairs(
+		shuffledLeaders,
+		shuffledFollowers,
+		shuffledFlex,
+	)
+
+	// Step 3.5: Solo chance — probabilistically break some pairs into two solos
+	const pairs: [DancerRow, DancerRow][] = []
+	const solos: DancerRow[] = [...rawSolos]
+	const soloChance = config.layout.soloChance
+	for (const pair of rawPairs) {
+		const pairKey = [pair[0].name, pair[1].name].sort().join('\0')
+		const roll = hashString(songSlot + '\0solobreak\0' + pairKey) / MAX_HASH
+		if (roll < soloChance) {
+			solos.push(pair[0], pair[1])
+		} else {
+			pairs.push(pair)
+		}
+	}
 
 	// Step 4: Message balance
 	const balancedPairs = balanceMessages(pairs, songSlot, config.layout.messageBalanceRate)

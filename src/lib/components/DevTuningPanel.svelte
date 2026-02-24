@@ -51,6 +51,7 @@
 	let soloAffinity = $state(DEFAULT_LAYOUT.soloAffinity)
 	let messageBalanceRate = $state(DEFAULT_LAYOUT.messageBalanceRate)
 	let minSpacing = $state(DEFAULT_LAYOUT.minSpacing)
+	let soloChance = $state(DEFAULT_LAYOUT.soloChance)
 
 	// Dock
 	let dockMaxScale = $state(DEFAULT_DOCK.maxScale)
@@ -93,6 +94,7 @@
 			soloAffinity,
 			messageBalanceRate,
 			minSpacing,
+			soloChance,
 		},
 		dock: {
 			maxScale: dockMaxScale,
@@ -163,6 +165,7 @@
 		soloAffinity = c.layout.soloAffinity
 		messageBalanceRate = c.layout.messageBalanceRate
 		minSpacing = c.layout.minSpacing ?? DEFAULT_LAYOUT.minSpacing
+		soloChance = c.layout.soloChance ?? DEFAULT_LAYOUT.soloChance
 		dockMaxScale = c.dock.maxScale
 		neighborCount = c.dock.neighborCount
 		falloffFn = c.dock.falloffFn
@@ -432,6 +435,17 @@
 						max="0.15"
 						step="0.005"
 						bind:value={minSpacing}
+					/>
+
+					<label for="dp-soloChance">soloChance</label>
+					<span class="val">{soloChance.toFixed(2)}</span>
+					<input
+						id="dp-soloChance"
+						type="range"
+						min="0"
+						max="1"
+						step="0.05"
+						bind:value={soloChance}
 					/>
 				</div>
 			</fieldset>

@@ -46,6 +46,12 @@ function makeDancer(
 
 const FORM = 'Test Dance Event 2026'
 
+/** Config with soloChance disabled, for tests that verify core pairing logic. */
+const NO_SOLO_CHANCE_CONFIG: DancePartyConfig = {
+	...DEFAULT_CONFIG,
+	layout: { ...DEFAULT_LAYOUT, soloChance: 0 },
+}
+
 // ---------------------------------------------------------------------------
 // Song Computation
 // ---------------------------------------------------------------------------
@@ -413,7 +419,7 @@ describe('buildDanceUnits', () => {
 
 	it('creates a pair from one leader and one follower', () => {
 		const dancers = [makeDancer('L1', 'lead'), makeDancer('F1', 'follow')]
-		const units = buildDanceUnits(dancers, FORM, 1)
+		const units = buildDanceUnits(dancers, FORM, 1, NO_SOLO_CHANCE_CONFIG)
 
 		expect(units).toHaveLength(1)
 		expect(units[0].type).toBe('pair')
@@ -431,7 +437,7 @@ describe('buildDanceUnits', () => {
 
 	it('mixes pairs and solos', () => {
 		const dancers = [makeDancer('L1', 'lead'), makeDancer('L2', 'lead'), makeDancer('F1', 'follow')]
-		const units = buildDanceUnits(dancers, FORM, 1)
+		const units = buildDanceUnits(dancers, FORM, 1, NO_SOLO_CHANCE_CONFIG)
 
 		const pairs = units.filter((u) => u.type === 'pair')
 		const solos = units.filter((u) => u.type === 'solo')
@@ -446,7 +452,7 @@ describe('buildDanceUnits', () => {
 			makeDancer('B2', 'both'),
 			makeDancer('F1', 'follow'),
 		]
-		const units = buildDanceUnits(dancers, FORM, 1)
+		const units = buildDanceUnits(dancers, FORM, 1, NO_SOLO_CHANCE_CONFIG)
 
 		// Should form 2 pairs: L1+someone, someone+F1
 		const pairs = units.filter((u) => u.type === 'pair')
@@ -455,7 +461,7 @@ describe('buildDanceUnits', () => {
 
 	it('assigns valid paired-pool image numbers to pairs', () => {
 		const dancers = [makeDancer('L1', 'lead'), makeDancer('F1', 'follow')]
-		const units = buildDanceUnits(dancers, FORM, 1)
+		const units = buildDanceUnits(dancers, FORM, 1, NO_SOLO_CHANCE_CONFIG)
 		expect(PAIRED_POOL).toContain(units[0].imageNum)
 	})
 
@@ -505,6 +511,91 @@ describe('buildDanceUnits', () => {
 			}
 		}
 		expect(anyDifference).toBe(true)
+	})
+})
+
+// ---------------------------------------------------------------------------
+// Solo Chance
+// ---------------------------------------------------------------------------
+
+describe('soloChance', () => {
+	it('soloChance=0 produces no solos when leads equal follows', () => {
+		const dancers = Array.from({ length: 10 }, (_, i) =>
+			makeDancer(`D${i}`, i % 2 === 0 ? 'lead' : 'follow'),
+		)
+		const units = buildDanceUnits(dancers, FORM, 1, NO_SOLO_CHANCE_CONFIG)
+
+		expect(units.every((u) => u.type === 'pair')).toBe(true)
+		expect(units).toHaveLength(5)
+	})
+
+	it('soloChance=1 breaks all pairs into solos', () => {
+		const allSoloConfig: DancePartyConfig = {
+			...DEFAULT_CONFIG,
+			layout: { ...DEFAULT_LAYOUT, soloChance: 1.0 },
+		}
+		const dancers = Array.from({ length: 10 }, (_, i) =>
+			makeDancer(`D${i}`, i % 2 === 0 ? 'lead' : 'follow'),
+		)
+		const units = buildDanceUnits(dancers, FORM, 1, allSoloConfig)
+
+		expect(units.every((u) => u.type === 'solo')).toBe(true)
+		expect(units).toHaveLength(10)
+	})
+
+	it('default soloChance produces some solos with many balanced dancers', () => {
+		// With 50 pairs and soloChance=0.15, expect ~7-8 broken pairs on average.
+		// Test across multiple songs to ensure at least one produces solos.
+		const dancers = Array.from({ length: 100 }, (_, i) =>
+			makeDancer(`D${i}`, i % 2 === 0 ? 'lead' : 'follow', { ts: 1000 + i }),
+		)
+
+		let anySolos = false
+		for (let song = 1; song <= 5; song++) {
+			const units = buildDanceUnits(dancers, FORM, song)
+			if (units.some((u) => u.type === 'solo')) {
+				anySolos = true
+				break
+			}
+		}
+		expect(anySolos).toBe(true)
+	})
+
+	it('solo chance is deterministic per song', () => {
+		const dancers = Array.from({ length: 20 }, (_, i) =>
+			makeDancer(`D${i}`, i % 2 === 0 ? 'lead' : 'follow'),
+		)
+
+		const u1 = buildDanceUnits(dancers, FORM, 1)
+		const u2 = buildDanceUnits(dancers, FORM, 1)
+		expect(u1.map((u) => u.type)).toEqual(u2.map((u) => u.type))
+		expect(u1.map((u) => u.unitKey)).toEqual(u2.map((u) => u.unitKey))
+	})
+
+	it('preserves total member count when pairs are broken', () => {
+		const dancers = Array.from({ length: 20 }, (_, i) =>
+			makeDancer(`D${i}`, i % 2 === 0 ? 'lead' : 'follow'),
+		)
+		const units = buildDanceUnits(dancers, FORM, 1)
+
+		const totalMembers = units.reduce((sum, u) => sum + u.members.length, 0)
+		expect(totalMembers).toBe(20)
+	})
+
+	it('broken solos get valid solo image numbers (1-6)', () => {
+		const allSoloConfig: DancePartyConfig = {
+			...DEFAULT_CONFIG,
+			layout: { ...DEFAULT_LAYOUT, soloChance: 1.0 },
+		}
+		const dancers = [makeDancer('L1', 'lead'), makeDancer('F1', 'follow')]
+		const units = buildDanceUnits(dancers, FORM, 1, allSoloConfig)
+
+		expect(units).toHaveLength(2)
+		for (const u of units) {
+			expect(u.type).toBe('solo')
+			expect(u.imageNum).toBeGreaterThanOrEqual(1)
+			expect(u.imageNum).toBeLessThanOrEqual(6)
+		}
 	})
 })
 
@@ -566,7 +657,7 @@ describe('buildDanceUnits image dedup', () => {
 			dancers.push(makeDancer(`F${i}`, 'follow', { ts: 2000 + i }))
 		}
 
-		const units = buildDanceUnits(dancers, FORM, 1)
+		const units = buildDanceUnits(dancers, FORM, 1, NO_SOLO_CHANCE_CONFIG)
 		const pairImages = units.filter((u) => u.type === 'pair').map((u) => u.imageNum)
 
 		// All pair images should be unique
@@ -626,8 +717,8 @@ describe('buildDanceUnits image dedup', () => {
 			makeDancer('L2', 'lead', { ts: 3000 }),
 			makeDancer('F2', 'follow', { ts: 4000 }),
 		]
-		const u1 = buildDanceUnits(dancers, FORM, 1)
-		const u2 = buildDanceUnits(dancers, FORM, 1)
+		const u1 = buildDanceUnits(dancers, FORM, 1, NO_SOLO_CHANCE_CONFIG)
+		const u2 = buildDanceUnits(dancers, FORM, 1, NO_SOLO_CHANCE_CONFIG)
 		expect(u1.map((u) => u.imageNum)).toEqual(u2.map((u) => u.imageNum))
 	})
 })
@@ -1013,7 +1104,12 @@ describe('edge cases', () => {
 	})
 
 	it('2 dancers (1 leader + 1 follower): single pair', () => {
-		const placed = computeDanceFloor([makeDancer('L', 'lead'), makeDancer('F', 'follow')], FORM, 1)
+		const placed = computeDanceFloor(
+			[makeDancer('L', 'lead'), makeDancer('F', 'follow')],
+			FORM,
+			1,
+			NO_SOLO_CHANCE_CONFIG,
+		)
 		expect(placed).toHaveLength(1)
 		expect(placed[0].type).toBe('pair')
 		expect(placed[0].members).toHaveLength(2)
