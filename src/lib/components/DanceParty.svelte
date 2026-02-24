@@ -16,9 +16,10 @@
 		dancers: DancerRow[]
 		formTitle: string
 		firstSignupTs?: number | null
+		showBubbles?: boolean
 	}
 
-	let { dancers, formTitle, firstSignupTs }: Props = $props()
+	let { dancers, formTitle, firstSignupTs, showBubbles = true }: Props = $props()
 
 	// Dev mode detection: read ?dev query param
 	let isDev = $derived(page.url.searchParams.get('dev') != null)
@@ -97,10 +98,10 @@
 			heightMultiplier={viewHeightMultiplier}
 			marginTop={viewMarginTop}
 			anchorPercent={viewAnchorPercent}
-			onActiveUnit={handleActiveUnit}
+			onActiveUnit={showBubbles ? handleActiveUnit : undefined}
 			bubbleHeightFraction={viewBubbleHeightFraction}
 		/>
-		{#if activeUnit}
+		{#if showBubbles && activeUnit}
 			<SpeechBubble
 				unit={activeUnit}
 				centerX={bubbleCenterX}

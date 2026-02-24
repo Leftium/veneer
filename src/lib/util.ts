@@ -1,6 +1,7 @@
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
+import { REGEX_DANCE_LEADER, REGEX_DANCE_FOLLOW } from '$lib/dance-constants'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
@@ -141,6 +142,46 @@ export function assignDancerImages(formTitle: string, dancers: DancerRow[]): num
 	}
 
 	return result
+}
+
+/**
+ * Detect a dancer's role from the role column text.
+ */
+function detectRole(roleText: string): DancerRow['role'] {
+	const isLead = REGEX_DANCE_LEADER.test(roleText)
+	const isFollow = REGEX_DANCE_FOLLOW.test(roleText)
+	if (isLead && isFollow) return 'both'
+	if (isLead) return 'lead'
+	if (isFollow) return 'follow'
+	return 'unknown'
+}
+
+/**
+ * Derive DancerRow[] and firstSignupTs from processed sheet data.
+ * Shared by Sheet.svelte (list tab) and the layout footer dance party.
+ */
+export function getDancersFromSheetData(
+	rows: any[],
+	extra: { ci: { name: number; role: number; wish: number; paid: number }; [key: string]: any },
+): { dancers: DancerRow[]; firstSignupTs: number | null } {
+	const ci = extra?.ci
+	if (!ci) return { dancers: [], firstSignupTs: null }
+
+	const dancers: DancerRow[] = rows.map((row: any) => ({
+		name: row[ci.name]?.render ?? '',
+		role: detectRole(row[ci.role]?.render ?? ''),
+		ts: row.find((cell: any) => cell?.ts != null)?.ts ?? null,
+		wish: row[ci.wish]?.render || undefined,
+		paid: !!row[ci.paid]?.render,
+	}))
+
+	let earliest = Infinity
+	for (const d of dancers) {
+		if (d.ts != null && d.ts < earliest) earliest = d.ts
+	}
+	const firstSignupTs = earliest === Infinity ? null : earliest
+
+	return { dancers, firstSignupTs }
 }
 
 export function excelDateToUnix(excelDate: number, timeZone = 'UTC') {

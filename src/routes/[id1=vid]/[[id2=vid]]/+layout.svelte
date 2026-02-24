@@ -48,6 +48,8 @@
 	import { slide } from 'svelte/transition'
 	import { isOk } from 'wellcrafted/result'
 	import FooterSection from '$lib/components/FooterSection.svelte'
+	import DanceParty from '$lib/components/DanceParty.svelte'
+	import { getDancersFromSheetData } from '$lib/util.js'
 	import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte'
 	import {
 		segmentBilingualContent,
@@ -107,6 +109,13 @@
 			renderRelativeTimes,
 			collectExtraDance,
 		),
+	)
+
+	// Derive dancers for footer dance party (only when sheet is a dance-event)
+	// @ts-expect-error: finalData.extra is loosely typed by the pipeline
+	let isDanceEvent = $derived(finalData?.extra?.type === 'dance-event')
+	let footerDancerData = $derived(
+		isDanceEvent ? getDancersFromSheetData(finalData.rows, finalData.extra) : null,
 	)
 
 	let skipNextSlideChange = false
@@ -536,6 +545,17 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 			<FooterSection md={footerSources} />
 			<FooterSection md={standardFooter} />
 		</content>
+
+		{#if isDanceEvent && activeTab !== 'list' && footerDancerData}
+			<dance-floor-wrap class="footer-dance-party">
+				<DanceParty
+					dancers={footerDancerData.dancers}
+					formTitle={data.title}
+					firstSignupTs={footerDancerData.firstSignupTs}
+					showBubbles={false}
+				/>
+			</dance-floor-wrap>
+		{/if}
 	</d-footer>
 </d-article>
 
@@ -733,6 +753,13 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 
 	d-footer content {
 		padding-inline: 0;
+	}
+
+	.footer-dance-party {
+		display: block;
+		margin-block: $size-3;
+		margin-inline: calc(-1 * $size-5);
+		margin-bottom: calc(-1 * $size-3);
 	}
 
 	.markdown {

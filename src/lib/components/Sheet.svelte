@@ -8,12 +8,11 @@
 	dayjs.extend(isBetween)
 	dayjs.extend(utc)
 
-	import { stringify, assignDancerImages, type DancerRow } from '$lib/util'
+	import { stringify, assignDancerImages, getDancersFromSheetData } from '$lib/util'
 
 	import StickyHeaderGrid from '$lib/components/StickyHeaderSummaryDetailsGrid.svelte'
 	import DancerIcon from '$lib/components/DancerIcon.svelte'
 	import DanceParty from '$lib/components/DanceParty.svelte'
-	import { REGEX_DANCE_LEADER, REGEX_DANCE_FOLLOW } from '$lib/dance-constants'
 	import { m } from '$lib/paraglide/messages.js'
 
 	interface Props {
@@ -27,36 +26,8 @@
 	let columns = $derived(data.columns)
 	let rows = $derived(data.rows)
 
-	function detectRole(roleText: string): DancerRow['role'] {
-		const isLead = REGEX_DANCE_LEADER.test(roleText)
-		const isFollow = REGEX_DANCE_FOLLOW.test(roleText)
-		if (isLead && isFollow) return 'both'
-		if (isLead) return 'lead'
-		if (isFollow) return 'follow'
-		return 'unknown'
-	}
-
-	let dancers = $derived.by(() => {
-		const ci = extra?.ci
-		if (!ci) return [] as DancerRow[]
-		return rows.map((row: any) => ({
-			name: row[ci.name]?.render ?? '',
-			role: detectRole(row[ci.role]?.render ?? ''),
-			ts: row.find((cell: any) => cell?.ts != null)?.ts ?? null,
-			wish: row[ci.wish]?.render || undefined,
-			paid: !!row[ci.paid]?.render,
-		})) as DancerRow[]
-	})
+	let { dancers, firstSignupTs } = $derived(getDancersFromSheetData(rows, extra))
 	let imageNums = $derived(assignDancerImages(title, dancers))
-
-	// First signup timestamp for song numbering (earliest ts among all dancers)
-	let firstSignupTs = $derived.by(() => {
-		let earliest = Infinity
-		for (const d of dancers) {
-			if (d.ts != null && d.ts < earliest) earliest = d.ts
-		}
-		return earliest === Infinity ? null : earliest
-	})
 </script>
 
 {#snippet rowDetails(row: string | any[], _r: any)}
