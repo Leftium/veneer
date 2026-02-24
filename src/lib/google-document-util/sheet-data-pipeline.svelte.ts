@@ -283,14 +283,12 @@ function expandGroupMembers(
 				render: displayName,
 			}
 
-			// Overwrite role cell with parsed role
-			if (member.role) {
-				const roleDisplay = ROLE_DISPLAY[member.role] || ''
-				childRow[ci.role] = {
-					value: roleDisplay,
-					ts: null,
-					render: roleDisplay,
-				}
+			// Always overwrite role cell: explicit role → display text, null → empty (→ 'unknown')
+			const roleDisplay = member.role ? ROLE_DISPLAY[member.role] || '' : ''
+			childRow[ci.role] = {
+				value: roleDisplay,
+				ts: null,
+				render: roleDisplay,
 			}
 
 			// Clear the group cell on children (they don't have their own group data)
