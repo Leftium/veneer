@@ -605,6 +605,7 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 			padding-inline: $size-5;
 			background-color: var(--app-card-section-bg);
 			border-top: 1px solid var(--app-muted-border-color);
+			overflow-x: clip;
 		}
 	}
 
