@@ -200,6 +200,7 @@
 		-webkit-line-clamp: 2;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
+		font-weight: 400;
 		opacity: 0.85;
 		margin-top: 2px;
 		text-align: center;
