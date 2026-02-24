@@ -1,0 +1,17 @@
+# Veneer: dance form/sheet viewer
+# Allow indexing of document pages, block everything else.
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /wp-admin/
+Disallow: /wordpress/
+Disallow: /admin/
+Disallow: /login
+
+# Specific bot policies
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: GPTBot
+Allow: /

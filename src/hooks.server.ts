@@ -6,6 +6,9 @@ import { VENEER_ID_REGEX } from '$lib/google-document-util/url-id'
 import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-with-id'
 import { PRESETS, resolvePresetName } from '$lib/presets'
 
+/** Tab names that are valid as the first (and only meaningful) path segment. */
+const TAB_NAMES = new Set(['info', 'form', 'list', 'raw', 'dev'])
+
 /** Escape a string for use in an HTML attribute value. */
 function escAttr(s: string): string {
 	return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
@@ -36,6 +39,13 @@ async function preloadVeneerRoute(event: Parameters<Handle>[0]['event']): Promis
 	const segments = url.pathname.split('/').filter(Boolean)
 	let id1: string | undefined = segments[0]
 	let id2: string | undefined = segments[1]
+
+	// Early exit: if the first segment is present but is neither a veneer ID
+	// nor a tab name, this can't be a veneer route — skip the expensive
+	// document pre-fetch.  Blocks bot probes like /wp-admin/*, /login, etc.
+	if (id1 && !VENEER_ID_REGEX.test(id1) && !TAB_NAMES.has(id1)) {
+		return
+	}
 
 	// If the URL has no veneer IDs (e.g. root "/" on a preset domain),
 	// resolve default doc IDs from the domain preset — mirrors reroute in hooks.ts.
