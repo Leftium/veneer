@@ -452,6 +452,8 @@ interface PairingResult {
 /**
  * Match leaders and followers into pairs. Pull from flex pool when one side
  * runs short. Remaining unmatched dancers become solos.
+ *
+ * @deprecated Use {@link stableMatchPairs} for add-dancer-stable pairing.
  */
 export function matchPairs(
 	leaders: DancerRow[],
@@ -486,6 +488,80 @@ export function matchPairs(
 
 	// Anything left is a solo
 	const solos = [...leaderQueue, ...followerQueue, ...remainingFlex]
+
+	return { pairs, solos }
+}
+
+/**
+ * Stable pairing via affinity hashing.
+ *
+ * Each possible (lead-side, follow-side) pair gets a deterministic affinity
+ * score based on `hash(songSlot + names)`. The algorithm greedily picks the
+ * highest-affinity pair, removes both dancers, and repeats.
+ *
+ * Stability property: each pair's affinity depends only on the two dancers'
+ * names + songSlot, not on who else is present. Adding a dancer can only
+ * affect pairings that involve that dancer (or whose partner gets "stolen"
+ * by the newcomer having higher affinity — but this is rare and localized).
+ *
+ * Flex ("both") dancers are pre-assigned to the lead or follow side via a
+ * per-dancer hash, so they behave like fixed-role dancers for pairing.
+ * This avoids dual-pool cascades where consuming a flex on one side
+ * removes them from the other.
+ */
+export function stableMatchPairs(
+	leaders: DancerRow[],
+	followers: DancerRow[],
+	flex: DancerRow[],
+	songSlot: string,
+): PairingResult {
+	// Pre-assign flex dancers to a side via per-dancer hash.
+	// Each flex dancer's side depends only on their own name + songSlot,
+	// so adding other dancers doesn't change their assignment.
+	const effectiveLeaders = [...leaders]
+	const effectiveFollowers = [...followers]
+	for (const d of flex) {
+		const h = hashString(songSlot + '\0flexside\0' + d.name)
+		if (h % 2 === 0) {
+			effectiveLeaders.push(d)
+		} else {
+			effectiveFollowers.push(d)
+		}
+	}
+
+	const leadPool = new Set<DancerRow>(effectiveLeaders)
+	const followPool = new Set<DancerRow>(effectiveFollowers)
+
+	// Compute affinity for all possible (lead-candidate, follow-candidate) pairs.
+	interface Candidate {
+		lead: DancerRow
+		follow: DancerRow
+		affinity: number
+	}
+	const candidates: Candidate[] = []
+	for (const lead of leadPool) {
+		for (const follow of followPool) {
+			const key = [lead.name, follow.name].sort().join('\0')
+			const affinity = hashString(songSlot + '\0affinity\0' + key)
+			candidates.push({ lead, follow, affinity })
+		}
+	}
+
+	// Sort by affinity descending (highest first)
+	candidates.sort((a, b) => b.affinity - a.affinity)
+
+	// Greedily pick pairs
+	const pairs: [DancerRow, DancerRow][] = []
+	for (const { lead, follow } of candidates) {
+		if (!leadPool.has(lead) || !followPool.has(follow)) continue
+
+		pairs.push([lead, follow])
+		leadPool.delete(lead)
+		followPool.delete(follow)
+	}
+
+	// Anything left is a solo
+	const solos = [...leadPool, ...followPool]
 
 	return { pairs, solos }
 }
@@ -638,31 +714,38 @@ export function buildDanceUnits(
 	// Step 1: Classify
 	const { leaders, followers, flex } = classifyDancers(dancers, songSlot)
 
-	// Step 2: Priority-biased shuffle each pool
-	const shuffledLeaders = priorityShuffle(leaders, songSlot, timestamps, config.weights)
-	const shuffledFollowers = priorityShuffle(followers, songSlot, timestamps, config.weights)
-	const shuffledFlex = priorityShuffle(flex, songSlot, timestamps, config.weights)
+	// Step 1.5: Solo chance — per-dancer "sit out" decision before pairing.
+	// Each dancer's solo status depends only on their own name + song slot,
+	// so adding/removing other dancers doesn't change existing dancers' status.
+	const sitOutSolos: DancerRow[] = []
+	const soloChance = config.layout.soloChance
+	function filterSitOuts(pool: DancerRow[]): DancerRow[] {
+		return pool.filter((d) => {
+			const roll = hashString(songSlot + '\0sitout\0' + d.name) / MAX_HASH
+			if (roll < soloChance) {
+				sitOutSolos.push(d)
+				return false
+			}
+			return true
+		})
+	}
+	const availableLeaders = filterSitOuts(leaders)
+	const availableFollowers = filterSitOuts(followers)
+	const availableFlex = filterSitOuts(flex)
 
-	// Step 3: Match pairs
-	const { pairs: rawPairs, solos: rawSolos } = matchPairs(
-		shuffledLeaders,
-		shuffledFollowers,
-		shuffledFlex,
+	// Step 2: Stable affinity-based pairing
+	// Each (lead, follow) pair gets a deterministic affinity from hashing their
+	// names + songSlot. Greedy best-match ensures adding a dancer only affects
+	// pairings involving that dancer (or rare "stolen partner" cases).
+	const { pairs, solos: unmatchedSolos } = stableMatchPairs(
+		availableLeaders,
+		availableFollowers,
+		availableFlex,
+		songSlot,
 	)
 
-	// Step 3.5: Solo chance — probabilistically break some pairs into two solos
-	const pairs: [DancerRow, DancerRow][] = []
-	const solos: DancerRow[] = [...rawSolos]
-	const soloChance = config.layout.soloChance
-	for (const pair of rawPairs) {
-		const pairKey = [pair[0].name, pair[1].name].sort().join('\0')
-		const roll = hashString(songSlot + '\0solobreak\0' + pairKey) / MAX_HASH
-		if (roll < soloChance) {
-			solos.push(pair[0], pair[1])
-		} else {
-			pairs.push(pair)
-		}
-	}
+	// Combine sit-out solos with unmatched solos
+	const solos = [...sitOutSolos, ...unmatchedSolos]
 
 	// Step 4: Message balance
 	const balancedPairs = balanceMessages(pairs, songSlot, config.layout.messageBalanceRate)

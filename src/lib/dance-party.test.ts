@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { DancerRow } from './util'
+import { hashString, type DancerRow } from './util'
 import {
 	getSongNumber,
 	getSongSlot,
@@ -9,6 +9,7 @@ import {
 	classifyDancers,
 	priorityShuffle,
 	matchPairs,
+	stableMatchPairs,
 	balanceMessages,
 	buildUnitKey,
 	buildDanceUnits,
@@ -326,6 +327,155 @@ describe('matchPairs', () => {
 })
 
 // ---------------------------------------------------------------------------
+// Stable Match Pairs
+// ---------------------------------------------------------------------------
+
+describe('stableMatchPairs', () => {
+	const slot = 'test\0song1'
+
+	it('pairs leaders with followers', () => {
+		const leaders = [makeDancer('L1', 'lead'), makeDancer('L2', 'lead')]
+		const followers = [makeDancer('F1', 'follow'), makeDancer('F2', 'follow')]
+		const { pairs, solos } = stableMatchPairs(leaders, followers, [], slot)
+
+		expect(pairs).toHaveLength(2)
+		expect(solos).toHaveLength(0)
+		// All leaders and followers should appear exactly once
+		const allNames = pairs.flatMap(([l, f]) => [l.name, f.name]).sort()
+		expect(allNames).toEqual(['F1', 'F2', 'L1', 'L2'])
+	})
+
+	it('flex dancers get pre-assigned to a side and can fill gaps', () => {
+		// With many flex dancers, some will hash to lead side and some to follow,
+		// allowing them to pair with fixed-role dancers or each other.
+		const leaders = [makeDancer('L1', 'lead')]
+		const flex = Array.from({ length: 6 }, (_, i) => makeDancer(`B${i}`, 'both'))
+		const { pairs, solos } = stableMatchPairs(leaders, [], flex, slot)
+
+		// At least some flex should hash to the follow side and pair up
+		expect(pairs.length).toBeGreaterThan(0)
+		// Total members should be accounted for
+		const totalMembers = pairs.length * 2 + solos.length
+		expect(totalMembers).toBe(7)
+	})
+
+	it('leaves unmatched dancers as solos', () => {
+		const leaders = [makeDancer('L1', 'lead'), makeDancer('L2', 'lead'), makeDancer('L3', 'lead')]
+		const followers = [makeDancer('F1', 'follow')]
+		const { pairs, solos } = stableMatchPairs(leaders, followers, [], slot)
+
+		expect(pairs).toHaveLength(1)
+		expect(solos).toHaveLength(2)
+	})
+
+	it('flex members can pair with each other when assigned to opposite sides', () => {
+		// Use enough flex dancers that statistically some go to each side
+		const flex = Array.from({ length: 10 }, (_, i) => makeDancer(`B${i}`, 'both'))
+		const { pairs, solos } = stableMatchPairs([], [], flex, slot)
+
+		// With 10 flex, very likely some end up on each side
+		expect(pairs.length).toBeGreaterThan(0)
+		const totalMembers = pairs.length * 2 + solos.length
+		expect(totalMembers).toBe(10)
+	})
+
+	it('handles empty inputs', () => {
+		const { pairs, solos } = stableMatchPairs([], [], [], slot)
+		expect(pairs).toHaveLength(0)
+		expect(solos).toHaveLength(0)
+	})
+
+	it('is deterministic', () => {
+		const leaders = [makeDancer('L1', 'lead'), makeDancer('L2', 'lead')]
+		const followers = [makeDancer('F1', 'follow'), makeDancer('F2', 'follow')]
+		const r1 = stableMatchPairs(leaders, followers, [], slot)
+		const r2 = stableMatchPairs(leaders, followers, [], slot)
+
+		const names1 = r1.pairs.map(([l, f]) => `${l.name}-${f.name}`)
+		const names2 = r2.pairs.map(([l, f]) => `${l.name}-${f.name}`)
+		expect(names1).toEqual(names2)
+	})
+
+	it('adding a dancer preserves most existing pairings', () => {
+		// Use varied names (like real signups) to avoid worst-case sequential hashing
+		const leaders = ['김철수', '박지훈', '오태호', '정민수', '강현우'].map((n) =>
+			makeDancer(n, 'lead'),
+		)
+		const followers = ['이영희', '최수정', '한소연', '윤미래', '서지은'].map((n) =>
+			makeDancer(n, 'follow'),
+		)
+
+		const basePairs = stableMatchPairs(leaders, followers, [], slot).pairs
+		const basePairSet = new Set(basePairs.map(([l, f]) => [l.name, f.name].sort().join('\0')))
+
+		// Add one more leader (will be solo since no follower available)
+		const extLeaders = [...leaders, makeDancer('NewLeader', 'lead')]
+		const extPairs = stableMatchPairs(extLeaders, followers, [], slot).pairs
+		const extPairSet = new Set(extPairs.map(([l, f]) => [l.name, f.name].sort().join('\0')))
+
+		let preserved = 0
+		for (const pair of basePairSet) {
+			if (extPairSet.has(pair)) preserved++
+		}
+		// Most pairings should be preserved (newcomer may steal a partner,
+		// causing a short cascade — typically 1-2 pairs disrupted)
+		expect(preserved).toBeGreaterThanOrEqual(3)
+	})
+
+	it('adding a follower preserves most existing pairings', () => {
+		const leaders = ['김철수', '박지훈', '오태호', '정민수', '강현우'].map((n) =>
+			makeDancer(n, 'lead'),
+		)
+		const followers = ['이영희', '최수정', '한소연', '윤미래', '서지은'].map((n) =>
+			makeDancer(n, 'follow'),
+		)
+
+		const basePairs = stableMatchPairs(leaders, followers, [], slot).pairs
+		const basePairSet = new Set(basePairs.map(([l, f]) => [l.name, f.name].sort().join('\0')))
+
+		// Add one more follower (will be solo)
+		const extFollowers = [...followers, makeDancer('NewFollower', 'follow')]
+		const extPairs = stableMatchPairs(leaders, extFollowers, [], slot).pairs
+		const extPairSet = new Set(extPairs.map(([l, f]) => [l.name, f.name].sort().join('\0')))
+
+		let preserved = 0
+		for (const pair of basePairSet) {
+			if (extPairSet.has(pair)) preserved++
+		}
+		expect(preserved).toBeGreaterThanOrEqual(3)
+	})
+
+	it('single flex dancer becomes solo (no partner on opposite side)', () => {
+		const flex = [makeDancer('B1', 'both')]
+		const { pairs, solos } = stableMatchPairs([], [], flex, slot)
+
+		// Pre-assigned to one side, no one on the other → solo
+		expect(pairs).toHaveLength(0)
+		expect(solos).toHaveLength(1)
+	})
+
+	it('adding a flex dancer preserves existing pairings', () => {
+		const leaders = Array.from({ length: 5 }, (_, i) => makeDancer(`L${i}`, 'lead'))
+		const followers = Array.from({ length: 5 }, (_, i) => makeDancer(`F${i}`, 'follow'))
+
+		const basePairs = stableMatchPairs(leaders, followers, [], slot).pairs
+		const basePairSet = new Set(basePairs.map(([l, f]) => [l.name, f.name].sort().join('\0')))
+
+		// Add a flex dancer — should not disrupt existing lead-follow pairings
+		const flex = [makeDancer('B1', 'both')]
+		const extResult = stableMatchPairs(leaders, followers, flex, slot)
+		const extPairSet = new Set(extResult.pairs.map(([l, f]) => [l.name, f.name].sort().join('\0')))
+
+		let preserved = 0
+		for (const pair of basePairSet) {
+			if (extPairSet.has(pair)) preserved++
+		}
+		// All 5 original pairs should be preserved (flex goes to one side as extra)
+		expect(preserved).toBe(5)
+	})
+})
+
+// ---------------------------------------------------------------------------
 // Message Balancing
 // ---------------------------------------------------------------------------
 
@@ -445,18 +595,21 @@ describe('buildDanceUnits', () => {
 		expect(solos).toHaveLength(1)
 	})
 
-	it('uses flex members to fill both sides', () => {
+	it('uses flex members to fill gaps', () => {
+		// Use enough flex dancers that some hash to each side
 		const dancers = [
 			makeDancer('L1', 'lead'),
-			makeDancer('B1', 'both'),
-			makeDancer('B2', 'both'),
+			...Array.from({ length: 6 }, (_, i) => makeDancer(`B${i}`, 'both')),
 			makeDancer('F1', 'follow'),
 		]
 		const units = buildDanceUnits(dancers, FORM, 1, NO_SOLO_CHANCE_CONFIG)
 
-		// Should form 2 pairs: L1+someone, someone+F1
+		// L1 and F1 should each find a partner (flex fills gaps)
 		const pairs = units.filter((u) => u.type === 'pair')
-		expect(pairs).toHaveLength(2)
+		expect(pairs.length).toBeGreaterThanOrEqual(2)
+		// Total members accounted for
+		const totalMembers = units.reduce((sum, u) => sum + u.members.length, 0)
+		expect(totalMembers).toBe(8)
 	})
 
 	it('assigns valid paired-pool image numbers to pairs', () => {
@@ -529,7 +682,7 @@ describe('soloChance', () => {
 		expect(units).toHaveLength(5)
 	})
 
-	it('soloChance=1 breaks all pairs into solos', () => {
+	it('soloChance=1 makes all dancers sit out as solos', () => {
 		const allSoloConfig: DancePartyConfig = {
 			...DEFAULT_CONFIG,
 			layout: { ...DEFAULT_LAYOUT, soloChance: 1.0 },
@@ -544,7 +697,7 @@ describe('soloChance', () => {
 	})
 
 	it('default soloChance produces some solos with many balanced dancers', () => {
-		// With 50 pairs and soloChance=0.15, expect ~7-8 broken pairs on average.
+		// With 100 dancers and soloChance=0.15, expect ~15 sit-outs on average.
 		// Test across multiple songs to ensure at least one produces solos.
 		const dancers = Array.from({ length: 100 }, (_, i) =>
 			makeDancer(`D${i}`, i % 2 === 0 ? 'lead' : 'follow', { ts: 1000 + i }),
@@ -572,7 +725,7 @@ describe('soloChance', () => {
 		expect(u1.map((u) => u.unitKey)).toEqual(u2.map((u) => u.unitKey))
 	})
 
-	it('preserves total member count when pairs are broken', () => {
+	it('preserves total member count', () => {
 		const dancers = Array.from({ length: 20 }, (_, i) =>
 			makeDancer(`D${i}`, i % 2 === 0 ? 'lead' : 'follow'),
 		)
@@ -582,7 +735,7 @@ describe('soloChance', () => {
 		expect(totalMembers).toBe(20)
 	})
 
-	it('broken solos get valid solo image numbers (1-6)', () => {
+	it('sit-out solos get valid solo image numbers (1-6)', () => {
 		const allSoloConfig: DancePartyConfig = {
 			...DEFAULT_CONFIG,
 			layout: { ...DEFAULT_LAYOUT, soloChance: 1.0 },
@@ -596,6 +749,84 @@ describe('soloChance', () => {
 			expect(u.imageNum).toBeGreaterThanOrEqual(1)
 			expect(u.imageNum).toBeLessThanOrEqual(6)
 		}
+	})
+
+	it('adding a dancer does not change existing dancers solo status', () => {
+		// Each dancer's sit-out is based only on their own name + song slot
+		const baseDancers = Array.from({ length: 10 }, (_, i) =>
+			makeDancer(`Stable${i}`, i % 2 === 0 ? 'lead' : 'follow'),
+		)
+
+		const baseUnits = buildDanceUnits(baseDancers, FORM, 1)
+		const baseSoloNames = new Set(
+			baseUnits.filter((u) => u.type === 'solo').flatMap((u) => u.members.map((m) => m.name)),
+		)
+
+		// Add a new dancer
+		const extendedDancers = [...baseDancers, makeDancer('Newcomer', 'lead')]
+		const extendedUnits = buildDanceUnits(extendedDancers, FORM, 1)
+		const extendedSoloNames = new Set(
+			extendedUnits.filter((u) => u.type === 'solo').flatMap((u) => u.members.map((m) => m.name)),
+		)
+
+		// Every original dancer that was a sit-out solo should still be solo
+		for (const name of baseSoloNames) {
+			expect(extendedSoloNames.has(name)).toBe(true)
+		}
+
+		// Verify sit-out hash is stable: paired dancers' hashes didn't change
+		const basePairedNames = new Set(
+			baseUnits.filter((u) => u.type === 'pair').flatMap((u) => u.members.map((m) => m.name)),
+		)
+		const songSlot = getSongSlot(FORM, 1)
+		for (const name of basePairedNames) {
+			const roll = hashString(songSlot + '\0sitout\0' + name) / 0xffff_ffff
+			expect(roll).toBeGreaterThanOrEqual(DEFAULT_LAYOUT.soloChance)
+		}
+	})
+
+	it('adding a dancer preserves most existing pairings (full pipeline)', () => {
+		// With stable affinity-based pairing, adding a dancer should not
+		// reshuffle all existing pairs.
+		const leadNames = ['김철수', '박지훈', '오태호', '정민수', '강현우']
+		const followNames = ['이영희', '최수정', '한소연', '윤미래', '서지은']
+		const baseDancers = [
+			...leadNames.map((n) => makeDancer(n, 'lead')),
+			...followNames.map((n) => makeDancer(n, 'follow')),
+		]
+
+		const baseUnits = buildDanceUnits(baseDancers, FORM, 1, NO_SOLO_CHANCE_CONFIG)
+		const basePairSet = new Set(
+			baseUnits
+				.filter((u) => u.type === 'pair')
+				.map((u) =>
+					u.members
+						.map((m) => m.name)
+						.sort()
+						.join('\0'),
+				),
+		)
+
+		// Add a dancer that won't match (extra lead, no new follow)
+		const extDancers = [...baseDancers, makeDancer('NewLead', 'lead')]
+		const extUnits = buildDanceUnits(extDancers, FORM, 1, NO_SOLO_CHANCE_CONFIG)
+		const extPairSet = new Set(
+			extUnits
+				.filter((u) => u.type === 'pair')
+				.map((u) =>
+					u.members
+						.map((m) => m.name)
+						.sort()
+						.join('\0'),
+				),
+		)
+
+		// Most pairings should be preserved (newcomer may cause a short cascade)
+		let preserved = 0
+		for (const pair of basePairSet) {
+			if (extPairSet.has(pair)) preserved++
+		}
+		expect(preserved).toBeGreaterThanOrEqual(3)
 	})
 })
 
