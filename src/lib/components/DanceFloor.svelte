@@ -322,6 +322,7 @@
 <style>
 	.dance-floor {
 		position: relative;
+		z-index: 1;
 		width: 100%;
 		overflow: visible;
 		touch-action: pan-y;

@@ -118,7 +118,7 @@
 		left: 0;
 		right: 0;
 		pointer-events: none;
-		z-index: -1;
+		z-index: 0;
 	}
 
 	// Shared pointer base
@@ -187,7 +187,8 @@
 	}
 
 	.name {
-		font-weight: 600;
+		font-weight: 800;
+		font-size: 0.85rem;
 
 		.right > & {
 			text-align: right;
