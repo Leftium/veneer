@@ -78,7 +78,7 @@
 	const search = page.url.search
 
 	let swiperContainer = $state<SwiperContainer>()
-	let activeTab = $state(untrack(() => params.tid))
+	let activeTab = $state(untrack(() => params.tid || data.defaultTab))
 	let notificationBoxHidden = $state(false)
 	let headerTitleToggled = $state(false)
 
@@ -365,7 +365,7 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 </script>
 
 <d-article
-	class="content-bg"
+	class={['content-bg', { 'wide-table': activeTab === 'list' && !isDanceEvent, ready: hasJS }]}
 	style:--app-accent-color={data.accentColor}
 	style:--app-accent-text={data.accentText}
 	style:background-color={data.bgColor}
@@ -585,6 +585,14 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 		padding: 0;
 		margin-block: 0;
 
+		&.ready {
+			transition: max-width 0.3s ease;
+		}
+
+		&.wide-table {
+			max-width: var(--table-width, $size-content-3);
+		}
+
 		h1 {
 			margin-bottom: $size-2;
 			text-align: center;
@@ -606,6 +614,13 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 			background-color: var(--app-card-section-bg);
 			border-top: 1px solid var(--app-muted-border-color);
 			overflow-x: clip;
+		}
+
+		&.wide-table {
+			d-header,
+			d-footer {
+				max-width: none;
+			}
 		}
 	}
 
@@ -750,6 +765,8 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 	content {
 		display: block;
 		padding-inline: $size-7;
+		max-width: $size-content-3;
+		margin-inline: auto;
 	}
 
 	d-footer content {

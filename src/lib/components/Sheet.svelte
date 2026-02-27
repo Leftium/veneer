@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte'
 	import dayjs from 'dayjs'
 	import relativeTime from 'dayjs/plugin/relativeTime'
 	import isBetween from 'dayjs/plugin/isBetween'
@@ -28,6 +29,28 @@
 
 	let { dancers, firstSignupTs } = $derived(getDancersFromSheetData(rows, extra))
 	let imageNums = $derived(assignDancerImages(title, dancers))
+
+	let wrapperEl = $state<HTMLElement>()
+
+	onMount(() => {
+		if (!wrapperEl || extra.type) return // only for default table mode
+		const gridTable = wrapperEl.querySelector('grid-table') as HTMLElement
+		const article = wrapperEl.closest('d-article') as HTMLElement
+		if (!gridTable || !article) return
+
+		// Set immediately to avoid transition flash on initial load
+		article.style.setProperty('--table-width', `${gridTable.scrollWidth}px`)
+
+		const ro = new ResizeObserver(() => {
+			article.style.setProperty('--table-width', `${gridTable.scrollWidth}px`)
+		})
+		ro.observe(gridTable)
+
+		return () => {
+			ro.disconnect()
+			article.style.removeProperty('--table-width')
+		}
+	})
 </script>
 
 {#snippet rowDetails(row: string | any[], _r: any)}
@@ -43,9 +66,9 @@
 	</dl>
 {/snippet}
 
-<div class={extra.type}>
+<div class={extra.type || 'default-table'} bind:this={wrapperEl}>
 	{#if !extra.type}
-		{@const gridTemplateColumns = `auto repeat(${columns.length - 1}, minmax(120px, 1fr))`}
+		{@const gridTemplateColumns = `max-content repeat(${columns.length - 1}, minmax(120px, max-content))`}
 		<StickyHeaderGrid {gridTemplateColumns} data={{ columns, rows }} {rowDetails}>
 			{#snippet header()}
 				{#each columns as column (column.title)}
@@ -178,6 +201,14 @@
 
 		dd {
 			margin-left: 0;
+		}
+	}
+
+	.default-table {
+		:global(grid-table) {
+			width: max-content;
+			min-width: $size-content-3;
+			margin-inline: auto;
 		}
 	}
 
