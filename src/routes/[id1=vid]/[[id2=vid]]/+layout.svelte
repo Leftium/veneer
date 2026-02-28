@@ -731,27 +731,30 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 		// so the <body> can be the scrolling context for sticky elements inside <swiper-slide>.
 		swiper-container::part(container) {
 			overflow: visible !important;
+			pointer-events: auto;
 		}
 
 		swiper-container {
-			overflow-x: clip;
-			overflow-y: visible;
-
-			// Hide the now visible overflow with a mask:
-			//mask-image: linear-gradient(to right, transparent 0%, black 0%, black 100%, transparent 100%);
-			//mask-mode: alpha;
+			// Use same-axis overflow:clip — split-axis (overflow-x:clip + overflow-y:visible)
+			// creates a containing block on iOS Safari that breaks position:sticky.
+			overflow: clip;
+			// overflow:clip clips at the padding box, so extra padding extends the
+			// visible region for speech bubbles that overflow above the dance floor.
+			// Negative margin compensates so layout is unaffected.
+			// pointer-events:none on the padding prevents blocking elements underneath.
+			padding-block: 100px;
+			margin-block: -100px;
+			pointer-events: none;
 
 			//width: 100%;
 			///overflow: hidden;
 
 			swiper-slide {
 				display: block;
+				pointer-events: auto;
 				///max-height: 100vh; // define scrollable block
 				margin-bottom: 0;
 				///background-color: #00f6;
-
-				overflow-x: clip;
-				overflow-y: visible;
 
 				pre {
 					width: 100%;
