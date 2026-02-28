@@ -15,6 +15,7 @@
 		adjustColumnLengths,
 		adjustColumnTypes,
 		collectExtraDance,
+		collectExtraPlaylist,
 		extractColumnHeaders,
 		hidePhoneNumbers,
 		makeRaw,
@@ -108,12 +109,14 @@
 			padNumericRenders,
 			renderRelativeTimes,
 			collectExtraDance,
+			collectExtraPlaylist,
 		),
 	)
 
 	// Derive dancers for footer dance party (only when sheet is a dance-event)
 	// @ts-expect-error: finalData.extra is loosely typed by the pipeline
 	let isDanceEvent = $derived(finalData?.extra?.type === 'dance-event')
+	let isPlaylist = $derived((finalData?.extra as any)?.type === 'playlist')
 	let footerDancerData = $derived(
 		isDanceEvent ? getDancersFromSheetData(finalData.rows, finalData.extra) : null,
 	)
@@ -365,7 +368,10 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 </script>
 
 <d-article
-	class={['content-bg', { 'wide-table': activeTab === 'list' && !isDanceEvent, ready: hasJS }]}
+	class={[
+		'content-bg',
+		{ 'wide-table': activeTab === 'list' && !isDanceEvent && !isPlaylist, ready: hasJS },
+	]}
 	style:--app-accent-color={data.accentColor}
 	style:--app-accent-text={data.accentText}
 	style:background-color={data.bgColor}

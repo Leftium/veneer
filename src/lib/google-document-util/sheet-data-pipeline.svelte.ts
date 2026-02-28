@@ -311,3 +311,80 @@ function expandGroupMembers(
 
 	return expanded
 }
+
+import {
+	REGEX_PLAYLIST_TITLE,
+	REGEX_PLAYLIST_ARTIST,
+	REGEX_PLAYLIST_LENGTH,
+	REGEX_PLAYLIST_BPM,
+	REGEX_PLAYLIST_GENRE,
+	REGEX_PLAYLIST_YEAR,
+	REGEX_PLAYLIST_ALBUM,
+	REGEX_PLAYLIST_REMIX,
+	REGEX_PLAYLIST_PLAYTIME,
+} from '$lib/playlist-constants'
+
+/**
+ * Parse a duration string like "3:00" or "1:23:45" into total seconds.
+ * Returns 0 if unparseable.
+ */
+function parseDurationSeconds(value: string): number {
+	const parts = value.trim().split(':').map(Number)
+	if (parts.some(isNaN)) return 0
+	if (parts.length === 2) return parts[0] * 60 + parts[1]
+	if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
+	return 0
+}
+
+/**
+ * Format total seconds as "Xh Ym" or "Xm Ys".
+ */
+function formatTotalDuration(totalSeconds: number): string {
+	if (totalSeconds <= 0) return ''
+	const h = Math.floor(totalSeconds / 3600)
+	const m = Math.floor((totalSeconds % 3600) / 60)
+	const s = totalSeconds % 60
+	if (h > 0) return `${h}h ${m}m`
+	return `${m}m ${s}s`
+}
+
+export function collectExtraPlaylist({ extra, columns, rows }: SheetDataPipe) {
+	// Skip if already classified (e.g. dance-event)
+	if ((extra as any)?.type) return { extra, columns, rows }
+
+	gg.time('⏱️ sheet-pipeline:collectExtraPlaylist')
+	const ci = {
+		title: columns.findIndex((c) => REGEX_PLAYLIST_TITLE.test(c.title)),
+		artist: columns.findIndex((c) => REGEX_PLAYLIST_ARTIST.test(c.title)),
+		length: columns.findIndex((c) => REGEX_PLAYLIST_LENGTH.test(c.title)),
+		bpm: columns.findIndex((c) => REGEX_PLAYLIST_BPM.test(c.title)),
+		genre: columns.findIndex((c) => REGEX_PLAYLIST_GENRE.test(c.title)),
+		year: columns.findIndex((c) => REGEX_PLAYLIST_YEAR.test(c.title)),
+		album: columns.findIndex((c) => REGEX_PLAYLIST_ALBUM.test(c.title)),
+		remix: columns.findIndex((c) => REGEX_PLAYLIST_REMIX.test(c.title)),
+		playTime: columns.findIndex((c) => REGEX_PLAYLIST_PLAYTIME.test(c.title)),
+	}
+
+	if (ci.title === -1 || ci.artist === -1) {
+		gg.timeEnd('⏱️ sheet-pipeline:collectExtraPlaylist')
+		return { extra, columns, rows }
+	}
+
+	// Compute summary stats
+	let totalSeconds = 0
+	if (ci.length !== -1) {
+		for (const row of rows) {
+			totalSeconds += parseDurationSeconds(row[ci.length]?.value || '')
+		}
+	}
+
+	extra = {
+		type: 'playlist',
+		trackCount: rows.length,
+		totalDuration: formatTotalDuration(totalSeconds),
+		ci,
+	}
+
+	gg.timeEnd('⏱️ sheet-pipeline:collectExtraPlaylist')
+	return { extra, columns, rows }
+}
