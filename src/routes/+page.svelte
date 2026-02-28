@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { browser } from '$app/environment'
+	import { browser, dev } from '$app/environment'
 	import { resolve } from '$app/paths'
 	import type { Pathname } from '$app/types'
 	import { SvelteURLSearchParams } from 'svelte/reactivity'
@@ -91,7 +91,7 @@
 
 	$effect(() => {
 		const id = formResult ? `${formResult.prefix}.${formResult.id}` : null
-		if (!id || formResult?.prefix === 's') {
+		if (!id) {
 			formMeta = null
 			return
 		}
@@ -161,6 +161,19 @@
 	}
 
 	let isFormType = $derived(formResult?.prefix === 'f' || formResult?.prefix === 'g')
+	let isSheetType = $derived(formResult?.prefix === 's')
+
+	const FORM_ONLY_TABS = new Set(['info', 'form'])
+	let disabledTabs = $derived(isSheetType ? FORM_ONLY_TABS : new Set<string>())
+
+	// Auto-configure tabs when URL type changes
+	$effect(() => {
+		if (isSheetType) {
+			selectedTabsArr = ['list']
+		} else {
+			selectedTabsArr = []
+		}
+	})
 
 	// Generated veneer path
 	let veneerPath = $derived.by(() => {
@@ -210,11 +223,19 @@
 		return 'none'
 	})
 	let previewTitle = $derived(formMeta?.title || '')
-	let previewAccentColor = $derived(accentColor || formMeta?.accentColor || GOOGLE_FORM_ACCENT)
+	let previewAccentColor = $derived(
+		accentColor ||
+			formMeta?.accentColor ||
+			(isSheetType ? selectedPreset.headerColor : GOOGLE_FORM_ACCENT),
+	)
 	let previewAccentText = $derived(contrastText(previewAccentColor))
-	let previewBodyBgColor = $derived(bgColor || formMeta?.bgColor || GOOGLE_FORM_BG)
+	let previewBodyBgColor = $derived(
+		bgColor || formMeta?.bgColor || (isSheetType ? '#f5f5f5' : GOOGLE_FORM_BG),
+	)
 	let previewBgColor = $derived(headerColor || darkenHex(previewAccentColor, 0.5))
-	let previewHeight = $derived(headerHeight || selectedPreset.headerHeight)
+	let previewHeight = $derived(
+		previewBgImage === 'none' ? '0' : headerHeight || selectedPreset.headerHeight,
+	)
 	let previewBgSize = $derived(headerImageFit || selectedPreset.headerImageFit)
 
 	let resolvedTabs = $derived.by(() => {
@@ -264,13 +285,16 @@
 			</div>
 			<div class="preview-bar">
 				{#if veneerPath}
-					<input
-						class="veneer-url"
-						type="text"
-						readonly
-						value={window.location.origin + veneerPath}
-						onfocus={(e) => e.currentTarget.select()}
-					/>
+					<label class="veneer-url-label">
+						Veneer URL
+						<input
+							class="veneer-url"
+							type="text"
+							readonly
+							value={window.location.origin + veneerPath}
+							onfocus={(e) => e.currentTarget.select()}
+						/>
+					</label>
 					<p class="preview-actions-prose">
 						<a href={resolve(veneerPath as Pathname)} target="_blank">Open</a> this veneer in a new
 						tab, or
@@ -339,7 +363,7 @@
 				{/if}
 			{/if}
 
-			<details open>
+			<details open={dev}>
 				<summary>Advanced options</summary>
 
 				<div class="advanced-grid">
@@ -356,9 +380,12 @@
 						{#each ALL_TABS as tabId (tabId)}
 							{@const meta = TAB_META[tabId]}
 							{@const isActive = selectedTabsArr.includes(tabId)}
+							{@const isDisabled = disabledTabs.has(tabId)}
 							<button
 								type="button"
 								class={['tab-toggle', { active: isActive }]}
+								disabled={isDisabled}
+								title={isDisabled ? 'Not available for sheet-only URLs' : ''}
 								onclick={() => {
 									if (isActive) {
 										selectedTabsArr = selectedTabsArr.filter((t) => t !== tabId)
@@ -459,12 +486,12 @@
 						<input
 							id="opt-accent-color"
 							type="text"
-							placeholder={formMeta?.accentColor || GOOGLE_FORM_ACCENT}
+							placeholder={previewAccentColor}
 							bind:value={accentColor}
 						/>
 						<input
 							type="color"
-							value={toHex(accentColor || formMeta?.accentColor || GOOGLE_FORM_ACCENT)}
+							value={toHex(previewAccentColor)}
 							oninput={(e) => (accentColor = e.currentTarget.value)}
 						/>
 					</div>
@@ -474,12 +501,12 @@
 						<input
 							id="opt-bg-color"
 							type="text"
-							placeholder={formMeta?.bgColor || GOOGLE_FORM_BG}
+							placeholder={previewBodyBgColor}
 							bind:value={bgColor}
 						/>
 						<input
 							type="color"
-							value={toHex(bgColor || formMeta?.bgColor || GOOGLE_FORM_BG)}
+							value={toHex(previewBodyBgColor)}
 							oninput={(e) => (bgColor = e.currentTarget.value)}
 						/>
 					</div>
@@ -537,6 +564,12 @@
 
 	.preview-bar {
 		padding: $size-1 $size-3 $size-2;
+	}
+
+	.veneer-url-label {
+		font-size: $font-size-0;
+		color: var(--app-muted-color, #666);
+		font-weight: $font-weight-6;
 	}
 
 	input.veneer-url {
@@ -649,6 +682,11 @@
 
 			&:hover:not(.active) {
 				background: var(--app-border-color, #ddd);
+			}
+
+			&:disabled {
+				opacity: 0.35;
+				cursor: not-allowed;
 			}
 		}
 

@@ -74,10 +74,11 @@ export const load = async ({ cookies, locals, params, url }) => {
 	// Phase 3b: header param overrides
 	const headerImageParam = url.searchParams.get('headerImage')
 	const headerColorParam = url.searchParams.get('headerColor')
-	const headerHeight = url.searchParams.get('headerHeight') ?? preset.headerHeight
+	const headerHeightParam = url.searchParams.get('headerHeight')
 	const headerTextColor = url.searchParams.get('headerTextColor') ?? preset.headerTextColor
 	const headerImageFit = url.searchParams.get('headerImageFit') ?? preset.headerImageFit
-	// headerImage resolved after form is loaded (needed for 'form' sentinel)
+	// headerImage and headerHeight resolved after form is loaded (image needed for 'form' sentinel;
+	// height defaults to '0' when there is no header image)
 
 	// ?ogImage= override: 'header' | 'first' | 'none' | <url>
 	const ogImageParam = url.searchParams.get('ogImage')
@@ -264,17 +265,26 @@ export const load = async ({ cookies, locals, params, url }) => {
 				? ((isOk(form) ? form.data.headerImageUrl : null) ?? preset.headerImage)
 				: (headerImageParam ?? preset.headerImage)
 
+	// Extra height defaults to '0' when there is no header image
+	const headerHeight = headerHeightParam ?? (headerImage ? preset.headerHeight : '0')
+
 	// Phase 5: resolve accentColor/bgColor — 'form' sentinel (now also the default) uses parsed form value
-	// Final fallback is Google Forms' own default theme colors.
+	// When no form is present (sheet-only), use preset headerColor / neutral gray instead of Google Form purple.
+	const formAccent = isOk(form) ? form.data.accentColor : null
+	const formBg = isOk(form) ? form.data.bgColor : null
+	const hasForm = isOk(form)
+	const accentFallback = hasForm ? GOOGLE_FORM_ACCENT : (preset.accentColor ?? preset.headerColor)
+	const bgFallback = hasForm ? GOOGLE_FORM_BG : (preset.bgColor ?? '#f5f5f5')
+
 	const accentColor =
 		accentColorParam === 'form' || accentColorParam == null
-			? ((isOk(form) ? form.data.accentColor : null) ?? preset.accentColor ?? GOOGLE_FORM_ACCENT)
-			: (accentColorParam ?? preset.accentColor ?? GOOGLE_FORM_ACCENT)
+			? (formAccent ?? preset.accentColor ?? accentFallback)
+			: (accentColorParam ?? preset.accentColor ?? accentFallback)
 
 	const bgColor =
 		bgColorParam === 'form' || bgColorParam == null
-			? ((isOk(form) ? form.data.bgColor : null) ?? preset.bgColor ?? GOOGLE_FORM_BG)
-			: (bgColorParam ?? preset.bgColor ?? GOOGLE_FORM_BG)
+			? (formBg ?? preset.bgColor ?? bgFallback)
+			: (bgColorParam ?? preset.bgColor ?? bgFallback)
 
 	const accentText = contrastText(accentColor)
 

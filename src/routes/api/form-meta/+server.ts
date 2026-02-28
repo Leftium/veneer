@@ -19,6 +19,15 @@ export const GET: RequestHandler = async ({ url }) => {
 		})
 	}
 
-	// Sheet or error — degrade gracefully
+	if (isOk(result) && result.data.type === 'sheet') {
+		return json({
+			title: result.data.title,
+			headerImageUrl: null,
+			accentColor: null,
+			bgColor: null,
+		})
+	}
+
+	// Error — degrade gracefully
 	return json({ title: '', headerImageUrl: null, accentColor: null, bgColor: null })
 }
