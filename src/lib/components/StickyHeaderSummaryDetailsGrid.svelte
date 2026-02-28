@@ -72,7 +72,7 @@
 		background-color: var(--app-card-section-bg);
 
 		display: flex;
-		justify-content: center;
+		justify-content: start;
 
 		padding-inline: $size-3;
 		box-shadow:
