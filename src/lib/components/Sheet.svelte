@@ -51,6 +51,7 @@
 
 	let displayColumns = $derived(displayOrder.map((i: number) => columns[i]))
 	let displayRows = $derived(rows.map((row: any[]) => displayOrder.map((i: number) => row[i])))
+	let firstNonPinnedDi = $derived(displayOrder.findIndex((i: number) => !pinnedIndices.has(i)))
 
 	const FLIP_DURATION = 1000 // ms
 
@@ -225,6 +226,12 @@
 				{#each displayColumns as column, di (displayOrder[di])}
 					{@const isPinned = pinnedIndices.has(displayOrder[di])}
 					<gh class={{ pinned: isPinned }} onclick={() => handleHeaderTap(di)}>
+						{#if !isPinned}
+							<span class="rotate-chevron" class:first-visible={di === firstNonPinnedDi}
+								>{'\u21A9\uFE0E'}</span
+							>
+						{/if}
+						<span class="col-title">{column.title}</span>
 						<button
 							class="pin-toggle"
 							onclick={(e) => {
@@ -239,7 +246,6 @@
 								/></svg
 							>
 						</button>
-						{column.title}
 					</gh>
 				{/each}
 			{/snippet}
@@ -374,14 +380,41 @@
 			border-radius: 2px;
 			opacity: 0.2;
 			transition: opacity 0.15s;
+			margin-left: auto;
+			align-self: flex-end;
+			margin-bottom: 0.25em;
 
 			&:hover {
 				background: rgba(0, 0, 0, 0.08);
 			}
 		}
 
+		.rotate-chevron {
+			font-size: 1.1em;
+			line-height: 1;
+			opacity: 0;
+			transition: opacity 0.15s;
+			user-select: none;
+			color: currentColor;
+			flex-shrink: 0;
+			align-self: flex-end;
+			margin-bottom: 0em;
+
+			&.first-visible {
+				opacity: 0.3;
+			}
+		}
+
 		&:hover .pin-toggle {
 			opacity: 0.5;
+		}
+
+		&:hover .rotate-chevron {
+			opacity: 0.5;
+		}
+
+		&:hover .rotate-chevron.first-visible {
+			opacity: 0.7;
 		}
 
 		&.pinned .pin-toggle {
