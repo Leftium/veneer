@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte'
+	import { onMount, tick } from 'svelte'
 	import { SvelteSet } from 'svelte/reactivity'
 	import dayjs from 'dayjs'
 	import relativeTime from 'dayjs/plugin/relativeTime'
@@ -52,26 +52,119 @@
 	let displayColumns = $derived(displayOrder.map((i: number) => columns[i]))
 	let displayRows = $derived(rows.map((row: any[]) => displayOrder.map((i: number) => row[i])))
 
+	const FLIP_DURATION = 1000 // ms
+
+	function snapshotHeaderPositions(): Map<number, number> {
+		const positions = new Map<number, number>()
+		if (!wrapperEl) return positions
+		const headers = wrapperEl.querySelectorAll('grid-table > gh') as NodeListOf<HTMLElement>
+		headers.forEach((gh, di) => {
+			positions.set(displayOrder[di], gh.getBoundingClientRect().left)
+		})
+		return positions
+	}
+
+	async function flipColumns(applyChange: () => void, retreating: Set<number>) {
+		const before = snapshotHeaderPositions()
+
+		applyChange()
+
+		// Wait for Svelte to update the DOM
+		await tick()
+
+		// Compute deltas per original column index
+		const deltas = new Map<number, number>()
+		const headers = wrapperEl?.querySelectorAll('grid-table > gh') as NodeListOf<HTMLElement>
+		if (headers) {
+			headers.forEach((gh, di) => {
+				const origIndex = displayOrder[di]
+				const oldLeft = before.get(origIndex)
+				if (oldLeft !== undefined) {
+					const delta = oldLeft - gh.getBoundingClientRect().left
+					if (Math.abs(delta) > 1) {
+						deltas.set(origIndex, delta)
+					}
+				}
+			})
+		}
+
+		if (deltas.size === 0) return
+
+		// Collect all non-pinned cells, grouped by their original column index
+		const gridTable = wrapperEl?.querySelector('grid-table') as HTMLElement
+		if (!gridTable) return
+
+		const cells = gridTable.querySelectorAll('gh, gd') as NodeListOf<HTMLElement>
+		const numCols = displayOrder.length
+
+		// Apply FLIP: set transform to old position (Invert), then animate to 0 (Play)
+		cells.forEach((cell, i) => {
+			const colIndex = i % numCols
+			const origIndex = displayOrder[colIndex]
+			const delta = deltas.get(origIndex)
+			if (delta === undefined || pinnedIndices.has(origIndex)) return
+
+			// Immediately position at old location
+			cell.style.transform = `translateX(${delta}px)`
+			cell.style.transition = 'none'
+			// Nearly hide retreating columns so focus is on incoming ones
+			if (retreating.has(origIndex)) {
+				cell.style.opacity = '0.15'
+			}
+		})
+
+		// Force layout so the browser registers the initial transform
+		void gridTable.offsetHeight
+
+		// Now animate to final position
+		requestAnimationFrame(() => {
+			cells.forEach((cell, i) => {
+				const colIndex = i % numCols
+				const origIndex = displayOrder[colIndex]
+				const delta = deltas.get(origIndex)
+				if (delta === undefined || pinnedIndices.has(origIndex)) return
+
+				// Retreating columns: stay hidden during move, fade in at the end
+				const isRetreating = retreating.has(origIndex)
+				cell.style.transition = isRetreating
+					? `transform ${FLIP_DURATION}ms cubic-bezier(0.25, 0.1, 0.25, 1), opacity ${FLIP_DURATION * 0.4}ms ease ${FLIP_DURATION * 0.6}ms`
+					: `transform ${FLIP_DURATION}ms cubic-bezier(0.25, 0.1, 0.25, 1)`
+				cell.style.transform = ''
+				if (isRetreating) cell.style.opacity = ''
+			})
+
+			// Clean up inline styles after animation
+			setTimeout(() => {
+				cells.forEach((cell) => {
+					cell.style.transition = ''
+					cell.style.transform = ''
+					cell.style.opacity = ''
+				})
+			}, FLIP_DURATION + 50)
+		})
+	}
+
 	function handleHeaderTap(displayIndex: number) {
 		const originalIndex = displayOrder[displayIndex]
 		if (pinnedIndices.has(originalIndex)) return // Don't rotate pinned columns
 
-		// Find the non-pinned columns in current display order
 		const nonPinnedDisplay = displayOrder.filter((i: number) => !pinnedIndices.has(i))
 		const posInNonPinned = nonPinnedDisplay.indexOf(originalIndex)
 
-		if (posInNonPinned === 0) {
-			// Tapping the first non-pinned column rotates it to the end
-			rotationStart = (rotationStart + 1) % (nonPinnedDisplay.length || 1)
-		} else {
-			// Tapping any other column makes it the first non-pinned column
-			// Find its position in the original non-pinned order
-			const allNonPinned = columns
-				.map((_: any, i: number) => i)
-				.filter((i: number) => !pinnedIndices.has(i))
-			const originalPos = allNonPinned.indexOf(originalIndex)
-			rotationStart = originalPos
-		}
+		// Columns before the tapped one are retreating to the back
+		const retreating = new Set(nonPinnedDisplay.slice(0, posInNonPinned === 0 ? 1 : posInNonPinned))
+
+		flipColumns(() => {
+			if (posInNonPinned === 0) {
+				rotationStart = (rotationStart + 1) % (nonPinnedDisplay.length || 1)
+			} else {
+				const allNonPinned = columns
+					.map((_: any, i: number) => i)
+					.filter((i: number) => !pinnedIndices.has(i))
+				const originalPos = allNonPinned.indexOf(originalIndex)
+				rotationStart = originalPos
+			}
+		}, retreating)
 	}
 
 	function togglePin(displayIndex: number) {
@@ -130,10 +223,8 @@
 		>
 			{#snippet header()}
 				{#each displayColumns as column, di (displayOrder[di])}
-					<gh
-						class={{ pinned: pinnedIndices.has(displayOrder[di]) }}
-						onclick={() => handleHeaderTap(di)}
-					>
+					{@const isPinned = pinnedIndices.has(displayOrder[di])}
+					<gh class={{ pinned: isPinned }} onclick={() => handleHeaderTap(di)}>
 						<button
 							class="pin-toggle"
 							onclick={(e) => {
@@ -157,8 +248,12 @@
 				{@const row = displayRows[r]}
 				{#each displayColumns as { isNumeric }, c (displayOrder[c])}
 					{@const render = row?.[c]?.render || ''}
+					{@const isPinnedCell = pinnedIndices.has(displayOrder[c])}
 					<gd
-						class={{ numeric: isNumeric, pinned: pinnedIndices.has(displayOrder[c]) }}
+						class={{
+							numeric: isNumeric,
+							pinned: isPinnedCell,
+						}}
 						onclick={makeToggleDetails(r)}
 						role="none"
 					>
