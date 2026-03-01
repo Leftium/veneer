@@ -120,6 +120,7 @@
 			dancers.push({
 				name: `Lead-${String(i).padStart(2, '0')}`,
 				role: 'lead',
+				index: dancers.length,
 				ts: baseTs + (i - 1) * 60_000,
 				wish: i % 3 === 1 ? `Lead ${i} says hi!` : undefined,
 				paid: i % 4 === 0,
@@ -129,6 +130,7 @@
 			dancers.push({
 				name: `Follow-${String(i).padStart(2, '0')}`,
 				role: 'follow',
+				index: dancers.length,
 				ts: baseTs + 1_000_000 + (i - 1) * 60_000,
 				wish: i % 3 === 1 ? `Follow ${i} says hi!` : undefined,
 				paid: i % 4 === 0,
@@ -138,12 +140,12 @@
 			dancers.push({
 				name: `Both-${String(i).padStart(2, '0')}`,
 				role: 'both',
+				index: dancers.length,
 				ts: baseTs + 2_000_000 + (i - 1) * 60_000,
 				wish: i % 3 === 1 ? `Both ${i} says hi!` : undefined,
 				paid: i % 4 === 0,
 			})
 		}
-		dancers.forEach((d, i) => (d.index = i))
 		return dancers
 	}
 

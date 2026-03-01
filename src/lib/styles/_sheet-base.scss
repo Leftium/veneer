@@ -30,20 +30,5 @@
 		border-top: 1px solid var(--app-muted-border-color);
 	}
 
-	dl {
-		display: grid;
-
-		flex-basis: $size-content-3;
-		flex-shrink: 1;
-
-		dt {
-			margin-top: $size-2;
-			font-weight: bold;
-			opacity: 15%;
-		}
-
-		dd {
-			margin-left: 0;
-		}
-	}
+	// dl styles are in the router Sheet.svelte (Svelte scopes snippet styles to defining component)
 }

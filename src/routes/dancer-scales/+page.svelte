@@ -88,12 +88,14 @@
 	}
 
 	function resetOne(sectionKey: SectionKey, num: number) {
-		scales[sectionKey][num] = DANCER_SCALES[sectionKey][num] ?? 1.0
+		scales[sectionKey][num] =
+			DANCER_SCALES[sectionKey][String(num) as keyof (typeof DANCER_SCALES)[SectionKey]] ?? 1.0
 	}
 
 	function resetSection(sectionKey: SectionKey, count: number) {
 		for (let i = 1; i <= count; i++) {
-			scales[sectionKey][i] = DANCER_SCALES[sectionKey][i] ?? 1.0
+			scales[sectionKey][i] =
+				DANCER_SCALES[sectionKey][String(i) as keyof (typeof DANCER_SCALES)[SectionKey]] ?? 1.0
 		}
 	}
 

@@ -115,7 +115,7 @@
 	// Auto-show table tab for playlists; also shown when explicitly in ?tabs= param
 	let showTableTab = $derived(isPlaylist || !!data.navTabs.table?.icon)
 	let footerDancerData = $derived(
-		isDanceEvent ? getDancersFromSheetData(finalData.rows, finalData.extra) : null,
+		isDanceEvent ? getDancersFromSheetData(finalData.rows, finalData.extra as any) : null,
 	)
 
 	let skipNextSlideChange = false

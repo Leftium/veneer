@@ -146,7 +146,7 @@ export const DANCER_SCALES = {
  * Returns 1.0 for unknown images.
  */
 export function getDancerScale(role: 'both' | 'lead' | 'follow', imageNum: number): number {
-	return DANCER_SCALES[role]?.[imageNum] ?? 1.0
+	return DANCER_SCALES[role]?.[String(imageNum) as keyof (typeof DANCER_SCALES)[typeof role]] ?? 1.0
 }
 
 /**

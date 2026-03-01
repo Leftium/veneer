@@ -15,16 +15,9 @@
 		{#if locale === currentLocale}
 			<span class="locale active">{displayNames[locale]}</span>
 		{:else}
-			<span
-				class="locale inactive"
-				tabindex="0"
-				onclick={() => setLocale(locale)}
-				onkeydown={(e) => {
-					if (e.key === 'Enter' || e.key === ' ') setLocale(locale)
-				}}
-			>
+			<button class="locale inactive" onclick={() => setLocale(locale)}>
 				{displayNames[locale]}
-			</span>
+			</button>
 		{/if}
 	{/each}
 </span>
@@ -40,6 +33,8 @@
 	}
 
 	.locale.inactive {
+		all: unset;
+		font: inherit;
 		font-weight: normal;
 		opacity: 0.7;
 		cursor: pointer;
