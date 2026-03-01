@@ -230,7 +230,7 @@
 	)
 	let previewAccentText = $derived(contrastText(previewAccentColor))
 	let previewBodyBgColor = $derived(
-		bgColor || formMeta?.bgColor || (isSheetType ? '#f5f5f5' : GOOGLE_FORM_BG),
+		bgColor || formMeta?.bgColor || (isSheetType ? '#fefefe' : GOOGLE_FORM_BG),
 	)
 	let previewBgColor = $derived(headerColor || darkenHex(previewAccentColor, 0.5))
 	let previewHeight = $derived(

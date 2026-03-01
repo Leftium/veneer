@@ -274,7 +274,7 @@ export const load = async ({ cookies, locals, params, url }) => {
 	const formBg = isOk(form) ? form.data.bgColor : null
 	const hasForm = isOk(form)
 	const accentFallback = hasForm ? GOOGLE_FORM_ACCENT : (preset.accentColor ?? preset.headerColor)
-	const bgFallback = hasForm ? GOOGLE_FORM_BG : (preset.bgColor ?? '#f5f5f5')
+	const bgFallback = hasForm ? GOOGLE_FORM_BG : (preset.bgColor ?? '#fefefe')
 
 	const accentColor =
 		accentColorParam === 'form' || accentColorParam == null
