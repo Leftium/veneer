@@ -42,7 +42,7 @@
 	import { page } from '$app/state'
 	import { DOCUMENT_URL_REGEX, urlFromVeneerId } from '$lib/google-document-util/url-id.js'
 	import GoogleForm from '$lib/components/GoogleForm.svelte'
-	import Sheet from '$lib/components/Sheet.svelte'
+	import Sheet from '$lib/components/sheet/Sheet.svelte'
 	import Confetti from 'svelte-confetti'
 	import { confetti } from '@neoconfetti/svelte'
 	import NotificationBox from '$lib/components/NotificationBox.svelte'

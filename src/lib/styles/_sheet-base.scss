@@ -1,0 +1,49 @@
+// Shared base styles for all Sheet sub-components (SheetTable, DanceEventList, PlaylistList).
+// Each component `@use` this partial for the common gh/gd/dl rules.
+
+@use 'open-props-scss' as *;
+
+@mixin base {
+	gh,
+	gd {
+		padding: $size-2 $size-2;
+
+		&:global(.numeric) {
+			font-family: Lato, Helvetica, sans-serif;
+			font-feature-settings: 'tnum';
+			font-variant-numeric: tabular-nums;
+		}
+
+		// Ghost zero: takes up space for alignment but cannot be seen/selected.
+		:global(gz) {
+			opacity: 0;
+			user-select: none;
+		}
+	}
+
+	gd {
+		display: block;
+		white-space: nowrap;
+		overflow: clip;
+		text-overflow: ellipsis;
+
+		border-top: 1px solid var(--app-muted-border-color);
+	}
+
+	dl {
+		display: grid;
+
+		flex-basis: $size-content-3;
+		flex-shrink: 1;
+
+		dt {
+			margin-top: $size-2;
+			font-weight: bold;
+			opacity: 15%;
+		}
+
+		dd {
+			margin-left: 0;
+		}
+	}
+}
