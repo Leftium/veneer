@@ -36,6 +36,61 @@ const ALL_TABS = ['info', 'form', 'list', 'table', 'raw', 'dev']
 /** If info content has at least this many lines, auto-show the info tab. */
 const INFO_LINE_THRESHOLD = 30
 
+/**
+ * Parse the ?tabs= parameter into a resolved tab list.
+ *
+ * Two modes:
+ * - **Absolute** (no +/- anywhere): plain tab names separated by `.` → replaces entire list
+ * - **Modifier** (+/- present): add/remove from a base set
+ *
+ * Bases for modifier mode:
+ * - bare (no prefix) → computedTabs (heuristic defaults)
+ * - `*`              → ALL_TABS
+ * - `~`              → presetTabs (raw preset.tabs before heuristics)
+ *
+ * Final order always follows canonical ALL_TABS order.
+ */
+function parseTabs(
+	param: string,
+	computedTabs: string[],
+	presetTabs: string[] | undefined,
+): string[] | null {
+	if (!param) return null
+
+	// No +/- anywhere → absolute mode (backward compatible)
+	if (!param.includes('+') && !param.includes('-')) {
+		// Bare `*` → all tabs (replaces old redirect behavior)
+		if (param === '*') return [...ALL_TABS]
+		return param.split('.').filter((t) => ALL_TABS.includes(t))
+	}
+
+	// Modifier mode: determine base
+	let base: string[]
+	let expr = param
+	if (expr.startsWith('*')) {
+		base = [...ALL_TABS]
+		expr = expr.slice(1)
+	} else if (expr.startsWith('~')) {
+		base = [...(presetTabs ?? computedTabs)]
+		expr = expr.slice(1)
+	} else {
+		base = [...computedTabs]
+	}
+
+	// Parse +/- segments
+	const ops = expr.match(/[+-][a-z]+/gi) || []
+	const result = new Set(base)
+	for (const op of ops) {
+		const name = op.slice(1)
+		if (!ALL_TABS.includes(name)) continue
+		if (op[0] === '+') result.add(name)
+		else result.delete(name)
+	}
+
+	// Preserve canonical tab order
+	return ALL_TABS.filter((t) => result.has(t))
+}
+
 /** Compute default visible tabs from sheet type and info length. */
 function computeDefaultTabs(sheetType: SheetType, infoLines: number): string[] {
 	let tabs: string[]
@@ -78,19 +133,8 @@ export const load = async ({ cookies, locals, params, url }) => {
 	const presetName = url.searchParams.get('preset') || resolvePresetName(hostname) || 'base'
 	const preset = PRESETS[presetName] || PRESETS['base']
 
-	// Phase 3a: ?tabs= override — expand wildcard to editable list via redirect
+	// ?tabs= parsed after sheetType and info are known (parseTabs needs computed defaults).
 	const tabsParam = url.searchParams.get('tabs')
-	if (tabsParam === '*') {
-		const expandedUrl = new URL(url)
-		expandedUrl.searchParams.set('tabs', ALL_TABS.join('.'))
-		redirect(307, expandedUrl.pathname + expandedUrl.search)
-	}
-
-	// Tab list computed after sheetType and info are known (see below).
-	// If ?tabs= is an explicit absolute list, use it directly; otherwise heuristics decide.
-	const tabsParamList = tabsParam
-		? tabsParam.split('.').filter((t: string) => ALL_TABS.includes(t))
-		: null
 
 	// Phase 3a: ?showErrors — defaults to true in dev, false in prod
 	const showErrorsParam = url.searchParams.get('showErrors')
@@ -327,8 +371,11 @@ export const load = async ({ cookies, locals, params, url }) => {
 	// --- Compute visible tabs (unified: sheet type + info heuristic + preset/param overrides) ---
 	const infoLines = info.trimEnd().split('\n').length
 	const computedTabs = computeDefaultTabs(sheetType, infoLines)
-	// Priority: ?tabs= param (absolute) > preset.tabs (explicit override) > computed heuristics
-	const tabs = tabsParamList ?? preset.tabs ?? computedTabs
+	// Priority: ?tabs= param (absolute/modifier) > preset.tabs (explicit) > computed heuristics
+	const tabs =
+		(tabsParam ? parseTabs(tabsParam, computedTabs, preset.tabs) : null) ??
+		preset.tabs ??
+		computedTabs
 	const visibleTabs = new Set(tabs)
 
 	type TabsKey = keyof typeof TABS
