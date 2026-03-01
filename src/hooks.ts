@@ -5,7 +5,7 @@ import { dev } from '$app/environment'
 import { deLocalizeUrl } from '$lib/paraglide/runtime'
 import { PRESETS, resolvePresetName } from '$lib/presets'
 
-const TAB_NAMES = new Set(['info', 'form', 'list', 'raw', 'dev'])
+const TAB_NAMES = new Set(['info', 'form', 'list', 'table', 'raw', 'dev'])
 
 function isVeneerId(segment: string): boolean {
 	return /^[sfgbh]\.[a-zA-Z0-9_-]+$/.test(segment)

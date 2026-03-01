@@ -7,7 +7,7 @@ import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-wi
 import { PRESETS, resolvePresetName } from '$lib/presets'
 
 /** Tab names that are valid as the first (and only meaningful) path segment. */
-const TAB_NAMES = new Set(['info', 'form', 'list', 'raw', 'dev'])
+const TAB_NAMES = new Set(['info', 'form', 'list', 'table', 'raw', 'dev'])
 
 /** Escape a string for use in an HTML attribute value. */
 function escAttr(s: string): string {

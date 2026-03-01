@@ -30,7 +30,7 @@ import { addBilingualData, splitBilingualLabel } from '$lib/locale-content'
 
 type DocumentResult = Result<GoogleSheet | GoogleFormDocument, GoogleDocumentError>
 
-const ALL_TABS = ['info', 'form', 'list', 'raw', 'dev']
+const ALL_TABS = ['info', 'form', 'list', 'table', 'raw', 'dev']
 
 /** Return 'white' or 'black' for readable text on a given hex background. */
 function contrastText(hex: string | null): string | null {
