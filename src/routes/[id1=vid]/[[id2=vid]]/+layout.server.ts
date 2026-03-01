@@ -97,8 +97,9 @@ export const load = async ({ cookies, locals, params, url }) => {
 	const TABS: Record<string, [string, string]> = {
 		info: ['ℹ️', m.info()],
 		form: ['✍', m.form()],
-		list: ['📋', m.list()],
-		raw:  ['🔧', 'RAW'],
+		list:  ['📋', m.list()],
+		table: ['▦', m.table()],
+		raw:   ['🔧', 'RAW'],
 		dev:  ['🔧', m.dev()],
 	}
 

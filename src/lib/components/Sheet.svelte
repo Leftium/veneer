@@ -27,9 +27,10 @@
 	interface Props {
 		data: any
 		title?: string
+		forceTable?: boolean
 	}
 
-	let { data, title = '' }: Props = $props()
+	let { data, title = '', forceTable = false }: Props = $props()
 
 	let extra = $derived(data.extra)
 	let columns = $derived(data.columns)
@@ -187,7 +188,7 @@
 	}
 
 	onMount(() => {
-		if (!wrapperEl || extra.type) return // only for default table mode
+		if (!wrapperEl || (extra.type && !forceTable)) return // only for default table mode
 		const gridTable = wrapperEl.querySelector('grid-table') as HTMLElement
 		const article = wrapperEl.closest('d-article') as HTMLElement
 		if (!gridTable || !article) return
@@ -221,8 +222,8 @@
 	</dl>
 {/snippet}
 
-<div class={extra.type || 'default-table'} bind:this={wrapperEl}>
-	{#if !extra.type}
+<div class={forceTable ? 'default-table' : extra.type || 'default-table'} bind:this={wrapperEl}>
+	{#if forceTable || !extra.type}
 		{@const gridTemplateColumns = `max-content repeat(${displayColumns.length - 1}, minmax(120px, max-content))`}
 		<StickyHeaderGrid
 			{gridTemplateColumns}

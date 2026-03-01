@@ -42,12 +42,13 @@
 		return L > 0.179 ? '#212529' : 'white'
 	}
 
-	const ALL_TABS = ['info', 'form', 'list', 'raw', 'dev']
+	const ALL_TABS = ['info', 'form', 'list', 'table', 'raw', 'dev']
 
 	const TAB_META: Record<string, { icon: string; name: string }> = {
 		info: { icon: 'ℹ️', name: 'Info' },
 		form: { icon: '✍', name: 'Form' },
 		list: { icon: '📋', name: 'List' },
+		table: { icon: '▦', name: 'Table' },
 		raw: { icon: '🔧', name: 'RAW' },
 		dev: { icon: '🔧', name: 'Dev' },
 	}

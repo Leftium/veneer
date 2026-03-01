@@ -117,6 +117,9 @@
 	// @ts-expect-error: finalData.extra is loosely typed by the pipeline
 	let isDanceEvent = $derived(finalData?.extra?.type === 'dance-event')
 	let isPlaylist = $derived((finalData?.extra as any)?.type === 'playlist')
+	let isSpecialSheet = $derived(isDanceEvent || isPlaylist)
+	// Auto-show table tab for playlists; also shown when explicitly in ?tabs= param
+	let showTableTab = $derived(isPlaylist || !!data.navTabs.table?.icon)
 	let footerDancerData = $derived(
 		isDanceEvent ? getDancersFromSheetData(finalData.rows, finalData.extra) : null,
 	)
@@ -205,7 +208,7 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 
 		// 1. Build an array of tab IDs in the order you render slides
 		const orderedTabs = Object.entries(data.navTabs)
-			.filter(([_key, tab]) => tab.icon) // only include tabs with icons
+			.filter(([key, tab]) => tab.icon || (key === 'table' && showTableTab))
 			.map(([key]) => key)
 
 		// 2. Find the index of the current tid
@@ -277,7 +280,7 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 		// 3) extract the tab ID and slide WITHOUT touching history
 		const lastSegment = to?.url.pathname.split('/').pop()
 		const tid =
-			lastSegment && ['info', 'form', 'list', 'raw', 'dev'].includes(lastSegment)
+			lastSegment && ['info', 'form', 'list', 'table', 'raw', 'dev'].includes(lastSegment)
 				? lastSegment
 				: data.defaultTab
 		slideToTab(tid, { updateHistory: false })
@@ -370,7 +373,10 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 <d-article
 	class={[
 		'content-bg',
-		{ 'wide-table': activeTab === 'list' && !isDanceEvent && !isPlaylist, ready: hasJS },
+		{
+			'wide-table': activeTab === 'table' || (activeTab === 'list' && !isSpecialSheet),
+			ready: hasJS,
+		},
 	]}
 	style:--app-accent-color={data.accentColor}
 	style:--app-accent-text={data.accentText}
@@ -397,10 +403,11 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 				><span class="lang-alt">{otherLang(data.bilingualTitle)}</span>{/if}
 		</h1>
 
-		{#if data.numTabs > 1}
+		{#if data.numTabs > 1 || showTableTab}
 			<nav-buttons>
 				{#each Object.entries(data.navTabs) as [tid, { name, icon, error }] (tid)}
-					{#if icon}
+					{@const showTab = icon || (tid === 'table' && showTableTab)}
+					{#if showTab}
 						<a
 							class={['glass', { active: activeTab === tid }]}
 							onclick={(e) => {
@@ -413,7 +420,7 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 									: `${docPath}/${tid}${search}`) as Pathname,
 							)}
 						>
-							{icon}
+							{icon || '▦'}
 							{name}{error ? ' ⚠️' : ''}
 						</a>
 					{/if}
@@ -520,6 +527,12 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 					{:else}
 						<pre>{stringify(data.sheet.error)}</pre>
 					{/if}
+				</swiper-slide>
+			{/if}
+
+			{#if showTableTab && isOk(data.sheet)}
+				<swiper-slide data-tid="table" hidden={!hasJS && tid !== 'table'}>
+					<Sheet data={finalData} title={data.title} forceTable></Sheet>
 				</swiper-slide>
 			{/if}
 
