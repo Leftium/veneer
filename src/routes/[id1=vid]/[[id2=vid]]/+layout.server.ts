@@ -32,6 +32,9 @@ type DocumentResult = Result<GoogleSheet | GoogleFormDocument, GoogleDocumentErr
 
 const ALL_TABS = ['info', 'form', 'list', 'table', 'raw', 'dev']
 
+/** If info content has at least this many lines, auto-show the info tab. */
+const INFO_LINE_THRESHOLD = 30
+
 /** Return 'white' or 'black' for readable text on a given hex background. */
 function contrastText(hex: string | null): string | null {
 	if (!hex || !/^#[0-9a-f]{6}$/i.test(hex)) return null
@@ -62,10 +65,10 @@ export const load = async ({ cookies, locals, params, url }) => {
 		redirect(307, expandedUrl.pathname + expandedUrl.search)
 	}
 
-	const tabs = tabsParam
+	let tabs = tabsParam
 		? tabsParam.split('.').filter((t: string) => ALL_TABS.includes(t))
-		: preset.tabs
-	const visibleTabs = new Set(tabs)
+		: [...preset.tabs]
+	let visibleTabs = new Set(tabs)
 
 	// Phase 3a: ?showErrors — defaults to true in dev, false in prod
 	const showErrorsParam = url.searchParams.get('showErrors')
@@ -185,6 +188,16 @@ export const load = async ({ cookies, locals, params, url }) => {
 
 		footers = infoAndFooters
 		info = footers.shift() || 'EMPTY'
+
+		// Auto-show info tab when content is long enough (heuristic).
+		// Skipped when ?tabs= is explicit (user controls tabs) or preset already includes 'info'.
+		if (!tabsParam && !preset.tabs.includes('info')) {
+			const infoLines = info.trimEnd().split('\n').length
+			if (infoLines >= INFO_LINE_THRESHOLD) {
+				tabs = ['info', ...tabs]
+				visibleTabs = new Set(tabs)
+			}
+		}
 
 		footers = footers.reduce((result, footer, i, footers) => {
 			if (i % 2 === 0) {

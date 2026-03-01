@@ -52,7 +52,7 @@ export interface Preset {
 
 export const PRESETS: Record<string, Preset> = {
 	base: {
-		tabs: ['info', 'form', 'list'],
+		tabs: ['form', 'list'],
 		// No default doc IDs — unknown domains render the launcher page.
 		headerImage: null,
 		headerColor: '#0b4474',
@@ -61,7 +61,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerImageFit: 'cover',
 	},
 	btango: {
-		tabs: ['info', 'form', 'list'],
+		tabs: ['form', 'list'],
 		defaultFormId: 'g.4EKt4Vyzgq1E5eHC8',
 		defaultSheetId: 's.1jwmdTf0fArizqA8IM6EavaTYDKn_uXMKj_VF3K1gw40',
 		headerImage: '/dance_night.gif',
@@ -71,7 +71,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerImageFit: 'cover',
 	},
 	'btango-class': {
-		tabs: ['info', 'form', 'list'],
+		tabs: ['form', 'list'],
 		defaultFormId: 'g.rzQZWr3o17Doj3Nq5',
 		defaultSheetId: 's.1bYczvgFwW0t5A858xTIESlhulGP1cBtBlaDBwOHus30',
 		headerImage: '/dance_night.gif',
@@ -91,7 +91,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerImageFit: 'cover',
 	},
 	vivimil: {
-		tabs: ['info', 'form', 'list'],
+		tabs: ['form', 'list'],
 		defaultFormId: 'g.r6eRUz2U9uf5oVFn6',
 		defaultSheetId: 's.13E_wsbrKLEsuV-eDaTKl0a967EdpYgcZrXH0Gq_KK3g',
 		headerImage: '/dance_night.gif',
