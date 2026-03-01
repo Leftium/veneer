@@ -999,7 +999,7 @@ describe('placeDanceUnits', () => {
 
 		// High-priority should be closer to center (0.5)
 		const highDist = Math.abs(placed[0].x - 0.5)
-		const lowDist = Math.abs(placed[1].x - 0.5)
+		const _lowDist = Math.abs(placed[1].x - 0.5)
 		// This isn't guaranteed for all hash values, but with center bias = 0.8
 		// the high-priority item should be very close to 0.5
 		expect(highDist).toBeLessThan(0.15) // within 15% of center

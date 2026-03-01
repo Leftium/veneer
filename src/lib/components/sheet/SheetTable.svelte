@@ -43,6 +43,7 @@
 	const FLIP_DURATION = 1000 // ms
 
 	function snapshotHeaderPositions(): Map<number, number> {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- ephemeral local Map, not reactive state
 		const positions = new Map<number, number>()
 		if (!wrapperEl) return positions
 		const headers = wrapperEl.querySelectorAll('grid-table > gh') as NodeListOf<HTMLElement>
@@ -61,6 +62,7 @@
 		await tick()
 
 		// Compute deltas per original column index
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- ephemeral local Map, not reactive state
 		const deltas = new Map<number, number>()
 		const headers = wrapperEl?.querySelectorAll('grid-table > gh') as NodeListOf<HTMLElement>
 		if (headers) {

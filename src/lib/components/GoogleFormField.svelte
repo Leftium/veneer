@@ -308,7 +308,8 @@
 						class:toggled={optionToggles.has(i)}
 						onclick={(e) => {
 							e.stopPropagation()
-							optionToggles.has(i) ? optionToggles.delete(i) : optionToggles.add(i)
+							if (optionToggles.has(i)) optionToggles.delete(i)
+							else optionToggles.add(i)
 						}}>🌐</button
 					><span class="lang-alt">{otherLang(field.bilingualOptions[i]!)}</span>{/if}
 			</label>

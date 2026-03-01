@@ -1,5 +1,4 @@
 import { dev } from '$app/environment'
-import { redirect } from '@sveltejs/kit'
 import { gg } from '@leftium/gg'
 
 import { Err, isErr, isOk, Ok } from 'wellcrafted/result'

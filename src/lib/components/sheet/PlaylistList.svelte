@@ -51,10 +51,8 @@
 									rel="noopener noreferrer"
 									onclick={(e) => e.stopPropagation()}
 								>
-									{row[ci.title]
-										?.render}{#if ci.remix !== -1 && row[ci.remix]?.render}{' '}<pl-remix
-											>({row[ci.remix].render})</pl-remix
-										>{/if}
+									{row[ci.title]?.render}{#if ci.remix !== -1 && row[ci.remix]?.render}
+										<pl-remix>({row[ci.remix].render})</pl-remix>{/if}
 								</a>
 							</pl-title>
 						</pl-line1>

@@ -101,7 +101,7 @@
 		bubbleTops[sectionKey][num] = BUBBLE_TOPS[sectionKey]?.[num] ?? DEFAULT_BUBBLE_TOP
 	}
 
-	function resetBubbleSection(sectionKey: SectionKey, count: number) {
+	function _resetBubbleSection(sectionKey: SectionKey, count: number) {
 		for (let i = 1; i <= count; i++) {
 			bubbleTops[sectionKey][i] = BUBBLE_TOPS[sectionKey]?.[i] ?? DEFAULT_BUBBLE_TOP
 		}

@@ -26,7 +26,6 @@
 	} from '$lib/google-document-util/sheet-data-pipeline.svelte.js'
 	import { onDestroy, onMount, tick, untrack } from 'svelte'
 	import { afterNavigate, goto } from '$app/navigation'
-	import { browser } from '$app/environment'
 	import { resolve } from '$app/paths'
 	import type { Pathname } from '$app/types'
 	import { linkifyRelative, makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
@@ -52,12 +51,7 @@
 	import DanceParty from '$lib/components/DanceParty.svelte'
 	import { getDancersFromSheetData } from '$lib/util.js'
 	import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte'
-	import {
-		segmentBilingualContent,
-		localeText,
-		type ContentSegment,
-		type BilingualText,
-	} from '$lib/locale-content'
+	import { segmentBilingualContent, localeText, type BilingualText } from '$lib/locale-content'
 	import { getLocale } from '$lib/paraglide/runtime.js'
 	import { m } from '$lib/paraglide/messages.js'
 

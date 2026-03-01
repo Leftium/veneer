@@ -349,7 +349,8 @@
 							class:toggled={optionToggles.has(i)}
 							onclick={(e) => {
 								e.stopPropagation()
-								optionToggles.has(i) ? optionToggles.delete(i) : optionToggles.add(i)
+								if (optionToggles.has(i)) optionToggles.delete(i)
+								else optionToggles.add(i)
 							}}>🌐</button
 						><span class="lang-alt">{otherLang(bRoleField.bilingualOptions![i]!)}</span>{/if}
 				</label>
@@ -393,7 +394,8 @@
 								class:toggled={extraToggles.has(k)}
 								onclick={(e) => {
 									e.stopPropagation()
-									extraToggles.has(k) ? extraToggles.delete(k) : extraToggles.add(k)
+									if (extraToggles.has(k)) extraToggles.delete(k)
+									else extraToggles.add(k)
 								}}>🌐</button
 							><span class="lang-alt">{otherLang(bNameField.bilingualTitle)}</span>{/if}
 						<button
@@ -423,7 +425,8 @@
 									class:toggled={extraToggles.has(k)}
 									onclick={(e) => {
 										e.stopPropagation()
-										extraToggles.has(k) ? extraToggles.delete(k) : extraToggles.add(k)
+										if (extraToggles.has(k)) extraToggles.delete(k)
+										else extraToggles.add(k)
 									}}>🌐</button
 								><span class="lang-alt">{otherLang(bRoleField.bilingualTitle)}</span>{/if}</label
 						>
@@ -456,7 +459,8 @@
 										class:toggled={extraToggles.has(k)}
 										onclick={(e) => {
 											e.stopPropagation()
-											extraToggles.has(k) ? extraToggles.delete(k) : extraToggles.add(k)
+											if (extraToggles.has(k)) extraToggles.delete(k)
+											else extraToggles.add(k)
 										}}>🌐</button
 									><span class="lang-alt">{otherLang(bRoleField.bilingualOptions![j]!)}</span>{/if}
 							</label>

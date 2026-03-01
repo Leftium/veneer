@@ -248,6 +248,7 @@
 	})
 
 	onDestroy(() => {
+		// eslint-disable-next-line svelte/no-dom-manipulating -- intentional cleanup of portal element appended outside Svelte's tree
 		panelEl?.remove()
 	})
 
