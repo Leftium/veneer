@@ -25,6 +25,7 @@ import type {
 } from '$lib/google-document-util/types'
 import type { Result } from 'wellcrafted/result'
 import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-with-id'
+import { detectSheetType } from '$lib/google-document-util/detect-sheet-type'
 import { getLocale } from '$lib/paraglide/runtime.js'
 import { addBilingualData, splitBilingualLabel } from '$lib/locale-content'
 
@@ -310,6 +311,8 @@ export const load = async ({ cookies, locals, params, url }) => {
 		sheet = Ok(stripHidden(sheet.data, allCols, allRows))
 	}
 
+	const sheetType = isOk(sheet) ? detectSheetType(sheet.data.rows) : null
+
 	type TabsKey = keyof typeof TABS
 	const navTabs = Object.entries(TABS).reduce(
 		(acc, [hash, [icon, name]]) => {
@@ -380,5 +383,6 @@ export const load = async ({ cookies, locals, params, url }) => {
 		accentText,
 		bgColor,
 		ogImage,
+		sheetType,
 	}
 }
