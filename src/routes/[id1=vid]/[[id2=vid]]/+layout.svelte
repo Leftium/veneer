@@ -761,8 +761,8 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 			// visible region for speech bubbles that overflow above the dance floor.
 			// Negative margin compensates so layout is unaffected.
 			// pointer-events:none on the padding prevents blocking elements underneath.
-			padding-block: 100px;
-			margin-block: -100px;
+			padding-block: 9999px;
+			margin-block: -9999px;
 			pointer-events: none;
 
 			//width: 100%;
