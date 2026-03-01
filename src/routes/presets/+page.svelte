@@ -27,7 +27,7 @@
 					<strong>{entry.name}</strong>
 					<code>{entry.domain}</code>
 					{#if presetData}
-						<small>tabs: {presetData.tabs.join(', ')}</small>
+						<small>tabs: {presetData.tabs?.join(', ') ?? '(heuristics)'}</small>
 					{/if}
 					&mdash;
 					{#if dev}

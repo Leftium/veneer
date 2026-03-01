@@ -242,7 +242,7 @@
 	let resolvedTabs = $derived.by(() => {
 		const tabList = tabs
 			? tabs.split('.').filter((t: string) => ALL_TABS.includes(t))
-			: selectedPreset.tabs
+			: (selectedPreset.tabs ?? ['form', 'table'])
 		return tabList
 			.filter((t: string) => TAB_META[t])
 			.map((t: string) => ({ id: t, ...TAB_META[t] }))

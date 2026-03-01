@@ -25,7 +25,7 @@ import type {
 } from '$lib/google-document-util/types'
 import type { Result } from 'wellcrafted/result'
 import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-with-id'
-import { detectSheetType } from '$lib/google-document-util/detect-sheet-type'
+import { detectSheetType, type SheetType } from '$lib/google-document-util/detect-sheet-type'
 import { getLocale } from '$lib/paraglide/runtime.js'
 import { addBilingualData, splitBilingualLabel } from '$lib/locale-content'
 
@@ -35,6 +35,26 @@ const ALL_TABS = ['info', 'form', 'list', 'table', 'raw', 'dev']
 
 /** If info content has at least this many lines, auto-show the info tab. */
 const INFO_LINE_THRESHOLD = 30
+
+/** Compute default visible tabs from sheet type and info length. */
+function computeDefaultTabs(sheetType: SheetType, infoLines: number): string[] {
+	let tabs: string[]
+	switch (sheetType) {
+		case 'dance-event':
+			tabs = ['form', 'list']
+			break
+		case 'playlist':
+			tabs = ['form', 'list', 'table']
+			break
+		default:
+			tabs = ['form', 'table']
+			break
+	}
+	if (infoLines >= INFO_LINE_THRESHOLD) {
+		tabs = ['info', ...tabs]
+	}
+	return tabs
+}
 
 /** Return 'white' or 'black' for readable text on a given hex background. */
 function contrastText(hex: string | null): string | null {
@@ -66,10 +86,11 @@ export const load = async ({ cookies, locals, params, url }) => {
 		redirect(307, expandedUrl.pathname + expandedUrl.search)
 	}
 
-	let tabs = tabsParam
+	// Tab list computed after sheetType and info are known (see below).
+	// If ?tabs= is an explicit absolute list, use it directly; otherwise heuristics decide.
+	const tabsParamList = tabsParam
 		? tabsParam.split('.').filter((t: string) => ALL_TABS.includes(t))
-		: [...preset.tabs]
-	let visibleTabs = new Set(tabs)
+		: null
 
 	// Phase 3a: ?showErrors — defaults to true in dev, false in prod
 	const showErrorsParam = url.searchParams.get('showErrors')
@@ -190,16 +211,6 @@ export const load = async ({ cookies, locals, params, url }) => {
 		footers = infoAndFooters
 		info = footers.shift() || 'EMPTY'
 
-		// Auto-show info tab when content is long enough (heuristic).
-		// Skipped when ?tabs= is explicit (user controls tabs) or preset already includes 'info'.
-		if (!tabsParam && !preset.tabs.includes('info')) {
-			const infoLines = info.trimEnd().split('\n').length
-			if (infoLines >= INFO_LINE_THRESHOLD) {
-				tabs = ['info', ...tabs]
-				visibleTabs = new Set(tabs)
-			}
-		}
-
 		footers = footers.reduce((result, footer, i, footers) => {
 			if (i % 2 === 0) {
 				const header = footer ? `# ${footer}` : ''
@@ -312,6 +323,13 @@ export const load = async ({ cookies, locals, params, url }) => {
 	}
 
 	const sheetType = isOk(sheet) ? detectSheetType(sheet.data.rows) : null
+
+	// --- Compute visible tabs (unified: sheet type + info heuristic + preset/param overrides) ---
+	const infoLines = info.trimEnd().split('\n').length
+	const computedTabs = computeDefaultTabs(sheetType, infoLines)
+	// Priority: ?tabs= param (absolute) > preset.tabs (explicit override) > computed heuristics
+	const tabs = tabsParamList ?? preset.tabs ?? computedTabs
+	const visibleTabs = new Set(tabs)
 
 	type TabsKey = keyof typeof TABS
 	const navTabs = Object.entries(TABS).reduce(

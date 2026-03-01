@@ -1,6 +1,6 @@
 # Tab Visibility Refactor
 
-> **Status**: Draft
+> **Status**: Phase 2 complete
 >
 > **Last updated**: 2026-03-01
 
@@ -351,12 +351,12 @@ src/lib/components/
 
 ## Implementation Order
 
-| Phase                                     | Depends on                            | Estimated size                                             |
-| ----------------------------------------- | ------------------------------------- | ---------------------------------------------------------- |
-| Phase 1: Server-side sheet type detection | —                                     | ~30 lines new file + ~5 lines integration                  |
-| Phase 2: Tab heuristic refactor           | Phase 1                               | ~40 lines refactor in `+layout.server.ts` + preset changes |
-| Phase 3: `?tabs=` modifier syntax         | Phase 2                               | ~30 lines parser + update existing param handling          |
-| Phase 4: Split Sheet.svelte               | Independent (can be done in parallel) | Reorganization, no new logic                               |
+| Phase                                     | Depends on                            | Estimated size                                             | Status  |
+| ----------------------------------------- | ------------------------------------- | ---------------------------------------------------------- | ------- |
+| Phase 1: Server-side sheet type detection | —                                     | ~30 lines new file + ~5 lines integration                  | Done    |
+| Phase 2: Tab heuristic refactor           | Phase 1                               | ~40 lines refactor in `+layout.server.ts` + preset changes | Done    |
+| Phase 3: `?tabs=` modifier syntax         | Phase 2                               | ~30 lines parser + update existing param handling          | Pending |
+| Phase 4: Split Sheet.svelte               | Independent (can be done in parallel) | Reorganization, no new logic                               | Pending |
 
 Phases 1-3 are sequential. Phase 4 is independent and can be done at any time.
 
@@ -364,18 +364,21 @@ Phases 1-3 are sequential. Phase 4 is independent and can be done at any time.
 
 ## Files affected
 
-| File                                                 | Changes                                                                                                         |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `src/lib/google-document-util/detect-sheet-type.ts`  | **New** — `detectSheetType()` function                                                                          |
-| `src/lib/presets.ts`                                 | Make `tabs` optional; remove from most presets                                                                  |
-| `src/routes/[id1=vid]/[[id2=vid]]/+layout.server.ts` | Call `detectSheetType()`, compute default tabs, parse modifier syntax, pass `sheetType` to client               |
-| `src/hooks.ts`                                       | _(no change — reroute doesn't need sheet type)_                                                                 |
-| `src/hooks.server.ts`                                | _(no change — OG preload doesn't need sheet type)_                                                              |
-| `src/routes/[id1=vid]/[[id2=vid]]/+layout.svelte`    | Consume `sheetType` from server data; use for `showTableTab` / `isSpecialSheet` instead of client-side pipeline |
-| `src/lib/components/Sheet.svelte`                    | Split into `SheetTable.svelte`, `DanceEventList.svelte`, `PlaylistList.svelte`                                  |
-| `src/lib/components/SheetTable.svelte`               | **New** — generic table component                                                                               |
-| `src/lib/components/DanceEventList.svelte`           | **New** — dance-event list component                                                                            |
-| `src/lib/components/PlaylistList.svelte`             | **New** — playlist list component                                                                               |
+| File                                                 | Changes                                                                                                         | Phase    |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | -------- |
+| `src/lib/google-document-util/detect-sheet-type.ts`  | **New** — `detectSheetType()` function                                                                          | 1 Done   |
+| `src/lib/presets.ts`                                 | Make `tabs` optional; remove from most presets                                                                  | 2 Done   |
+| `src/routes/[id1=vid]/[[id2=vid]]/+layout.server.ts` | Call `detectSheetType()`, `computeDefaultTabs()`, pass `sheetType` to client                                    | 1-2 Done |
+| `src/routes/+page.svelte`                            | Handle optional `preset.tabs` in launcher preview                                                               | 2 Done   |
+| `src/routes/presets/+page.svelte`                    | Handle optional `preset.tabs` in preset directory                                                               | 2 Done   |
+| `src/hooks.ts`                                       | _(no change — reroute doesn't need sheet type)_                                                                 | —        |
+| `src/hooks.server.ts`                                | _(no change — OG preload doesn't need sheet type)_                                                              | —        |
+| `src/routes/[id1=vid]/[[id2=vid]]/+layout.server.ts` | Parse modifier syntax (Phase 3)                                                                                 | 3        |
+| `src/routes/[id1=vid]/[[id2=vid]]/+layout.svelte`    | Consume `sheetType` from server data; use for `showTableTab` / `isSpecialSheet` instead of client-side pipeline | 3-4      |
+| `src/lib/components/Sheet.svelte`                    | Split into `SheetTable.svelte`, `DanceEventList.svelte`, `PlaylistList.svelte`                                  | 4        |
+| `src/lib/components/SheetTable.svelte`               | **New** — generic table component                                                                               | 4        |
+| `src/lib/components/DanceEventList.svelte`           | **New** — dance-event list component                                                                            | 4        |
+| `src/lib/components/PlaylistList.svelte`             | **New** — playlist list component                                                                               | 4        |
 
 ---
 
