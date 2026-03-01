@@ -15,5 +15,7 @@
 	"cancel_group": "단체 취소",
 	"delete_member": "신청자 {number} 삭제",
 	"optional": "(선택)",
-	"add_member": "+ 신청자 추가"
+	"add_member": "+ 신청자 추가",
+	"success_signup": "신청 성공!",
+	"error_problem": "죄송합니다! 문제가 발생했습니다:"
 }

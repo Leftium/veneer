@@ -433,7 +433,7 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 		{#if (page.form || successParty) && !notificationBoxHidden}
 			{@const form = page.form}
 			{@const level = successParty ? 'success' : 'warning'}
-			{@const subject = successParty ? 'Successfully signed up!' : 'Sorry! There was a problem:'}
+			{@const subject = successParty ? m.success_signup() : m.error_problem()}
 			{@const message = successParty ? '' : `${form?.status}: ${form?.statusText}`}
 
 			{#if successParty}

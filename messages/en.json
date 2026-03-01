@@ -15,5 +15,7 @@
 	"cancel_group": "Cancel group",
 	"delete_member": "Delete member {number}",
 	"optional": "(optional)",
-	"add_member": "+ Add member"
+	"add_member": "+ Add member",
+	"success_signup": "Successfully signed up!",
+	"error_problem": "Sorry! There was a problem:"
 }
