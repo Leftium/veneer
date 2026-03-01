@@ -101,7 +101,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerImageFit: 'cover',
 	},
 	party: {
-		tabs: ['info', 'form', 'list'],
+		tabs: ['form', 'list'],
 		defaultFormId: 'g.DQszzU7SKC7U96hq7',
 		defaultSheetId: 's.1N8Rkj-CLJs_Kx6315odpH0Idnc6xwSQqTry-pCCB9ak',
 		headerImage: '/dance_night.gif',
