@@ -43,6 +43,8 @@ const POOL_SIZE: Record<string, number> = { lead: 6, follow: 6, both: 18 }
 export interface DancerRow {
 	name: string
 	role: 'lead' | 'follow' | 'both' | 'unknown'
+	/** Row index in the sheet (0-based). Unique per page load; used for keying. */
+	index: number
 	/** Signup timestamp (unix ms) for stable ordering. Older entries get icons first. */
 	ts?: number | null
 	/** Wish/message text from the signup form. */
@@ -167,9 +169,10 @@ export function getDancersFromSheetData(
 	const ci = extra?.ci
 	if (!ci) return { dancers: [], firstSignupTs: null }
 
-	const dancers: DancerRow[] = rows.map((row: any) => ({
+	const dancers: DancerRow[] = rows.map((row: any, i: number) => ({
 		name: row[ci.name]?.render ?? '',
 		role: detectRole(row[ci.role]?.render ?? ''),
+		index: i,
 		ts: row.find((cell: any) => cell?.ts != null)?.ts ?? null,
 		wish: row[ci.wish]?.render || undefined,
 		paid: !!row[ci.paid]?.render,

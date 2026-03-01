@@ -143,6 +143,7 @@
 				paid: i % 4 === 0,
 			})
 		}
+		dancers.forEach((d, i) => (d.index = i))
 		return dancers
 	}
 

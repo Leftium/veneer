@@ -632,27 +632,12 @@ export function balanceMessages(
 }
 
 /**
- * Build a disambiguation suffix for a dancer name if there are duplicates.
- * Returns '' for unique names or '#N' (1-indexed) for Nth occurrence.
- */
-function disambiguate(name: string, allNames: string[]): string {
-	const count = allNames.filter((n) => n === name).length
-	if (count <= 1) return ''
-	const idx = allNames.indexOf(name)
-	let occurrence = 0
-	for (let i = 0; i <= idx; i++) {
-		if (allNames[i] === name) occurrence++
-	}
-	// Only suffix 2nd, 3rd, etc. — first occurrence gets no suffix
-	return occurrence > 1 ? `#${occurrence}` : ''
-}
-
-/**
  * Build a unit key for a pair (sorted names) or solo (single name).
- * Includes disambiguation suffixes for duplicate names.
+ * Appends each dancer's row index to guarantee uniqueness even when
+ * multiple dancers share the same name.
  */
-export function buildUnitKey(members: DancerRow[], allNames: string[]): string {
-	const keys = members.map((m) => m.name + disambiguate(m.name, allNames))
+export function buildUnitKey(members: DancerRow[]): string {
+	const keys = members.map((m) => `${m.name}:${m.index}`)
 	return keys.sort().join('\0')
 }
 
@@ -709,7 +694,6 @@ export function buildDanceUnits(
 
 	const songSlot = getSongSlot(formTitle, songNumber)
 	const timestamps = getTimestampRange(dancers)
-	const allNames = dancers.map((d) => d.name)
 
 	// Step 1: Classify
 	const { leaders, followers, flex } = classifyDancers(dancers, songSlot)
@@ -759,7 +743,7 @@ export function buildDanceUnits(
 	const usedFollowImages = new Set<number>()
 
 	for (const [leader, follower] of balancedPairs) {
-		const unitKey = buildUnitKey([leader, follower], allNames)
+		const unitKey = buildUnitKey([leader, follower])
 		const leaderScore = computePriority(leader, timestamps, config.weights)
 		const followerScore = computePriority(follower, timestamps, config.weights)
 		const priorityScore = Math.max(leaderScore, followerScore)
@@ -780,7 +764,7 @@ export function buildDanceUnits(
 	const SOLO_POOL = [1, 2, 3, 4, 5, 6] as const
 
 	for (const solo of solos) {
-		const unitKey = buildUnitKey([solo], allNames)
+		const unitKey = buildUnitKey([solo])
 		const priorityScore = computePriority(solo, timestamps, config.weights)
 
 		// Solo image: lead images 1-6, follow images 1-6 (deduped per role)

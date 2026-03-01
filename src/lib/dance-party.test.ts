@@ -37,12 +37,13 @@ import {
 // Helpers
 // ---------------------------------------------------------------------------
 
+let nextIndex = 0
 function makeDancer(
 	name: string,
 	role: DancerRow['role'] = 'lead',
 	overrides: Partial<DancerRow> = {},
 ): DancerRow {
-	return { name, role, ...overrides }
+	return { name, role, index: nextIndex++, ...overrides }
 }
 
 const FORM = 'Test Dance Event 2026'
@@ -539,22 +540,25 @@ describe('balanceMessages', () => {
 // ---------------------------------------------------------------------------
 
 describe('buildUnitKey', () => {
-	it('sorts pair names', () => {
-		const key = buildUnitKey([makeDancer('Bob'), makeDancer('Alice')], ['Bob', 'Alice'])
-		expect(key).toBe('Alice\0Bob')
+	it('sorts pair names and includes index', () => {
+		const bob = makeDancer('Bob')
+		const alice = makeDancer('Alice')
+		const key = buildUnitKey([bob, alice])
+		expect(key).toBe(`Alice:${alice.index}\0Bob:${bob.index}`)
 	})
 
-	it('returns single name for solo', () => {
-		const key = buildUnitKey([makeDancer('Alice')], ['Alice'])
-		expect(key).toBe('Alice')
+	it('returns single name:index for solo', () => {
+		const alice = makeDancer('Alice')
+		const key = buildUnitKey([alice])
+		expect(key).toBe(`Alice:${alice.index}`)
 	})
 
-	it('disambiguates duplicate names', () => {
-		const allNames = ['Kim', 'Kim', 'Lee']
-		const key1 = buildUnitKey([makeDancer('Kim')], allNames) // first Kim
-		// Second Kim would be at index 1 in allNames — but buildUnitKey uses the first
-		// occurrence in allNames. The first Kim gets no suffix.
-		expect(key1).toBe('Kim')
+	it('produces unique keys for duplicate names', () => {
+		const kim1 = makeDancer('Kim')
+		const kim2 = makeDancer('Kim')
+		const key1 = buildUnitKey([kim1])
+		const key2 = buildUnitKey([kim2])
+		expect(key1).not.toBe(key2)
 	})
 })
 
@@ -1186,13 +1190,20 @@ describe('enforceMinSpacing', () => {
 describe('computeDanceFloor', () => {
 	it('returns placed units for a realistic scenario', () => {
 		const dancers: DancerRow[] = [
-			{ name: '김철수', role: 'lead', ts: 1000, wish: 'Having a great time!', paid: true },
-			{ name: '이영희', role: 'follow', ts: 2000, wish: "Can't wait! 🎉" },
-			{ name: '박지훈', role: 'lead', ts: 3000, paid: true },
-			{ name: '최수정', role: 'follow', ts: 4000, wish: 'So excited!' },
-			{ name: '정민수', role: 'both', ts: 5000 },
-			{ name: '한소연', role: 'follow', ts: 6000, wish: 'My first dance!' },
-			{ name: '오태호', role: 'lead', ts: 7000 },
+			{
+				name: '김철수',
+				role: 'lead',
+				index: 0,
+				ts: 1000,
+				wish: 'Having a great time!',
+				paid: true,
+			},
+			{ name: '이영희', role: 'follow', index: 1, ts: 2000, wish: "Can't wait! 🎉" },
+			{ name: '박지훈', role: 'lead', index: 2, ts: 3000, paid: true },
+			{ name: '최수정', role: 'follow', index: 3, ts: 4000, wish: 'So excited!' },
+			{ name: '정민수', role: 'both', index: 4, ts: 5000 },
+			{ name: '한소연', role: 'follow', index: 5, ts: 6000, wish: 'My first dance!' },
+			{ name: '오태호', role: 'lead', index: 6, ts: 7000 },
 		]
 
 		const placed = computeDanceFloor(dancers, FORM, 1)
@@ -1357,6 +1368,7 @@ describe('edge cases', () => {
 		const dancers: DancerRow[] = Array.from({ length: 60 }, (_, i) => ({
 			name: `Dancer${i}`,
 			role: i % 3 === 0 ? 'lead' : i % 3 === 1 ? 'follow' : 'both',
+			index: i,
 			ts: 1000 + i * 100,
 			wish: i % 4 === 0 ? `Message ${i}` : undefined,
 			paid: i % 5 === 0,
