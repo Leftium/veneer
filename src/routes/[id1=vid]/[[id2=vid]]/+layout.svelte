@@ -755,8 +755,11 @@ ${!sourceUrlSheet ? '' : `구글 시트 (Google Sheet)\n~ ${sourceUrlSheet}\n~ i
 			// visible region for speech bubbles that overflow above the dance floor.
 			// Negative margin compensates so layout is unaffected.
 			// pointer-events:none on the padding prevents blocking elements underneath.
-			padding-block: 9999px;
-			margin-block: -9999px;
+			// Only top is needed — bubbles overflow upward, not downward.
+			// Bottom padding would needlessly inflate document scroll height because
+			// the inner shadow-DOM wrapper uses overflow:visible.
+			padding-top: 999px;
+			margin-top: -999px;
 			pointer-events: none;
 
 			//width: 100%;
