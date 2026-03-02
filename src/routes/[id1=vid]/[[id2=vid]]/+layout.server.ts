@@ -389,7 +389,7 @@ export const load = async ({ cookies, locals, params, url }) => {
 			const visible = visibleTabs.has(hash) && (!error || showErrors)
 
 			acc[hash] = {
-				name,
+				name: preset.tabLabels?.[hash]?.[locale] ?? name,
 				icon: visible ? icon : '',
 				error,
 			}

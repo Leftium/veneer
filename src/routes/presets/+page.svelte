@@ -28,6 +28,9 @@
 					<code>{entry.domain}</code>
 					{#if presetData}
 						<small>tabs: {presetData.tabs?.join(', ') ?? '(heuristics)'}</small>
+						{#if presetData.tabLabels}
+							<small>tabLabels: {JSON.stringify(presetData.tabLabels)}</small>
+						{/if}
 					{/if}
 					&mdash;
 					{#if dev}

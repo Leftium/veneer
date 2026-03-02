@@ -39,6 +39,7 @@ export const DOMAIN_PRESETS: Record<string, string | null> = {
 
 export interface Preset {
 	tabs?: string[]
+	tabLabels?: Record<string, Record<string, string>>
 	defaultFormId?: string
 	defaultSheetId?: string
 	headerImage: string | null
@@ -78,6 +79,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerImageFit: 'cover',
 	},
 	'btango-dj': {
+		tabLabels: { table: { en: 'List', ko: '확인' } },
 		defaultFormId: 'g.H9nD4tKrkp1m8ESC9',
 		defaultSheetId: 's.16AtRFdLdYfnJRcXTf5N3fcLvZMMu48eECHXpxLHv7VU',
 		headerImage: '/dance_night.gif',
