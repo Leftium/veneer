@@ -206,10 +206,10 @@
 					role="columnheader"
 					tabindex="0"
 				>
+					<span class="col-title">{column.title}</span>
 					{#if !isPinned}
 						<span class="rotate-chevron" class:first-visible={di === firstNonPinnedDi}>↩︎</span>
 					{/if}
-					<span class="col-title">{column.title}</span>
 					<button
 						class="pin-toggle"
 						onclick={(e) => {
