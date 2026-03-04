@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte'
-	import { SvelteSet } from 'svelte/reactivity'
 	import type { Snippet } from 'svelte'
 	import { stringify } from '$lib/util'
 	import StickyHeaderGrid from '$lib/components/StickyHeaderSummaryDetailsGrid.svelte'
@@ -18,15 +17,15 @@
 	let wrapperEl = $state<HTMLElement>()
 
 	// Column rotation/pinning state
-	let pinnedIndices = new SvelteSet([0]) // Pin first column (#) by default
+	let pinnedIndices = $state([0]) // Pin first column (#) by default; order = pin order
 	let rotationStart = $state(0)
 
 	// Compute display order: pinned columns first (in original order), then non-pinned rotated
 	let displayOrder = $derived.by(() => {
-		const pinned = [...pinnedIndices].sort((a, b) => a - b)
+		const pinned = [...pinnedIndices]
 		const nonPinned = columns
 			.map((_: any, i: number) => i)
-			.filter((i: number) => !pinnedIndices.has(i))
+			.filter((i: number) => !pinnedIndices.includes(i))
 		// Rotate non-pinned array so rotationStart is first
 		const start = rotationStart % (nonPinned.length || 1)
 		const rotated = [...nonPinned.slice(start), ...nonPinned.slice(0, start)]
@@ -35,7 +34,7 @@
 
 	let displayColumns = $derived(displayOrder.map((i: number) => columns[i]))
 	let displayRows = $derived(rows.map((row: any[]) => displayOrder.map((i: number) => row[i])))
-	let firstNonPinnedDi = $derived(displayOrder.findIndex((i: number) => !pinnedIndices.has(i)))
+	let firstNonPinnedDi = $derived(displayOrder.findIndex((i: number) => !pinnedIndices.includes(i)))
 	let gridTemplateColumns = $derived(
 		`max-content repeat(${displayColumns.length - 1}, minmax(120px, max-content))`,
 	)
@@ -92,7 +91,7 @@
 			const colIndex = i % numCols
 			const origIndex = displayOrder[colIndex]
 			const delta = deltas.get(origIndex)
-			if (delta === undefined || pinnedIndices.has(origIndex)) return
+			if (delta === undefined || pinnedIndices.includes(origIndex)) return
 
 			// Immediately position at old location
 			cell.style.transform = `translateX(${delta}px)`
@@ -112,7 +111,7 @@
 				const colIndex = i % numCols
 				const origIndex = displayOrder[colIndex]
 				const delta = deltas.get(origIndex)
-				if (delta === undefined || pinnedIndices.has(origIndex)) return
+				if (delta === undefined || pinnedIndices.includes(origIndex)) return
 
 				// Retreating columns: stay hidden during move, fade in at the end
 				const isRetreating = retreating.has(origIndex)
@@ -136,9 +135,9 @@
 
 	function handleHeaderTap(displayIndex: number) {
 		const originalIndex = displayOrder[displayIndex]
-		if (pinnedIndices.has(originalIndex)) return // Don't rotate pinned columns
+		if (pinnedIndices.includes(originalIndex)) return // Don't rotate pinned columns
 
-		const nonPinnedDisplay = displayOrder.filter((i: number) => !pinnedIndices.has(i))
+		const nonPinnedDisplay = displayOrder.filter((i: number) => !pinnedIndices.includes(i))
 		const posInNonPinned = nonPinnedDisplay.indexOf(originalIndex)
 
 		// Columns before the tapped one are retreating to the back
@@ -150,7 +149,7 @@
 			} else {
 				const allNonPinned = columns
 					.map((_: any, i: number) => i)
-					.filter((i: number) => !pinnedIndices.has(i))
+					.filter((i: number) => !pinnedIndices.includes(i))
 				const originalPos = allNonPinned.indexOf(originalIndex)
 				rotationStart = originalPos
 			}
@@ -159,10 +158,10 @@
 
 	function togglePin(displayIndex: number) {
 		const originalIndex = displayOrder[displayIndex]
-		if (pinnedIndices.has(originalIndex)) {
-			pinnedIndices.delete(originalIndex)
+		if (pinnedIndices.includes(originalIndex)) {
+			pinnedIndices = pinnedIndices.filter((i) => i !== originalIndex)
 		} else {
-			pinnedIndices.add(originalIndex)
+			pinnedIndices = [...pinnedIndices, originalIndex]
 		}
 		// Reset rotation when pinning changes to avoid confusing jumps
 		rotationStart = 0
@@ -197,7 +196,7 @@
 	>
 		{#snippet header()}
 			{#each displayColumns as column, di (displayOrder[di])}
-				{@const isPinned = pinnedIndices.has(displayOrder[di])}
+				{@const isPinned = pinnedIndices.includes(displayOrder[di])}
 				<gh
 					class={{ pinned: isPinned }}
 					onclick={() => handleHeaderTap(di)}
@@ -217,7 +216,7 @@
 							e.stopPropagation()
 							togglePin(di)
 						}}
-						title={pinnedIndices.has(displayOrder[di]) ? 'Unpin column' : 'Pin column'}
+						title={pinnedIndices.includes(displayOrder[di]) ? 'Unpin column' : 'Pin column'}
 					>
 						<svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor"
 							><path
@@ -233,7 +232,7 @@
 			{@const row = displayRows[r]}
 			{#each displayColumns as { isNumeric }, c (displayOrder[c])}
 				{@const render = row?.[c]?.render || ''}
-				{@const isPinnedCell = pinnedIndices.has(displayOrder[c])}
+				{@const isPinnedCell = pinnedIndices.includes(displayOrder[c])}
 				<gd
 					class={{
 						numeric: isNumeric,
