@@ -61,7 +61,7 @@
 	let magnifiedSpacing = $state(DEFAULT_DOCK.magnifiedSpacing)
 
 	// Song
-	let localSongNumber = $state(songNumber)
+	let localSongNumber = $state(untrack(() => songNumber))
 
 	// View layout
 	let heightMultiplier = $state(0.8)

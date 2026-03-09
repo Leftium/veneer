@@ -31,7 +31,8 @@ export default ts.config(
 			],
 			'svelte/no-at-html-tags': 'off',
 			'svelte/require-each-key': 'warn',
-			'svelte/no-navigation-without-resolve': 'warn',
+			// TODO: re-enable when eslint-plugin-svelte fixes crash on valueless boolean attributes
+			'svelte/no-navigation-without-resolve': 'off',
 			'svelte/prefer-svelte-reactivity': 'warn',
 		},
 	},

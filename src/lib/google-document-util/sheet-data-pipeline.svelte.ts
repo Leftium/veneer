@@ -220,6 +220,7 @@ export function mergeDuplicateRows(mergeKeys?: string[]) {
 		const groupIndex = columns.findIndex((c) => REGEX_DANCE_GROUP.test(c.title))
 
 		// Map from composite key → index in merged array
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- local, non-reactive lookup
 		const keyMap = new Map<string, number>()
 		const merged: SheetDataPipe['rows'] = []
 
