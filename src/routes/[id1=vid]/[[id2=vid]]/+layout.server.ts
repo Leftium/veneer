@@ -448,5 +448,6 @@ export const load = async ({ cookies, locals, params, url }) => {
 		bgColor,
 		ogImage,
 		sheetType,
+		mergeKeys: preset.mergeKeys,
 	}
 }

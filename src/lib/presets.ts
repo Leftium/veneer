@@ -49,6 +49,10 @@ export interface Preset {
 	headerImageFit: string
 	accentColor?: string
 	bgColor?: string
+	/** Regex patterns (source strings) for columns that define a unique row identity.
+	 *  Rows with matching key values are merged (newest wins, oldest timestamp kept).
+	 *  If unset or empty, no merging is done. */
+	mergeKeys?: string[]
 }
 
 export const PRESETS: Record<string, Preset> = {
@@ -68,6 +72,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerHeight: '100px',
 		headerTextColor: 'white',
 		headerImageFit: 'cover',
+		mergeKeys: ['name|닉네임'],
 	},
 	'btango-class': {
 		defaultFormId: 'g.rzQZWr3o17Doj3Nq5',
@@ -77,6 +82,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerHeight: '100px',
 		headerTextColor: 'white',
 		headerImageFit: 'cover',
+		mergeKeys: ['name|닉네임'],
 	},
 	'btango-dj': {
 		tabLabels: { table: { en: 'List', ko: '확인' } },
@@ -87,6 +93,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerHeight: '100px',
 		headerTextColor: 'white',
 		headerImageFit: 'cover',
+		mergeKeys: ['name|닉네임'],
 	},
 	vivimil: {
 		defaultFormId: 'g.r6eRUz2U9uf5oVFn6',
@@ -96,6 +103,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerHeight: '100px',
 		headerTextColor: 'white',
 		headerImageFit: 'cover',
+		mergeKeys: ['name|닉네임'],
 	},
 	party: {
 		defaultFormId: 'g.DQszzU7SKC7U96hq7',
@@ -105,6 +113,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerHeight: '100px',
 		headerTextColor: 'white',
 		headerImageFit: 'cover',
+		mergeKeys: ['name|닉네임'],
 	},
 	minimal: {
 		tabs: ['info'],

@@ -180,6 +180,108 @@ import {
 
 import { parse as parseGroupMembers } from '$lib/group-registration/serialization'
 
+/**
+ * Factory that returns a pipeline transform to merge rows with duplicate key values.
+ * `mergeKeys` is an array of regex source strings (e.g. `['name|닉네임']`).
+ * Columns whose title matches any pattern form the composite key.
+ * If `mergeKeys` is empty/undefined, the transform is a no-op.
+ *
+ * Merge rules:
+ * - Rows are processed oldest-first (natural sheet order).
+ * - For duplicate keys, newer values overwrite older ones per cell.
+ * - Exception: timestamp cells keep the oldest value.
+ * - Exception: group column — blank newer value defaults to '0' (resets group members).
+ * - Blank newer cells do not overwrite existing values (preserves prior data).
+ */
+export function mergeDuplicateRows(mergeKeys?: string[]) {
+	return ({ extra, columns, rows }: SheetDataPipe) => {
+		gg(`mergeDuplicateRows called`, {
+			mergeKeys,
+			rowCount: rows.length,
+			colTitles: columns.map((c) => c.title),
+		})
+		if (!mergeKeys?.length || rows.length === 0) return { extra, columns, rows }
+
+		gg.time('⏱️ sheet-pipeline:mergeDuplicateRows')
+
+		// Compile key patterns and find matching column indices
+		const keyPatterns = mergeKeys.map((src) => new RegExp(src, 'i'))
+		const keyIndices = columns.reduce<number[]>((acc, col, i) => {
+			if (keyPatterns.some((re) => re.test(col.title))) acc.push(i)
+			return acc
+		}, [])
+
+		if (keyIndices.length === 0) {
+			gg.timeEnd('⏱️ sheet-pipeline:mergeDuplicateRows')
+			return { extra, columns, rows }
+		}
+
+		// Find group column index (blank group in newer row → '0' to allow reset)
+		const groupIndex = columns.findIndex((c) => REGEX_DANCE_GROUP.test(c.title))
+
+		// Map from composite key → index in merged array
+		const keyMap = new Map<string, number>()
+		const merged: SheetDataPipe['rows'] = []
+
+		for (const row of rows) {
+			// Build composite key from key columns (trimmed, lowercased)
+			const key = keyIndices.map((ci) => (row[ci]?.value ?? '').trim().toLowerCase()).join('\0')
+
+			// Skip rows where the key is entirely blank
+			if (key.replace(/\0/g, '') === '') {
+				merged.push(row)
+				continue
+			}
+
+			const existingIdx = keyMap.get(key)
+			if (existingIdx === undefined) {
+				// First occurrence — keep as-is
+				keyMap.set(key, merged.length)
+				merged.push(row)
+			} else {
+				// Duplicate — merge newer row into existing row
+				const existing = merged[existingIdx]
+				const maxLen = Math.max(existing.length, row.length)
+
+				for (let c = 0; c < maxLen; c++) {
+					const oldCell = existing[c]
+					const newCell = row[c]
+
+					// If the newer row doesn't have this column, keep existing
+					if (!newCell) continue
+
+					// Timestamp cells: keep the oldest value
+					if (oldCell?.ts != null && newCell?.ts != null) {
+						existing[c] = oldCell.ts <= newCell.ts ? oldCell : newCell
+						continue
+					}
+
+					// Group column: blank newer value → '0' (reset group members)
+					if (c === groupIndex) {
+						const newValue = newCell.value?.trim() ?? ''
+						if (newValue === '') {
+							existing[c] = { value: '0', ts: null, render: '0' }
+						} else {
+							existing[c] = newCell
+						}
+						continue
+					}
+
+					// All other columns: newer wins, unless blank (keep existing)
+					const newValue = newCell.value?.trim() ?? ''
+					if (newValue !== '') {
+						existing[c] = newCell
+					}
+					// If newValue is blank, keep existing[c] unchanged
+				}
+			}
+		}
+
+		gg.timeEnd('⏱️ sheet-pipeline:mergeDuplicateRows')
+		return { extra, columns, rows: merged }
+	}
+}
+
 export function collectExtraDance({ extra, columns, rows }: SheetDataPipe) {
 	gg.time('⏱️ sheet-pipeline:collectExtraDance')
 	const ci = {
