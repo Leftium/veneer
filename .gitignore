@@ -1,12 +1,15 @@
 node_modules
+node-compile-cache
 
 # Output
+.gg
 .output
 .vercel
 .netlify
 .wrangler
 /.svelte-kit
 /build
+
 
 # OS
 .DS_Store
