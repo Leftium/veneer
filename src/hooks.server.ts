@@ -1,5 +1,7 @@
 import { dev } from '$app/environment'
 import type { Handle } from '@sveltejs/kit'
+import { sequence } from '@sveltejs/kit/hooks'
+import { createHandler } from 'web-sentinel/hooks'
 import { isOk } from 'wellcrafted/result'
 import { paraglideMiddleware } from '$lib/paraglide/server'
 import { VENEER_ID_REGEX } from '$lib/google-document-util/url-id'
@@ -155,4 +157,6 @@ const handleParaglide: Handle = ({ event, resolve }) =>
 		})
 	})
 
-export const handle: Handle = handleParaglide
+const sentinel = createHandler({ log: true, preview: false, http_status: 418 })
+
+export const handle: Handle = sequence(sentinel, handleParaglide)
