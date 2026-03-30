@@ -1,0 +1,8 @@
+{
+	"$schema": "https://unpkg.com/knip@6/schema.json",
+	"tags": ["-lintignore"],
+	"entry": ["src/hooks.ts"],
+	"ignoreDependencies": ["open-props-scss"],
+	"ignore": ["src/**/*.scss"],
+	"ignoreExportsUsedInFile": true
+}
