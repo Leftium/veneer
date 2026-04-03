@@ -1,15 +1,60 @@
 {
+	"icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 5 5\">\n  <polygon points=\"1,0 2,0 2,4 4,4 4,5 1,5\" fill=\"currentColor\"/>\n</svg>",
+	"iconColor": "#ffffff",
+	"iconColorMode": "auto",
+	"background": {
+		"colors": [
+			"#0029c1",
+			"#3973ff",
+			"#0029c1"
+		],
+		"stops": [
+			0,
+			0.29,
+			1
+		],
+		"angle": 45,
+		"position": 0,
+		"scale": 1
+	},
+	"cornerRadius": 50,
+	"cornerShape": "superellipse(2)",
 	"logo": {
-		"size": 800,
-		"squircle": true,
-		"boundingBox": "encircled",
-		"background": "transparent"
+		"iconSize": 72,
+		"iconOffsetX": 0,
+		"iconOffsetY": -14,
+		"iconRotation": 45,
+		"iconMirrorH": true,
+		"iconMirrorV": false,
+		"grayscaleLightness": 100
 	},
 	"favicon": {
-		"size": 256,
-		"squircle": true,
-		"ligatureScale": 0.99,
-		"ligatureOffsetX": 0,
-		"ligatureOffsetY": 0.005
+		"icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 5 5\">\n  <polygon points=\"1,0 2,0 2,4 4,4 4,5 1,5\" fill=\"currentColor\"/>\n</svg>",
+		"iconColor": "#ffffff",
+		"iconColorMode": "auto",
+		"background": {
+			"colors": [
+				"#0029c1",
+				"#3973ff",
+				"#0029c1"
+			],
+			"stops": [
+				0,
+				0.29,
+				1
+			],
+			"angle": 45,
+			"position": 0,
+			"scale": 1
+		},
+		"cornerRadius": 50,
+		"cornerShape": "superellipse(2)",
+		"iconSize": 72,
+		"iconOffsetX": 0,
+		"iconOffsetY": -14,
+		"iconRotation": 45,
+		"iconMirrorH": true,
+		"iconMirrorV": false,
+		"grayscaleLightness": 100
 	}
 }
