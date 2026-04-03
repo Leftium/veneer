@@ -25,8 +25,6 @@ export const DOMAIN_PRESETS: Record<string, string | null> = {
 	'btango.com': 'btango',
 	'tangoclass.btango.com': 'btango-class',
 	'tangodj.btango.com': 'btango-dj',
-	'vivianblues.com': 'vivimil',
-	'vivibl.com': 'vivimil',
 	'vivimil.com': 'vivimil',
 	'xn--pg3bl5ba.com': 'vivimil', // IDN alias (비비블.com)
 

@@ -35,7 +35,7 @@ Maps hostnames directly to redirect paths with hardcoded flags + doc IDs:
 const SITES = [
 	{ redirect: '/7/g.rzQZWr3o.../s.1bYcz...', hostnames: ['tangoclass.btango.com'] },
 	{ redirect: '/7/g.4EKt4Vyz.../s.1jwmd...', hostnames: ['btango.com'] },
-	{ redirect: '/7/g.r6eRUz2U.../s.13E_w...', hostnames: ['vivianblues.com', 'vivibl.com'] },
+	{ redirect: '/7/g.r6eRUz2U.../s.13E_w...', hostnames: ['vivimil.com'] },
 ]
 ```
 
@@ -75,9 +75,7 @@ export const DOMAIN_PRESETS: Record<string, string | null> = {
 	'btango.com': 'btango',
 	'tangoclass.btango.com': 'btango-class',
 	'tangodj.btango.com': 'btango-dj',
-	'vivianblues.com': 'vivimil',
-	'vivibl.com': 'vivimil', // alias → same preset
-	'vivimil.com': 'vivimil', // alias → same preset
+	'vivimil.com': 'vivimil',
 	'xn--pg3bl5ba.com': 'vivimil', // IDN alias
 
 	// Veneer home — no preset, shows launcher
@@ -505,7 +503,7 @@ Notable decisions during implementation:
 
 - **No env var fallbacks** — `base` preset has no default doc IDs; launcher page renders instead
 - **btango-dj uses `tabs: ['form', 'list']`** — info content renders inline above the form (existing conditional in `+layout.svelte` handles this)
-- **`vivimil.com`** is the primary domain for the `vivimil` preset (supersedes `vivianblues.com`)
+- **`vivimil.com`** is the primary domain for the `vivimil` preset
 - **Legacy `[flags]/` route left in place** for reference; doesn't conflict with new routing
 
 ### Phase 2: Launcher Page (MVP) — DONE
