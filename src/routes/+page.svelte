@@ -976,7 +976,6 @@
 		isolation: isolate;
 		box-shadow: 0px 6px 24px rgba(0, 0, 0, 0.2);
 		backdrop-filter: blur(1px);
-		-webkit-backdrop-filter: blur(1px);
 		border: 1px solid rgba(255, 255, 255, 0.3);
 
 		// Softer text shadow than the header title for a glass-integrated look
@@ -1001,7 +1000,6 @@
 			z-index: -2;
 			border-radius: inherit;
 			backdrop-filter: blur(8px);
-			-webkit-backdrop-filter: blur(8px);
 			isolation: isolate;
 		}
 	}

@@ -142,7 +142,6 @@
 		padding: 6px 10px;
 		max-width: min($size-content-2, 100%);
 		backdrop-filter: blur(12px);
-		-webkit-backdrop-filter: blur(12px);
 		border: 1px solid color-mix(in srgb, var(--app-accent-text, white) 20%, transparent);
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 	}
