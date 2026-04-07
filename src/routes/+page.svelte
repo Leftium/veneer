@@ -554,7 +554,7 @@
 		max-width: $size-content-3;
 		margin-inline: auto;
 		padding-inline: $size-5;
-		padding-block: $size-5;
+		padding-block-start: $size-5;
 	}
 
 	.preview-bar {
