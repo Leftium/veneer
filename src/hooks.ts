@@ -8,7 +8,7 @@ import { PRESETS, resolvePresetName } from '$lib/presets'
 const TAB_NAMES = new Set(['info', 'form', 'list', 'table', 'raw', 'dev'])
 
 function isVeneerId(segment: string): boolean {
-	return /^[sfgbh]\.[a-zA-Z0-9_-]+$/.test(segment)
+	return /^[sfgbhu]\.[a-zA-Z0-9_-]+$/.test(segment)
 }
 
 export const reroute = ({ url }: { url: URL }) => {

@@ -19,6 +19,8 @@ export const DOCUMENT_URL_REGEX = {
 	b: /(?<beforeId>^https:\/\/bit.ly\/)(?<id>[^/]+)/,
 	// ShortUrl
 	h: /(?<beforeId>^https:\/\/shorturl.at\/)(?<id>[^/]+)/,
+	// url.kr
+	u: /(?<beforeId>^https:\/\/url\.kr\/)(?<id>[^/]+)/,
 }
 
 const GOOGLE_FORM_OR_SHEET_REGEX = {
@@ -26,7 +28,7 @@ const GOOGLE_FORM_OR_SHEET_REGEX = {
 	f: DOCUMENT_URL_REGEX.f,
 }
 
-export const VENEER_ID_REGEX = /^(?<prefix>[sfgbh])\.(?<id>[a-zA-Z0-9_-]+)$/
+export const VENEER_ID_REGEX = /^(?<prefix>[sfgbhu])\.(?<id>[a-zA-Z0-9_-]+)$/
 
 export const URL_TEMPLATES: Record<string, string> = {
 	s: 'https://docs.google.com/spreadsheets/d/{ID}',
@@ -34,6 +36,7 @@ export const URL_TEMPLATES: Record<string, string> = {
 	g: 'https://forms.gle/{ID}',
 	b: 'https://bit.ly/{ID}',
 	h: 'https://shorturl.at/{ID}',
+	u: 'https://url.kr/{ID}',
 }
 
 function makeGoogleSheetUrl(id: string) {

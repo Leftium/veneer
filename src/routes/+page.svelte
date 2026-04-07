@@ -155,6 +155,7 @@
 				return 'Google Sheet detected'
 			case 'b':
 			case 'h':
+			case 'u':
 				return 'Shortened URL — type detected when opened'
 			default:
 				return 'Unknown type'
@@ -510,7 +511,7 @@
 		{:else if urlInput.trim()}
 			<small>
 				No supported URL detected. Supported formats: Google Forms, Google Sheets, forms.gle,
-				bit.ly, shorturl.at
+				bit.ly, shorturl.at, url.kr
 			</small>
 		{/if}
 	</section>
