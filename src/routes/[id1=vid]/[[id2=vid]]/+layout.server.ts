@@ -2,7 +2,6 @@ import { dev } from '$app/environment'
 import { gg } from '@leftium/gg'
 
 import { Err, isErr, isOk, Ok } from 'wellcrafted/result'
-import * as linkify from 'linkifyjs'
 
 import { m } from '$lib/paraglide/messages.js'
 import {
@@ -13,7 +12,7 @@ import {
 	darkenHex,
 } from '$lib/presets'
 
-import { getGoogleDocumentId } from '$lib/google-document-util/url-id.js'
+import { scanSheetLinks } from '$lib/google-document-util/scan-sheet-links'
 import { stripHidden } from '$lib/google-document-util/google-sheets.js'
 import type {
 	GoogleSheet,
@@ -294,39 +293,13 @@ export const load = async ({ cookies, locals, params, url }) => {
 		isErr(sheet) &&
 		!sheet.error.documentId
 	) {
-		// Extract href URLs from HTML description (catches hyperlinks whose
-		// display text differs from the URL, e.g. <a href="...sheet...">신청확인</a>)
-		const htmlHrefs = [...(form.data.descriptionHtml ?? '').matchAll(/href="([^"]+)"/g)]
-			.map((m) => m[1])
-			.filter((href) => !/googleusercontent.com/.test(href))
-
-		// Fallback: bare URLs from plain text (safety net for older forms or
-		// cases where descriptionHtml is null but plain text has raw URLs)
-		const textHrefs = linkify
-			.find(info)
-			.map((link) => link.href)
-			.filter((href) => !/googleusercontent.com/.test(href))
-
-		// Reorder text hrefs: move first link (usually the form's own URL) to 2nd slot
-		const shifted = textHrefs.shift()
-		if (shifted) {
-			textHrefs.splice(1, 0, shifted)
-		}
-
-		// HTML hrefs first (higher signal), then reordered text hrefs as fallback
-		const hrefs = [...new Set([...htmlHrefs, ...textHrefs])]
-
-		let numLinksChecked = 0
-		for (const href of hrefs) {
-			gg(`Smart sheet ID scan #${++numLinksChecked}: ${href}`)
-			const googleDocumentId = await getGoogleDocumentId(href)
-			if (isOk(googleDocumentId) && googleDocumentId.data.documentId[0] === 's') {
-				const document = await fetchWithDocumentId(googleDocumentId.data.documentId)
-				if (isOk(document) && document.data.type === 'sheet') {
-					sheet = document as ResultGoogleSheet
-					break
-				}
-			}
+		const { sheets: detectedSheets, numLinksChecked } = await scanSheetLinks(
+			form.data.descriptionHtml,
+			info,
+		)
+		if (detectedSheets.length > 0) {
+			// Use the first detected sheet (reuse the already-fetched result)
+			sheet = detectedSheets[0].result as ResultGoogleSheet
 		}
 		if (numLinksChecked > 2) {
 			warnings.push({

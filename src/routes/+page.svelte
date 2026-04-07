@@ -4,7 +4,11 @@
 	import type { Pathname } from '$app/types'
 	import { SvelteURLSearchParams } from 'svelte/reactivity'
 	import * as linkify from 'linkifyjs'
-	import { DOCUMENT_URL_REGEX, SHORTENER_PREFIXES } from '$lib/google-document-util/url-id'
+	import {
+		DOCUMENT_URL_REGEX,
+		SHORTENER_PREFIXES,
+		URL_TEMPLATES,
+	} from '$lib/google-document-util/url-id'
 	import {
 		PRESETS,
 		LAUNCHER_PRESETS,
@@ -88,6 +92,7 @@
 		headerImageUrl: string | null
 		accentColor: string | null
 		bgColor: string | null
+		autoSheets: Array<{ veneerId: string; title: string }>
 	} | null>(null)
 	let formMetaLoading = $state(false)
 
@@ -172,6 +177,14 @@
 		formResult?.prefix === 'f' || formResult?.prefix === 'g' || resolvedType === 'form',
 	)
 	let isSheetType = $derived(formResult?.prefix === 's' || resolvedType === 'sheet')
+
+	let autoSheets = $derived(formMeta?.autoSheets ?? [])
+
+	// Build a full Google Sheets URL from a veneer ID like "s.ABC123"
+	function sheetUrlFromVeneerId(veneerId: string): string {
+		const [prefix, id] = veneerId.split('.')
+		return URL_TEMPLATES[prefix]?.replace('{ID}', id) ?? ''
+	}
 
 	const FORM_ONLY_TABS = new Set(['info', 'form'])
 	let disabledTabs = $derived(isSheetType ? FORM_ONLY_TABS : new Set<string>())
@@ -364,6 +377,34 @@
 				</label>
 				{#if sheetInput && !sheetResult}
 					<small>No valid Google Sheet URL detected in input.</small>
+				{/if}
+				{#if autoSheets.length > 0}
+					<div class="auto-sheets">
+						<span class="auto-sheets-label">Sheets detected in form description:</span>
+						<ul class="auto-sheets-list">
+							{#each autoSheets as sheet, i (sheet.veneerId)}
+								<li class="auto-sheet-item">
+									<span class="auto-sheet-title">
+										{sheet.title}
+										{#if i === 0}
+											<span class="auto-sheet-badge">auto-detected</span>
+										{/if}
+									</span>
+									<button
+										type="button"
+										class="auto-sheet-use"
+										onclick={() => {
+											sheetInput = sheetUrlFromVeneerId(sheet.veneerId)
+										}}>Use</button
+									>
+								</li>
+							{/each}
+						</ul>
+						<small class="auto-sheets-hint">
+							The first sheet above is used automatically when the veneer is opened — only set it
+							explicitly for a different sheet or a self-contained URL.
+						</small>
+					</div>
 				{/if}
 			{/if}
 
@@ -624,6 +665,81 @@
 		font-size: $font-size-0;
 		font-weight: $font-weight-4;
 		margin-left: $size-2;
+	}
+
+	.auto-sheets {
+		margin-top: $size-2;
+		margin-bottom: $size-2;
+		padding: $size-2 $size-3;
+		background: color-mix(in srgb, #3a7d44 8%, transparent);
+		border: 1px solid color-mix(in srgb, #3a7d44 25%, transparent);
+		border-radius: $radius-2;
+	}
+
+	.auto-sheets-label {
+		font-size: $font-size-0;
+		font-weight: $font-weight-6;
+		color: #3a7d44;
+	}
+
+	.auto-sheets-list {
+		list-style: none;
+		padding: 0;
+		margin: $size-1 0 0;
+	}
+
+	.auto-sheet-item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: $size-2;
+		padding: $size-1 0;
+
+		& + & {
+			border-top: 1px solid color-mix(in srgb, #3a7d44 15%, transparent);
+		}
+	}
+
+	.auto-sheet-title {
+		font-size: $font-size-1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.auto-sheet-badge {
+		font-size: $font-size-00;
+		color: #3a7d44;
+		background: color-mix(in srgb, #3a7d44 12%, transparent);
+		padding: 1px $size-1;
+		border-radius: $radius-1;
+		margin-left: $size-1;
+		white-space: nowrap;
+	}
+
+	.auto-sheet-use {
+		flex-shrink: 0;
+		padding: $size-1 $size-2;
+		font-size: $font-size-0;
+		border: 1px solid #3a7d44;
+		border-radius: $radius-2;
+		background: transparent;
+		color: #3a7d44;
+		cursor: pointer;
+		font-weight: $font-weight-6;
+
+		&:hover {
+			background: color-mix(in srgb, #3a7d44 12%, transparent);
+		}
+	}
+
+	.auto-sheets-hint {
+		display: block;
+		margin-top: $size-1;
+		font-size: $font-size-00;
+		color: var(--app-muted-color, #666);
+		line-height: 1.4;
 	}
 
 	details {
