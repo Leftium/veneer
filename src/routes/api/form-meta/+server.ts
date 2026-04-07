@@ -12,6 +12,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 	if (isOk(result) && result.data.type === 'form') {
 		return json({
+			type: 'form' as const,
 			title: result.data.title,
 			headerImageUrl: result.data.headerImageUrl,
 			accentColor: result.data.accentColor ?? null,
@@ -21,6 +22,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 	if (isOk(result) && result.data.type === 'sheet') {
 		return json({
+			type: 'sheet' as const,
 			title: result.data.title,
 			headerImageUrl: null,
 			accentColor: null,
@@ -29,5 +31,5 @@ export const GET: RequestHandler = async ({ url }) => {
 	}
 
 	// Error — degrade gracefully
-	return json({ title: '', headerImageUrl: null, accentColor: null, bgColor: null })
+	return json({ type: null, title: '', headerImageUrl: null, accentColor: null, bgColor: null })
 }

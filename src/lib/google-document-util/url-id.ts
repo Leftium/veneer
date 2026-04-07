@@ -23,6 +23,11 @@ export const DOCUMENT_URL_REGEX = {
 	u: /(?<beforeId>^https:\/\/url\.kr\/)(?<id>[^/]+)/,
 }
 
+const DIRECT_PREFIXES = new Set(['f', 's'])
+export const SHORTENER_PREFIXES = new Set(
+	Object.keys(DOCUMENT_URL_REGEX).filter((k) => !DIRECT_PREFIXES.has(k)),
+)
+
 const GOOGLE_FORM_OR_SHEET_REGEX = {
 	s: DOCUMENT_URL_REGEX.s,
 	f: DOCUMENT_URL_REGEX.f,

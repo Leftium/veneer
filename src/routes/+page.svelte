@@ -4,7 +4,7 @@
 	import type { Pathname } from '$app/types'
 	import { SvelteURLSearchParams } from 'svelte/reactivity'
 	import * as linkify from 'linkifyjs'
-	import { DOCUMENT_URL_REGEX } from '$lib/google-document-util/url-id'
+	import { DOCUMENT_URL_REGEX, SHORTENER_PREFIXES } from '$lib/google-document-util/url-id'
 	import {
 		PRESETS,
 		LAUNCHER_PRESETS,
@@ -83,6 +83,7 @@
 
 	// Form metadata from /api/form-meta (Phase 4)
 	let formMeta = $state<{
+		type: 'form' | 'sheet' | null
 		title: string
 		headerImageUrl: string | null
 		accentColor: string | null
@@ -145,7 +146,7 @@
 	})
 
 	// Type detection helpers
-	function typeLabel(prefix: string): string {
+	function typeLabel(prefix: string, resolvedType: 'form' | 'sheet' | null | undefined): string {
 		switch (prefix) {
 			case 'f':
 				return 'Google Form detected'
@@ -156,14 +157,21 @@
 			case 'b':
 			case 'h':
 			case 'u':
+				if (resolvedType === 'form') return 'Google Form (shortened URL) detected'
+				if (resolvedType === 'sheet') return 'Google Sheet (shortened URL) detected'
 				return 'Shortened URL — type detected when opened'
 			default:
 				return 'Unknown type'
 		}
 	}
 
-	let isFormType = $derived(formResult?.prefix === 'f' || formResult?.prefix === 'g')
-	let isSheetType = $derived(formResult?.prefix === 's')
+	let resolvedType = $derived(
+		formResult && SHORTENER_PREFIXES.has(formResult.prefix) ? formMeta?.type : null,
+	)
+	let isFormType = $derived(
+		formResult?.prefix === 'f' || formResult?.prefix === 'g' || resolvedType === 'form',
+	)
+	let isSheetType = $derived(formResult?.prefix === 's' || resolvedType === 'sheet')
 
 	const FORM_ONLY_TABS = new Set(['info', 'form'])
 	let disabledTabs = $derived(isSheetType ? FORM_ONLY_TABS : new Set<string>())
@@ -333,7 +341,7 @@
 		<label>
 			Paste a Google Form or Sheet URL
 			{#if formResult}
-				<span class="detected">{typeLabel(formResult.prefix)}</span>
+				<span class="detected">{typeLabel(formResult.prefix, resolvedType)}</span>
 			{/if}
 			<input
 				type="url"
