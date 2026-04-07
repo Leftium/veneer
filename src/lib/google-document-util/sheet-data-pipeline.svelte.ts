@@ -92,6 +92,9 @@ export function extractColumnHeaders({ extra, columns, rows }: SheetDataPipe) {
 			makeColumn({ title: cell.value || rows[0][ci].value }),
 		)
 
+		// Strip preamble rows above the header (e.g. staff lists, summary totals)
+		rows = rows.slice(titleRowIndex)
+
 		// Remove (partial) copies of header rows
 		const columnTitles = columns.map((column) => column.title)
 		rows = rows.filter((row) => row.filter((cell) => columnTitles.includes(cell.value)).length < 3)
