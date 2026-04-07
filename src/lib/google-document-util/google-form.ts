@@ -46,7 +46,7 @@ type Form = {
 	title: string
 	/// titleHtml?: string
 	description: string | null
-	/// descriptionHtml?: string | null
+	descriptionHtml: string | null
 	collectEmails: EmailOptions
 	questions: Question[]
 	accentColor: string | null
@@ -69,7 +69,7 @@ export function parseGoogleForm(html: string) {
 	gg.timeEnd('⏱️ parseGoogleForm:json-extract')
 
 	const description = jArray[1]?.[0] ?? null
-	/// const descriptionHtml = jArray[1]?.[24]?.[1] ?? null
+	const descriptionHtml = jArray[1]?.[24]?.[1] ?? null
 	const filename = jArray[3] ?? null
 	const title = jArray[1]?.[8] ?? null
 	/// const titleHtml = jArray[1]?.[25]?.[1] ?? null
@@ -91,7 +91,7 @@ export function parseGoogleForm(html: string) {
 		title,
 		/// titleHtml,
 		description,
-		/// descriptionHtml,
+		descriptionHtml,
 		collectEmails: collectEmails as EmailOptions,
 		questions: [],
 		accentColor,
@@ -226,6 +226,7 @@ export function adjustGoogleFormData(json: Form) {
 		filename: json.filename,
 		//formAction: json.formAction,
 		headerImageUrl: json.headerImageUrl,
+		descriptionHtml: json.descriptionHtml,
 		collectEmails: json.collectEmails,
 		accentColor: json.accentColor,
 		bgColor: json.bgColor,
