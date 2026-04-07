@@ -382,7 +382,7 @@ export const load = async ({ cookies, locals, params, url }) => {
 		(acc, [hash, [icon, name]]) => {
 			const error =
 				((hash === 'info' || hash === 'form') && isErr(form)) ||
-				(hash === 'list' && isErr(sheet)) ||
+				((hash === 'list' || hash === 'table') && isErr(sheet)) ||
 				(hash === 'dev' && !!warnings.length)
 
 			// Hide tab if: not in visible set, OR errored and showErrors is off
