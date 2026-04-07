@@ -286,16 +286,10 @@
 			</div>
 			<div class="preview-bar">
 				{#if veneerPath}
-					<label class="veneer-url-label">
+					<div class="veneer-url-label">
 						Veneer URL
-						<input
-							class="veneer-url"
-							type="text"
-							readonly
-							value={window.location.origin + veneerPath}
-							onfocus={(e) => e.currentTarget.select()}
-						/>
-					</label>
+						<span class="veneer-url">{window.location.origin + veneerPath}</span>
+					</div>
 					<p class="preview-actions-prose">
 						<a href={resolve(veneerPath as Pathname)} target="_blank">Open</a> this veneer in a new
 						tab, or
@@ -573,13 +567,14 @@
 		font-weight: $font-weight-6;
 	}
 
-	input.veneer-url {
-		width: 100%;
+	.veneer-url {
+		display: block;
 		font-family: monospace;
 		font-size: $font-size-0;
 		color: var(--app-muted-color, #666);
-		padding: $size-1 $size-2;
 		margin: 0;
+		user-select: all;
+		word-break: break-all;
 	}
 
 	.preview-actions-prose {
