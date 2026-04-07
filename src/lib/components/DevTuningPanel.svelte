@@ -52,6 +52,7 @@
 	let messageBalanceRate = $state(DEFAULT_LAYOUT.messageBalanceRate)
 	let minSpacing = $state(DEFAULT_LAYOUT.minSpacing)
 	let soloChance = $state(DEFAULT_LAYOUT.soloChance)
+	let maxUnits = $state(DEFAULT_LAYOUT.maxUnits)
 
 	// Dock
 	let dockMaxScale = $state(DEFAULT_DOCK.maxScale)
@@ -95,6 +96,7 @@
 			messageBalanceRate,
 			minSpacing,
 			soloChance,
+			maxUnits,
 		},
 		dock: {
 			maxScale: dockMaxScale,
@@ -169,6 +171,7 @@
 		messageBalanceRate = c.layout.messageBalanceRate
 		minSpacing = c.layout.minSpacing ?? DEFAULT_LAYOUT.minSpacing
 		soloChance = c.layout.soloChance ?? DEFAULT_LAYOUT.soloChance
+		maxUnits = c.layout.maxUnits ?? DEFAULT_LAYOUT.maxUnits
 		dockMaxScale = c.dock.maxScale
 		neighborCount = c.dock.neighborCount
 		falloffFn = c.dock.falloffFn
@@ -451,6 +454,10 @@
 						step="0.05"
 						bind:value={soloChance}
 					/>
+
+					<label for="dp-maxUnits">maxUnits</label>
+					<span class="val">{maxUnits || '∞'}</span>
+					<input id="dp-maxUnits" type="range" min="0" max="60" step="1" bind:value={maxUnits} />
 				</div>
 			</fieldset>
 

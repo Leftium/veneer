@@ -30,6 +30,8 @@ export interface LayoutConfig {
 	minSpacing: number
 	/** Probability [0,1] that a pair is broken into two solos. 0 = never, 1 = always. */
 	soloChance: number
+	/** Maximum number of units shown on the dance floor. 0 = no limit. */
+	maxUnits: number
 }
 
 export interface DockConfig {
@@ -62,6 +64,7 @@ export const DEFAULT_LAYOUT: LayoutConfig = {
 	messageBalanceRate: 0.5, // probability of swap attempt per messageless pair
 	minSpacing: 0.1, // minimum horizontal gap between adjacent units (normalized)
 	soloChance: 0.15, // probability each pair is broken into two solos
+	maxUnits: 20, // cap on visible dance floor units (0 = unlimited)
 }
 
 /** Dock magnification defaults (used in Phase 3, defined here for type completeness). */
@@ -1090,6 +1093,34 @@ export function findNearestUnit(unitPositions: number[], scrubX: number): number
 }
 
 // ---------------------------------------------------------------------------
+// Unit cap (stable random subset)
+// ---------------------------------------------------------------------------
+
+/**
+ * If there are more units than `maxUnits`, deterministically select a stable
+ * random subset. Each unit's selection key is `hash(songSlot + '\0cap\0' + unitKey)`,
+ * so the same units survive across re-renders and the selection is independent
+ * of list order. A limit of 0 means no cap.
+ */
+function capUnits(
+	units: DanceUnit[],
+	formTitle: string,
+	songNumber: number,
+	maxUnits: number,
+): DanceUnit[] {
+	if (maxUnits <= 0 || units.length <= maxUnits) return units
+	const songSlot = getSongSlot(formTitle, songNumber)
+	return units
+		.slice()
+		.sort((a, b) => {
+			const ha = hashString(songSlot + '\0cap\0' + a.unitKey)
+			const hb = hashString(songSlot + '\0cap\0' + b.unitKey)
+			return ha - hb
+		})
+		.slice(0, maxUnits)
+}
+
+// ---------------------------------------------------------------------------
 // Top-level orchestrator
 // ---------------------------------------------------------------------------
 
@@ -1103,7 +1134,8 @@ export function computeDanceFloor(
 	config: DancePartyConfig = DEFAULT_CONFIG,
 ): PlacedUnit[] {
 	const units = buildDanceUnits(dancers, formTitle, songNumber, config)
-	return placeDanceUnits(units, formTitle, songNumber, config)
+	const capped = capUnits(units, formTitle, songNumber, config.layout.maxUnits)
+	return placeDanceUnits(capped, formTitle, songNumber, config)
 }
 
 // ---------------------------------------------------------------------------
