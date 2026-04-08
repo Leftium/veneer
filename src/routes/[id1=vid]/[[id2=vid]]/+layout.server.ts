@@ -1,5 +1,4 @@
 import { dev } from '$app/environment'
-import { gg } from '@leftium/gg'
 
 import { Err, isErr, isOk, Ok } from 'wellcrafted/result'
 
