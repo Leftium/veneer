@@ -278,6 +278,16 @@ ${!isDanceEvent ? '' : `춤으로 전하는 힐링 대화 (Healing Message with 
 				? lastSegment
 				: data.defaultTab
 		slideToTab(tid, { updateHistory: false })
+
+		// 4) scroll to hash target (e.g. #google-form) after swiper settles
+		const hash = to?.url.hash
+		if (hash) {
+			// Wait for swiper slide transition + DOM update before scrolling
+			tick().then(() => {
+				const el = document.querySelector(hash)
+				el?.scrollIntoView({ behavior: 'smooth' })
+			})
+		}
 	})
 
 	function internalizeLinks(markdown: string): string {
@@ -307,13 +317,19 @@ ${!isDanceEvent ? '' : `춤으로 전하는 힐링 대화 (Healing Message with 
 					let internalLink = `/${id}`
 
 					if (/sign.?up|register|신청/i.test(context)) {
-						internalLink = `${docPath}/form${search}`
+						// When info has its own tab, navigate to the form tab (no hash).
+						// When info is inlined into the form tab, scroll down to the form (hash + ⬇️).
+						const sameTab = !data.navTabs.info.icon
+						internalLink = sameTab
+							? `${docPath}/form${search}#google-form`
+							: `${docPath}/form${search}`
 						//@ts-expect-error: TODO
 						const count = finalData.extra.count
 						const callout = !count
 							? ''
 							: `<div class="tooltip">${m.people_going({ count: count.total })} <span class="dancer-icon dancer-follow"><img src="/dancers/follows/06-F.png" alt="follow"></span>${count.follows} <span class="dancer-icon dancer-lead"><img src="/dancers/leads/06-L.png" alt="lead"></span>${count.leaders}</div>`
-						const button = `<a href="${internalLink}" role=button class=outline>${m.sign_up()}</a>`
+						const label = sameTab ? m.sign_up().replace('➡️', '⬇️') : m.sign_up()
+						const button = `<a href="${internalLink}" role=button class=outline>${label}</a>`
 						// If keyword was on the previous line, replace it with the button
 						if (!/sign.?up|register|신청/i.test(line)) out.pop()
 						out.push(callout)

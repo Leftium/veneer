@@ -70,7 +70,7 @@
 		</d-article>
 	{/if}
 
-	<form method="POST">
+	<form method="POST" id="google-form">
 		<input type="hidden" name="documentId" value={googleForm.documentId} />
 
 		{#each renderPlan as item, i (i)}
