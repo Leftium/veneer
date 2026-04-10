@@ -292,6 +292,12 @@ ${!isDanceEvent ? '' : `춤으로 전하는 힐링 대화 (Healing Message with 
 			if (links.length) {
 				const href = links[0].href
 
+				// When the URL is on its own line (e.g. Google Forms puts a bare
+				// URL below label text like "신청확인 :"), the keyword may only
+				// appear on the preceding line.  Combine both for matching.
+				const prevLine = out.at(-1) ?? ''
+				const context = `${prevLine}\n${line}`
+
 				let matches = href.match(DOCUMENT_URL_REGEX.g) || href.match(DOCUMENT_URL_REGEX.f)
 				if (matches) {
 					const documentId = matches.groups?.id || ''
@@ -300,7 +306,7 @@ ${!isDanceEvent ? '' : `춤으로 전하는 힐링 대화 (Healing Message with 
 
 					let internalLink = `/${id}`
 
-					if (/sign.?up|register|신청/i.test(line)) {
+					if (/sign.?up|register|신청/i.test(context)) {
 						internalLink = `${docPath}/form${search}`
 						//@ts-expect-error: TODO
 						const count = finalData.extra.count
@@ -308,6 +314,8 @@ ${!isDanceEvent ? '' : `춤으로 전하는 힐링 대화 (Healing Message with 
 							? ''
 							: `<div class="tooltip">${m.people_going({ count: count.total })} <span class="dancer-icon dancer-follow"><img src="/dancers/follows/06-F.png" alt="follow"></span>${count.follows} <span class="dancer-icon dancer-lead"><img src="/dancers/leads/06-L.png" alt="lead"></span>${count.leaders}</div>`
 						const button = `<a href="${internalLink}" role=button class=outline>${m.sign_up()}</a>`
+						// If keyword was on the previous line, replace it with the button
+						if (!/sign.?up|register|신청/i.test(line)) out.pop()
 						out.push(callout)
 						out.push(button)
 						continue
@@ -323,9 +331,11 @@ ${!isDanceEvent ? '' : `춤으로 전하는 힐링 대화 (Healing Message with 
 
 					let internalLink = `/${id}`
 
-					if (/check|list|확인/i.test(line)) {
+					if (/check|list|확인/i.test(context)) {
 						internalLink = `${docPath}/list${search}`
 						const button = `<a href="${internalLink}" role=button class=outline>${m.check_list()}</a>`
+						// If keyword was on the previous line, replace it with the button
+						if (!/check|list|확인/i.test(line)) out.pop()
 						out.push(button)
 						continue
 					}
