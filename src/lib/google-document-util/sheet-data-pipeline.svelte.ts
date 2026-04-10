@@ -71,6 +71,7 @@ export function adjustColumnLengths({ extra, columns, rows }: SheetDataPipe) {
 	gg.time('⏱️ sheet-pipeline:adjustColumnLengths')
 	for (const row of rows) {
 		for (const [ci, cell] of row.entries()) {
+			if (!columns[ci]) continue
 			columns[ci].lengthMax = Math.max(columns[ci].lengthMax, cell.value.length)
 			columns[ci].lengthMin = Math.min(columns[ci].lengthMin, cell.value.length)
 		}
@@ -81,15 +82,22 @@ export function adjustColumnLengths({ extra, columns, rows }: SheetDataPipe) {
 
 export function extractColumnHeaders({ extra, columns, rows }: SheetDataPipe) {
 	if (rows.length) {
+		// Header rows have the most non-empty, non-numeric cells (text labels).
+		// This avoids picking a data row that happens to be wider due to
+		// manually-added numeric values in trailing columns.
+		// NOTE: duplicated in detect-sheet-type.ts (server-side) — keep in sync.
+		const textCellCount = (row: SheetDataPipe['rows'][number]) =>
+			row.filter((cell) => cell.value && !REGEX_NUMERIC.test(cell.value)).length
+
 		let titleRowIndex = 0
 		for (const [ri, row] of rows.entries()) {
-			if (row.length > rows[titleRowIndex].length) {
+			if (textCellCount(row) > textCellCount(rows[titleRowIndex])) {
 				titleRowIndex = ri
 			}
 		}
 
 		columns = rows[titleRowIndex].map((cell, ci) =>
-			makeColumn({ title: cell.value || rows[0][ci].value }),
+			makeColumn({ title: cell.value || rows[0]?.[ci]?.value || '' }),
 		)
 
 		// Strip preamble rows above the header (e.g. staff lists, summary totals)
@@ -108,6 +116,7 @@ export function adjustColumnTypes({ extra, columns, rows }: SheetDataPipe) {
 	gg.time('⏱️ sheet-pipeline:adjustColumnTypes')
 	for (const row of rows) {
 		for (const [ci, cell] of row.entries()) {
+			if (!columns[ci]) continue
 			if (!REGEX_NUMERIC.test(cell.value)) {
 				columns[ci].isNumeric = false
 			}
@@ -121,6 +130,7 @@ export function padNumericRenders({ extra, columns, rows }: SheetDataPipe) {
 	gg.time('⏱️ sheet-pipeline:padNumericRenders')
 	for (const row of rows) {
 		for (const [ci, cell] of row.entries()) {
+			if (!columns[ci]) continue
 			if (cell.value && columns[ci].isNumeric && !cell.ts) {
 				cell.render = cell.value.padStart(columns[ci].lengthMax, '0')
 			}
@@ -134,6 +144,7 @@ export function hidePhoneNumbers({ extra, columns, rows }: SheetDataPipe) {
 	gg.time('⏱️ sheet-pipeline:hidePhoneNumbers')
 	for (const row of rows) {
 		for (const [ci, cell] of row.entries()) {
+			if (!columns[ci]) continue
 			if (/(contact)|(연락)/i.test(columns[ci].title)) {
 				cell.value = cell.value.replaceAll(/[0-9]/g, '*')
 				cell.render = cell.render.replaceAll(/[0-9]/g, '*')
@@ -145,7 +156,7 @@ export function hidePhoneNumbers({ extra, columns, rows }: SheetDataPipe) {
 }
 
 export function stripEmptyColumns({ extra, columns, rows }: SheetDataPipe) {
-	rows = rows.map((row) => row.filter((cell, ci) => columns[ci].lengthMax || columns[ci].title))
+	rows = rows.map((row) => row.filter((cell, ci) => columns[ci]?.lengthMax || columns[ci]?.title))
 	columns = columns.filter((col) => col.lengthMax || col.title)
 	return { extra, columns, rows }
 }

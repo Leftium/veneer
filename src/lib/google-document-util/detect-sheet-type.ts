@@ -7,13 +7,25 @@ import { REGEX_PLAYLIST_TITLE, REGEX_PLAYLIST_ARTIST } from '$lib/playlist-const
 
 export type SheetType = 'dance-event' | 'playlist' | null
 
+const REGEX_NUMERIC = /^[0-9-.,/: ]*$/
+
 export function detectSheetType(rows: (string | (string | number)[])[][]): SheetType {
 	if (!rows.length) return null
 
-	// Find header row: the row with the most cells (same heuristic as extractColumnHeaders)
+	// Find header row: the row with the most non-empty, non-numeric cells (text labels).
+	// Avoids picking a data row that happens to be wider due to manually-added numeric values.
+	// NOTE: duplicated in sheet-data-pipeline.svelte.ts (client-side) — keep in sync.
+	const cellValue = (cell: string | (string | number)[]) =>
+		typeof cell === 'string' ? cell : String(cell?.[0] ?? '')
+	const textCellCount = (row: (string | (string | number)[])[]) =>
+		row.filter((cell) => {
+			const v = cellValue(cell)
+			return v && !REGEX_NUMERIC.test(v)
+		}).length
+
 	let headerRowIndex = 0
 	for (let i = 1; i < rows.length; i++) {
-		if (rows[i].length > rows[headerRowIndex].length) {
+		if (textCellCount(rows[i]) > textCellCount(rows[headerRowIndex])) {
 			headerRowIndex = i
 		}
 	}
