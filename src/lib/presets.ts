@@ -61,6 +61,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerHeight: '100px',
 		headerTextColor: 'white',
 		headerImageFit: 'cover',
+		mergeKeys: ['name|닉네임'],
 	},
 	btango: {
 		defaultFormId: 'g.4EKt4Vyzgq1E5eHC8',
