@@ -64,7 +64,7 @@ export const PRESETS: Record<string, Preset> = {
 		mergeKeys: ['name|닉네임'],
 	},
 	btango: {
-		defaultFormId: 'g.4EKt4Vyzgq1E5eHC8',
+		defaultFormId: 'f.1FAIpQLSd4lP8wQKYe45r6BXEBlDxzJ28ztqqdLo6u_Ir1YZoF0HY8wA',
 		defaultSheetId: 's.1jwmdTf0fArizqA8IM6EavaTYDKn_uXMKj_VF3K1gw40',
 		headerImage: '/dance_night.gif',
 		headerColor: '#0b4474',
@@ -74,7 +74,7 @@ export const PRESETS: Record<string, Preset> = {
 		mergeKeys: ['name|닉네임'],
 	},
 	'btango-class': {
-		defaultFormId: 'g.rzQZWr3o17Doj3Nq5',
+		defaultFormId: 'f.1FAIpQLSc5VZUmih2AD3RUgdCCPklWcLuoqQ8ZRfAepqKBXK8QOSco2w',
 		defaultSheetId: 's.1bYczvgFwW0t5A858xTIESlhulGP1cBtBlaDBwOHus30',
 		headerImage: '/dance_night.gif',
 		headerColor: '#0b4474',
@@ -85,7 +85,7 @@ export const PRESETS: Record<string, Preset> = {
 	},
 	'btango-dj': {
 		tabLabels: { table: { en: 'List', ko: '확인' } },
-		defaultFormId: 'g.H9nD4tKrkp1m8ESC9',
+		defaultFormId: 'f.1FAIpQLSeOiwPRj8qaoBVWpWta1SrQL-d9cYgVISv6KTVdvKm_c9Sxwg',
 		defaultSheetId: 's.16AtRFdLdYfnJRcXTf5N3fcLvZMMu48eECHXpxLHv7VU',
 		headerImage: '/dance_night.gif',
 		headerColor: '#0b4474',
