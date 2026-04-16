@@ -95,7 +95,7 @@ export const PRESETS: Record<string, Preset> = {
 		mergeKeys: ['name|닉네임'],
 	},
 	vivimil: {
-		defaultFormId: 'g.r6eRUz2U9uf5oVFn6',
+		defaultFormId: 'f.1FAIpQLSe6jBW2ej8snX58QA-jI_5B0tfmOMXo4c1AcIxq26YoNfPiWQ',
 		defaultSheetId: 's.13E_wsbrKLEsuV-eDaTKl0a967EdpYgcZrXH0Gq_KK3g',
 		headerImage: '/dance_night.gif',
 		headerColor: '#0b4474',
