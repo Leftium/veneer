@@ -86,7 +86,7 @@ export const PRESETS: Record<string, Preset> = {
 	'btango-dj': {
 		tabLabels: { table: { en: 'List', ko: '확인' } },
 		defaultFormId: 'f.1FAIpQLSeOiwPRj8qaoBVWpWta1SrQL-d9cYgVISv6KTVdvKm_c9Sxwg',
-		defaultSheetId: 's.16AtRFdLdYfnJRcXTf5N3fcLvZMMu48eECHXpxLHv7VU',
+		//defaultSheetId: 's.16AtRFdLdYfnJRcXTf5N3fcLvZMMu48eECHXpxLHv7VU',
 		headerImage: '/dance_night.gif',
 		headerColor: '#0b4474',
 		headerHeight: '100px',
