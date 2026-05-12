@@ -27,6 +27,7 @@ export const DOMAIN_PRESETS: Record<string, string | null> = {
 	'tangodj.btango.com': 'btango-dj',
 	'vivimil.com': 'vivimil',
 	'xn--pg3bl5ba.com': 'vivimil', // IDN alias (비비블.com)
+	'blues-social.leftium.com': 'blues-social',
 
 	// Party site
 	'party.leftium.com': 'party',
@@ -104,6 +105,18 @@ export const PRESETS: Record<string, Preset> = {
 		headerImageFit: 'cover',
 		mergeKeys: ['name|닉네임'],
 	},
+
+	'blues-social': {
+		defaultFormId: 'f.1FAIpQLSconODVRc90dPO_MQlz6XVDxasCRoeec2sCdfuBLfnKWYqNQQ',
+		defaultSheetId: 's.1VOYPcyJbFpgBXcb3wC-1pE-3-8GW1z0AkcHO3qDEjCw',
+		headerImage: '/dance_night.gif',
+		headerColor: '#0b4474',
+		headerHeight: '100px',
+		headerTextColor: 'white',
+		headerImageFit: 'cover',
+		mergeKeys: ['name|닉네임'],
+	},
+
 	party: {
 		defaultFormId: 'g.DQszzU7SKC7U96hq7',
 		defaultSheetId: 's.1N8Rkj-CLJs_Kx6315odpH0Idnc6xwSQqTry-pCCB9ak',
