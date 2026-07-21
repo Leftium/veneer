@@ -53,6 +53,7 @@
 	import { getDancersFromSheetData } from '$lib/util.js'
 	import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte'
 	import { segmentBilingualContent, localeText, type BilingualText } from '$lib/locale-content'
+	import { googleImageUrl } from '$lib/google-document-util/google-image-url'
 	import { getLocale } from '$lib/paraglide/runtime.js'
 	import { m } from '$lib/paraglide/messages.js'
 
@@ -403,7 +404,9 @@ ${!isDanceEvent ? '' : `춤으로 전하는 힐링 대화 (Healing Message with 
 	style:background-color={data.bgColor}
 >
 	<d-header
-		style:background-image={data.header.image ? `url(${data.header.image})` : 'none'}
+		style:background-image={data.header.image
+			? `url(${googleImageUrl(data.header.image)})`
+			: 'none'}
 		style:background-color={data.header.color}
 		style:background-size={data.header.imageFit}
 		style:--header-text-color={data.header.textColor}

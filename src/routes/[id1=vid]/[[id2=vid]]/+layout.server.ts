@@ -25,6 +25,7 @@ import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-wi
 import { detectSheetType, type SheetType } from '$lib/google-document-util/detect-sheet-type'
 import { getLocale } from '$lib/paraglide/runtime.js'
 import { addBilingualData, splitBilingualLabel } from '$lib/locale-content'
+import { googleImageUrl } from '$lib/google-document-util/google-image-url'
 
 type DocumentResult = Result<GoogleSheet | GoogleFormDocument, GoogleDocumentError>
 
@@ -242,7 +243,7 @@ export const load = async ({ cookies, locals, params, url }) => {
 					add(f.description)
 				} else if (f.type === 'IMAGE') {
 					add(f.title, '# ')
-					add(`![](${f.imgUrl?.replace(/=w\d+$/i, '')})`)
+					add(`![](${googleImageUrl(f.imgUrl?.replace(/=w\d+$/i, ''))})`)
 				}
 				return s
 			})
@@ -431,7 +432,7 @@ export const load = async ({ cookies, locals, params, url }) => {
 		accentColor,
 		accentText,
 		bgColor,
-		ogImage,
+		ogImage: googleImageUrl(ogImage, url.origin),
 		sheetType,
 		mergeKeys: preset.mergeKeys,
 	}

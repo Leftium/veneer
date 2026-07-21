@@ -1,6 +1,7 @@
 import { Err, Ok } from 'wellcrafted/result'
 import type { QuestionType, Question } from '$lib'
 import { gg } from '@leftium/gg'
+import { extractGoogleFormsImageUrls } from './google-image-url'
 
 enum GoogleFormsFieldTypeEnum {
 	TEXT = 0,
@@ -179,10 +180,9 @@ export function parseGoogleForm(html: string) {
 	const formActionMatch = html.match(/<form[^>]*action="([^"]*)"/)
 	form.formAction = formActionMatch?.[1] || ''
 
-	// Extract form content images (from <img> tags with googleusercontent URLs containing /formsz/)
-	const imgMatches =
-		html.match(/<img[^>]*src="(https:\/\/lh[^"]*googleusercontent\.com\/formsz\/[^"]*)"/g) || []
-	const imgUrls = imgMatches.map((m) => m.match(/src="([^"]*)"/)?.[1]).filter(Boolean)
+	// Extract form content images. Google currently uses both the older
+	// googleusercontent.com/formsz path and docs.google.com/forms-images-rt.
+	const imgUrls = extractGoogleFormsImageUrls(html)
 
 	// Assign image URLs to questions that have an imageId.
 	// Try matching by mediaWidth first (comparing against the =w{N} suffix in the URL),

@@ -7,6 +7,7 @@ import { paraglideMiddleware } from '$lib/paraglide/server'
 import { VENEER_ID_REGEX } from '$lib/google-document-util/url-id'
 import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-with-id'
 import { PRESETS, resolvePresetName } from '$lib/presets'
+import { googleImageUrl } from '$lib/google-document-util/google-image-url'
 
 /** Tab names that are valid as the first (and only meaningful) path segment. */
 const TAB_NAMES = new Set(['info', 'form', 'list', 'table', 'raw', 'dev'])
@@ -130,7 +131,7 @@ async function preloadVeneerRoute(event: Parameters<Handle>[0]['event']): Promis
 						? ogImageParam
 						: markedOgImage || firstFormImage || headerImage || null
 
-	event.locals.ogMeta = { title, image: ogImage, url: url.href }
+	event.locals.ogMeta = { title, image: googleImageUrl(ogImage, url.origin), url: url.href }
 }
 
 const handleParaglide: Handle = ({ event, resolve }) =>

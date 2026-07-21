@@ -17,6 +17,7 @@
 		darkenHex,
 	} from '$lib/presets'
 	import FooterSection from '$lib/components/FooterSection.svelte'
+	import { googleImageUrl } from '$lib/google-document-util/google-image-url'
 
 	// Convert any CSS color to #rrggbb hex for <input type="color">
 	function toHex(color: string): string {
@@ -238,11 +239,11 @@
 			return headerImageCustom ? `url(${headerImageCustom})` : 'none'
 		if (headerImageMode === 'form') {
 			// Explicit 'from form': use form image if available, else none
-			return formMeta?.headerImageUrl ? `url(${formMeta.headerImageUrl})` : 'none'
+			return formMeta?.headerImageUrl ? `url(${googleImageUrl(formMeta.headerImageUrl)})` : 'none'
 		}
 		// '(not set)': preset image wins; fall back to form image; then none
 		if (selectedPreset.headerImage) return `url(${selectedPreset.headerImage})`
-		if (formMeta?.headerImageUrl) return `url(${formMeta.headerImageUrl})`
+		if (formMeta?.headerImageUrl) return `url(${googleImageUrl(formMeta.headerImageUrl)})`
 		return 'none'
 	})
 	let previewTitle = $derived(formMeta?.title || '')

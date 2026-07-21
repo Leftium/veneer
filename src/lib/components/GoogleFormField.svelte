@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { BilingualQuestion } from '$lib/locale-content'
 	import { localeText } from '$lib/locale-content'
+	import { googleImageUrl } from '$lib/google-document-util/google-image-url'
 	import { getLocale } from '$lib/paraglide/runtime.js'
 	import { SvelteSet } from 'svelte/reactivity'
 	import MarkdownIt from 'markdown-it'
@@ -81,15 +82,9 @@
 		return title?.trim()?.toLowerCase().replace(/\s+/g, '_')
 	}
 
-	// Server-side image proxy (disabled -- app should work without SSR/server)
-	// function proxyImgUrl(url?: string) {
-	// 	if (!url) return ''
-	// 	return `/api/image-proxy?url=${encodeURIComponent(url)}`
-	// }
-
 	function imgSrc(url?: string) {
 		if (!url) return ''
-		return url.replace(/=w\d+(\?|$)/i, '$1')
+		return googleImageUrl(url.replace(/=w\d+(\?|$)/i, '$1'))
 	}
 
 	function handleChange(this: HTMLInputElement) {
