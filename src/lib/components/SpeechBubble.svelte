@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { getBubbleAlignment, type PlacedUnit } from '$lib/dance-party'
-	import type { DancerRow } from '$lib/util'
+	import { getBubbleAlignment, type PlacedUnit } from '#lib/dance-party.js'
+	import type { DancerRow } from '#lib/util.js'
 
 	interface Props {
 		unit: PlacedUnit

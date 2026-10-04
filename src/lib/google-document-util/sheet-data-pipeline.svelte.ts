@@ -2,7 +2,7 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import isBetween from 'dayjs/plugin/isBetween'
 import utc from 'dayjs/plugin/utc'
-import type { ResultGoogleSheet } from '$lib/google-document-util/types'
+import type { ResultGoogleSheet } from '#lib/google-document-util/types.js'
 import { isErr } from 'wellcrafted/result'
 import { gg } from '@leftium/gg'
 
@@ -190,9 +190,9 @@ import {
 	REGEX_DANCE_GROUP,
 	REGEX_DANCE_LEADER,
 	REGEX_DANCE_FOLLOW,
-} from '$lib/dance-constants'
+} from '#lib/dance-constants.js'
 
-import { parse as parseGroupMembers } from '$lib/group-registration/serialization'
+import { parse as parseGroupMembers } from '#lib/group-registration/serialization.js'
 
 /**
  * Factory that returns a pipeline transform to merge rows with duplicate key values.
@@ -439,7 +439,7 @@ import {
 	REGEX_PLAYLIST_ALBUM,
 	REGEX_PLAYLIST_REMIX,
 	REGEX_PLAYLIST_PLAYTIME,
-} from '$lib/playlist-constants'
+} from '#lib/playlist-constants.js'
 
 /**
  * Parse a duration string like "3:00" or "1:23:45" into total seconds.

@@ -1,23 +1,23 @@
 <script lang="ts">
-	import { browser, dev } from '$app/environment'
+	import { browser, dev } from '$app/env'
 	import { resolve } from '$app/paths'
-	import type { Pathname } from '$app/types'
+	import type { Path } from '$app/types'
 	import { SvelteURLSearchParams } from 'svelte/reactivity'
 	import * as linkify from 'linkifyjs'
 	import {
 		DOCUMENT_URL_REGEX,
 		SHORTENER_PREFIXES,
 		URL_TEMPLATES,
-	} from '$lib/google-document-util/url-id'
+	} from '#lib/google-document-util/url-id.js'
 	import {
 		PRESETS,
 		LAUNCHER_PRESETS,
 		GOOGLE_FORM_ACCENT,
 		GOOGLE_FORM_BG,
 		darkenHex,
-	} from '$lib/presets'
-	import FooterSection from '$lib/components/FooterSection.svelte'
-	import { googleImageUrl } from '$lib/google-document-util/google-image-url'
+	} from '#lib/presets.js'
+	import FooterSection from '#lib/components/FooterSection.svelte'
+	import { googleImageUrl } from '#lib/google-document-util/google-image-url.js'
 
 	// Convert any CSS color to #rrggbb hex for <input type="color">
 	function toHex(color: string): string {
@@ -314,8 +314,8 @@
 						<span class="veneer-url">{window.location.origin + veneerPath}</span>
 					</div>
 					<p class="preview-actions-prose">
-						<a href={resolve(veneerPath as Pathname)} target="_blank">Open</a> this veneer in a new
-						tab, or
+						<a href={resolve(veneerPath as Path)} target="_blank">Open</a> this veneer in a new tab,
+						or
 						<button
 							class:copied={copiedUrl && copiedUrl === window.location.origin + veneerPath}
 							onclick={async () => {

@@ -1,4 +1,4 @@
-import type { adjustGoogleFormData } from '$lib/google-document-util/google-form'
+import type { adjustGoogleFormData } from '#lib/google-document-util/google-form.js'
 import type { Result } from 'wellcrafted/result'
 
 export type GoogleDocumentError = {

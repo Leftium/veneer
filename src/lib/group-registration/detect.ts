@@ -9,13 +9,13 @@
  * See specs/group-registration.md § Pattern Detection.
  */
 
-import type { Question } from '$lib'
+import type { Question } from '#lib'
 import {
 	REGEX_DANCE_NAME,
 	REGEX_DANCE_LEADER,
 	REGEX_DANCE_FOLLOW,
 	REGEX_DANCE_GROUP,
-} from '$lib/dance-constants'
+} from '#lib/dance-constants.js'
 
 export interface GroupRegistrationMatch {
 	/** Index of the first matched field (name field) in the fields array. */

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { GoogleFormDocument } from '$lib/google-document-util/types'
-	import { m } from '$lib/paraglide/messages'
+	import type { GoogleFormDocument } from '#lib/google-document-util/types.js'
+	import { m } from '#lib/paraglide/messages.js'
 	import { SvelteSet } from 'svelte/reactivity'
 
 	import GoogleFormField from './GoogleFormField.svelte'
@@ -8,8 +8,8 @@
 	import {
 		detectGroupRegistration,
 		type GroupRegistrationMatch,
-	} from '$lib/group-registration/detect'
-	import type { Question } from '$lib'
+	} from '#lib/group-registration/detect.js'
+	import type { Question } from '#lib'
 
 	interface Props {
 		googleForm: GoogleFormDocument
@@ -22,8 +22,7 @@
 	// Build a render plan: sequence of items to render (individual fields or group widgets).
 	// Group registration triples are collapsed into a single { type: 'group', match } entry.
 	type RenderItem =
-		| { kind: 'field'; field: Question }
-		| { kind: 'group'; match: GroupRegistrationMatch }
+		{ kind: 'field'; field: Question } | { kind: 'group'; match: GroupRegistrationMatch }
 
 	const renderPlan: RenderItem[] = $derived.by(() => {
 		const fields = googleForm.fields || []

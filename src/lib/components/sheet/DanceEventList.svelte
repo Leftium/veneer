@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte'
-	import { assignDancerImages, getDancersFromSheetData } from '$lib/util'
-	import StickyHeaderGrid from '$lib/components/StickyHeaderSummaryDetailsGrid.svelte'
-	import DancerIcon from '$lib/components/DancerIcon.svelte'
-	import DanceParty from '$lib/components/DanceParty.svelte'
-	import { m } from '$lib/paraglide/messages.js'
+	import { assignDancerImages, getDancersFromSheetData } from '#lib/util.js'
+	import StickyHeaderGrid from '#lib/components/StickyHeaderSummaryDetailsGrid.svelte'
+	import DancerIcon from '#lib/components/DancerIcon.svelte'
+	import DanceParty from '#lib/components/DanceParty.svelte'
+	import { m } from '#lib/paraglide/messages.js'
 
 	interface Props {
 		data: any
@@ -71,7 +71,7 @@
 </div>
 
 <style lang="scss">
-	@use '$lib/styles/sheet-base' as sheet;
+	@use '../../styles/sheet-base' as sheet;
 	@use 'open-props-scss' as *;
 
 	@include sheet.base;

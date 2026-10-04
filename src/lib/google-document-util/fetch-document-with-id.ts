@@ -1,4 +1,4 @@
-import { GCP_API_KEY } from '$env/static/private'
+import { GCP_API_KEY } from '$app/env/private'
 import { Err, isErr, isOk, Ok, type Result } from 'wellcrafted/result'
 import { adjustGoogleFormData, parseGoogleForm } from './google-form'
 import { adjustGoogleSheetData } from './google-sheets'

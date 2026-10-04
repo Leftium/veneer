@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
-import { REGEX_DANCE_LEADER, REGEX_DANCE_FOLLOW } from '$lib/dance-constants'
+import { REGEX_DANCE_LEADER, REGEX_DANCE_FOLLOW } from '#lib/dance-constants.js'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)

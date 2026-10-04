@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { dev } from '$app/environment'
+	import { dev } from '$app/env'
 	import { resolve } from '$app/paths'
-	import { DOMAIN_PRESETS, PRESETS } from '$lib/presets'
-	import FooterSection from '$lib/components/FooterSection.svelte'
+	import { DOMAIN_PRESETS, PRESETS } from '#lib/presets.js'
+	import FooterSection from '#lib/components/FooterSection.svelte'
 
 	// Preset directory data
 	const presetDirectory = [
@@ -48,7 +48,12 @@
 	<!-- Demo -->
 	<section>
 		<h2>Demo</h2>
-		<div><a href={resolve('/g.chwbD7sLmAoLe65Z8')} target="_blank">Demo form</a> (no preset)</div>
+		<div>
+			<a
+				href={resolve('/[id1=vid]/[[id2=vid]]/[[tid=tab]]', { id1: 'g.chwbD7sLmAoLe65Z8' })}
+				target="_blank">Demo form</a
+			> (no preset)
+		</div>
 	</section>
 
 	<!-- Dev Helpers -->

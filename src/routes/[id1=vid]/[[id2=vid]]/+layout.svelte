@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { GoogleFormDocument } from '$lib/google-document-util/types'
+	import type { GoogleFormDocument } from '#lib/google-document-util/types.js'
 
 	import type { SwiperContainer } from 'swiper/element/bundle'
 	import { register } from 'swiper/element/bundle'
@@ -8,7 +8,7 @@
 
 	import { pipe } from 'fp-ts/lib/function.js'
 
-	import { stringify } from '$lib/util.js'
+	import { stringify } from '#lib/util.js'
 
 	import {
 		addIndex,
@@ -24,12 +24,12 @@
 		renderRelativeTimes,
 		stripEmptyColumns,
 		stripEmptyRows,
-	} from '$lib/google-document-util/sheet-data-pipeline.svelte.js'
+	} from '#lib/google-document-util/sheet-data-pipeline.svelte.js'
 	import { onDestroy, onMount, tick, untrack } from 'svelte'
 	import { afterNavigate, goto } from '$app/navigation'
 	import { resolve } from '$app/paths'
-	import type { Pathname } from '$app/types'
-	import { linkifyRelative, makeTagFunctionMd } from '$lib/tag-functions/markdown.js'
+	import type { Path } from '$app/types'
+	import { linkifyRelative, makeTagFunctionMd } from '#lib/tag-functions/markdown.js'
 
 	import markdownitDeflist from 'markdown-it-deflist'
 	import MarkdownItGitHubAlerts from 'markdown-it-github-alerts'
@@ -40,22 +40,22 @@
 	import 'markdown-it-github-alerts/styles/github-base.css'
 
 	import { page } from '$app/state'
-	import { DOCUMENT_URL_REGEX, urlFromVeneerId } from '$lib/google-document-util/url-id.js'
-	import GoogleForm from '$lib/components/GoogleForm.svelte'
-	import Sheet from '$lib/components/sheet/Sheet.svelte'
+	import { DOCUMENT_URL_REGEX, urlFromVeneerId } from '#lib/google-document-util/url-id.js'
+	import GoogleForm from '#lib/components/GoogleForm.svelte'
+	import Sheet from '#lib/components/sheet/Sheet.svelte'
 	import Confetti from 'svelte-confetti'
 	import { confetti } from '@neoconfetti/svelte'
-	import NotificationBox from '$lib/components/NotificationBox.svelte'
+	import NotificationBox from '#lib/components/NotificationBox.svelte'
 	import { slide } from 'svelte/transition'
 	import { isOk } from 'wellcrafted/result'
-	import FooterSection from '$lib/components/FooterSection.svelte'
-	import DanceParty from '$lib/components/DanceParty.svelte'
-	import { getDancersFromSheetData } from '$lib/util.js'
-	import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte'
-	import { segmentBilingualContent, localeText, type BilingualText } from '$lib/locale-content'
-	import { googleImageUrl } from '$lib/google-document-util/google-image-url'
-	import { getLocale } from '$lib/paraglide/runtime.js'
-	import { m } from '$lib/paraglide/messages.js'
+	import FooterSection from '#lib/components/FooterSection.svelte'
+	import DanceParty from '#lib/components/DanceParty.svelte'
+	import { getDancersFromSheetData } from '#lib/util.js'
+	import LanguageSwitcher from '#lib/components/LanguageSwitcher.svelte'
+	import { segmentBilingualContent, localeText, type BilingualText } from '#lib/locale-content.js'
+	import { googleImageUrl } from '#lib/google-document-util/google-image-url.js'
+	import { getLocale } from '#lib/paraglide/runtime.js'
+	import { m } from '#lib/paraglide/messages.js'
 
 	const md = makeTagFunctionMd({ html: true, linkify: true, typographer: true, breaks: true }, [
 		[markdownitDeflist],
@@ -146,10 +146,9 @@
 		// after sliding, update URL *only* on user-driven calls
 		if (updateHistory) {
 			const tabPath = tid === data.defaultTab ? docPath || '/' : `${docPath}/${tid}`
-			goto(resolve(`${tabPath}${search}` as Pathname), {
-				replaceState: false,
-				noScroll: true,
-				keepFocus: true,
+			goto(resolve(`${tabPath}${search}` as Path), {
+				replace: false,
+				reset: false,
 			})
 		}
 	}
@@ -440,7 +439,7 @@ ${!isDanceEvent ? '' : `춤으로 전하는 힐링 대화 (Healing Message with 
 							href={resolve(
 								(tid === data.defaultTab
 									? `${docPath || '/'}${search}`
-									: `${docPath}/${tid}${search}`) as Pathname,
+									: `${docPath}/${tid}${search}`) as Path,
 							)}
 						>
 							{icon || '▦'}

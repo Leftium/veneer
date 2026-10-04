@@ -1,12 +1,12 @@
 <script lang="ts">
-	import type { DancerRow } from '$lib/util'
+	import type { DancerRow } from '#lib/util.js'
 	import {
 		computeDanceFloor,
 		getSongNumber,
 		DEFAULT_CONFIG,
 		type DancePartyConfig,
 		type PlacedUnit,
-	} from '$lib/dance-party'
+	} from '#lib/dance-party.js'
 	import DanceFloor, { type ActiveUnitInfo } from './DanceFloor.svelte'
 	import SpeechBubble from './SpeechBubble.svelte'
 	import DevTuningPanel from './DevTuningPanel.svelte'

@@ -1,13 +1,13 @@
-import { dev } from '$app/environment'
-import type { Handle } from '@sveltejs/kit'
+import { dev } from '$app/env'
+import type { Handle } from '@sveltejs/kit/hooks'
 import { sequence } from '@sveltejs/kit/hooks'
 import { createHandler } from 'web-sentinel/hooks'
 import { isOk } from 'wellcrafted/result'
-import { paraglideMiddleware } from '$lib/paraglide/server'
-import { VENEER_ID_REGEX } from '$lib/google-document-util/url-id'
-import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-with-id'
-import { PRESETS, resolvePresetName } from '$lib/presets'
-import { googleImageUrl } from '$lib/google-document-util/google-image-url'
+import { paraglideMiddleware } from '#lib/paraglide/server.js'
+import { VENEER_ID_REGEX } from '#lib/google-document-util/url-id.js'
+import { fetchWithDocumentId } from '#lib/google-document-util/fetch-document-with-id.js'
+import { PRESETS, resolvePresetName } from '#lib/presets.js'
+import { googleImageUrl } from '#lib/google-document-util/google-image-url.js'
 
 /** Tab names that are valid as the first (and only meaningful) path segment. */
 const TAB_NAMES = new Set(['info', 'form', 'list', 'table', 'raw', 'dev'])
@@ -136,12 +136,12 @@ async function preloadVeneerRoute(event: Parameters<Handle>[0]['event']): Promis
 
 const handleParaglide: Handle = ({ event, resolve }) =>
 	paraglideMiddleware(event.request, async ({ request, locale }) => {
-		event.request = request
+		const localizedEvent = { ...event, request }
 
 		// Pre-fetch documents & compute OG metadata before resolve()
-		await preloadVeneerRoute(event)
+		await preloadVeneerRoute(localizedEvent)
 
-		return resolve(event, {
+		return resolve(localizedEvent, {
 			transformPageChunk: ({ html }) => {
 				let result = html.replace('%paraglide.lang%', locale)
 

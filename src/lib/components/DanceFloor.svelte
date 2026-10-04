@@ -7,8 +7,8 @@
 		type PlacedUnit,
 		type DockConfig,
 		DEFAULT_DOCK,
-	} from '$lib/dance-party'
-	import { scrubAction } from '$lib/scrubAction'
+	} from '#lib/dance-party.js'
+	import { scrubAction } from '#lib/scrubAction.js'
 	import DancerIcon from './DancerIcon.svelte'
 
 	/** Info about the currently active (nearest) unit during scrub. */

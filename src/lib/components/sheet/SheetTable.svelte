@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte'
 	import type { Snippet } from 'svelte'
-	import { stringify } from '$lib/util'
-	import StickyHeaderGrid from '$lib/components/StickyHeaderSummaryDetailsGrid.svelte'
+	import { stringify } from '#lib/util.js'
+	import StickyHeaderGrid from '#lib/components/StickyHeaderSummaryDetailsGrid.svelte'
 
 	interface Props {
 		data: any
@@ -254,7 +254,7 @@
 </div>
 
 <style lang="scss">
-	@use '$lib/styles/sheet-base' as sheet;
+	@use '../../styles/sheet-base' as sheet;
 	@use 'open-props-scss' as *;
 
 	@include sheet.base;

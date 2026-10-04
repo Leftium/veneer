@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { BilingualQuestion } from '$lib/locale-content'
-	import { localeText } from '$lib/locale-content'
-	import { googleImageUrl } from '$lib/google-document-util/google-image-url'
-	import { getLocale } from '$lib/paraglide/runtime.js'
+	import type { BilingualQuestion } from '#lib/locale-content.js'
+	import { localeText } from '#lib/locale-content.js'
+	import { googleImageUrl } from '#lib/google-document-util/google-image-url.js'
+	import { getLocale } from '#lib/paraglide/runtime.js'
 	import { SvelteSet } from 'svelte/reactivity'
 	import MarkdownIt from 'markdown-it'
 	import easyTables from 'markdown-it-easy-tables'
@@ -36,7 +36,7 @@
 
 	const locale = $derived(getLocale())
 
-	import type { BilingualText } from '$lib/locale-content'
+	import type { BilingualText } from '#lib/locale-content.js'
 
 	// Per-item bilingual toggles: title and each option have independent toggles
 	let titleToggled = $state(false)

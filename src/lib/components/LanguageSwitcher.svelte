@@ -1,5 +1,5 @@
 <script>
-	import { getLocale, setLocale } from '$lib/paraglide/runtime.js'
+	import { getLocale, setLocale } from '#lib/paraglide/runtime.js'
 
 	const displayNames = { en: 'en', ko: '한' }
 	const locales = /** @type {const} */ (['en', 'ko'])

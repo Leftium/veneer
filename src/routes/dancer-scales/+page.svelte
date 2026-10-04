@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { DANCER_SCALES, BUBBLE_TOPS } from '$lib/dance-party'
+	import { DANCER_SCALES, BUBBLE_TOPS } from '#lib/dance-party.js'
 
 	const STORAGE_KEY = 'dancer-scale-tuning'
 	const REF_HEIGHT = 150
