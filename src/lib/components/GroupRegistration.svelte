@@ -1,21 +1,21 @@
 <script lang="ts">
-	import type { GroupRegistrationMatch } from '$lib/group-registration/detect'
+	import type { GroupRegistrationMatch } from '#lib/group-registration/detect.js'
 	import {
 		serialize,
 		parse,
 		type GroupMember,
 		type Role,
-	} from '$lib/group-registration/serialization'
-	import { REGEX_DANCE_LEADER, REGEX_DANCE_FOLLOW } from '$lib/dance-constants'
-	import type { BilingualQuestion } from '$lib/locale-content'
-	import { localeText } from '$lib/locale-content'
-	import { getLocale } from '$lib/paraglide/runtime.js'
-	import * as m from '$lib/paraglide/messages.js'
+	} from '#lib/group-registration/serialization.js'
+	import { REGEX_DANCE_LEADER, REGEX_DANCE_FOLLOW } from '#lib/dance-constants.js'
+	import type { BilingualQuestion } from '#lib/locale-content.js'
+	import { localeText } from '#lib/locale-content.js'
+	import { getLocale } from '#lib/paraglide/runtime.js'
+	import * as m from '#lib/paraglide/messages.js'
 	import { SvelteSet } from 'svelte/reactivity'
 	import { slide } from 'svelte/transition'
 	import { flip } from 'svelte/animate'
 	import store from 'store'
-	import { browser } from '$app/environment'
+	import { browser } from '$app/env'
 
 	interface Props {
 		match: GroupRegistrationMatch
@@ -34,7 +34,7 @@
 	const bNameField = $derived(nameField as BilingualQuestion)
 	const bRoleField = $derived(roleField as BilingualQuestion | undefined)
 
-	import type { BilingualText } from '$lib/locale-content'
+	import type { BilingualText } from '#lib/locale-content.js'
 
 	// Per-item bilingual toggles
 	let nameTitleToggled = $state(false)

@@ -5,7 +5,7 @@ import type {
 	GoogleSheet,
 	GoogleFormDocument,
 	GoogleDocumentError,
-} from '$lib/google-document-util/types'
+} from '#lib/google-document-util/types.js'
 
 type DocumentResult = Result<GoogleSheet | GoogleFormDocument, GoogleDocumentError>
 

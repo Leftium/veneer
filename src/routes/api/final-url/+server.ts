@@ -1,5 +1,4 @@
 import { gg } from '@leftium/gg'
-import { json } from '@sveltejs/kit'
 import { finalUrl } from './finalurl.js'
 
 export const GET = async ({ url }) => {
@@ -9,5 +8,5 @@ export const GET = async ({ url }) => {
 
 	gg(`api/final-url: ${urlShort} -> ${results.urlFinal}`)
 
-	return json(results)
+	return Response.json(results)
 }

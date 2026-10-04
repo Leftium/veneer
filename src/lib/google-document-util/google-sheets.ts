@@ -1,5 +1,5 @@
 import { Err, Ok } from 'wellcrafted/result'
-import { excelDateToUnix } from '$lib/util'
+import { excelDateToUnix } from '#lib/util.js'
 import type { GoogleSheet } from './types'
 import { gg } from '@leftium/gg'
 

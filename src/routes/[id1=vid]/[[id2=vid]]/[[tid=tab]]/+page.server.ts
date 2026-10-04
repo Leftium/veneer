@@ -1,6 +1,6 @@
-import { dev } from '$app/environment'
+import { dev } from '$app/env'
 import { fail, redirect } from '@sveltejs/kit'
-import { PRESETS, resolvePresetName } from '$lib/presets'
+import { PRESETS, resolvePresetName } from '#lib/presets.js'
 
 export const actions = {
 	default: async ({ cookies, params, request, url }) => {

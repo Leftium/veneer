@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount, onDestroy, untrack } from 'svelte'
-	import type { DancePartyConfig } from '$lib/dance-party'
-	import { DEFAULT_WEIGHTS, DEFAULT_LAYOUT, DEFAULT_DOCK } from '$lib/dance-party'
-	import type { DancerRow } from '$lib/util'
+	import type { DancePartyConfig } from '#lib/dance-party.js'
+	import { DEFAULT_WEIGHTS, DEFAULT_LAYOUT, DEFAULT_DOCK } from '#lib/dance-party.js'
+	import type { DancerRow } from '#lib/util.js'
 
 	interface Props {
 		config: DancePartyConfig

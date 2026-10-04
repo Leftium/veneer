@@ -1,9 +1,9 @@
 // src/hooks.ts — Universal reroute hook
 // See specs/page-options.md for full architecture docs.
 
-import { dev } from '$app/environment'
-import { deLocalizeUrl } from '$lib/paraglide/runtime'
-import { PRESETS, resolvePresetName } from '$lib/presets'
+import { dev } from '$app/env'
+import { deLocalizeUrl } from '#lib/paraglide/runtime.js'
+import { PRESETS, resolvePresetName } from '#lib/presets.js'
 
 const TAB_NAMES = new Set(['info', 'form', 'list', 'table', 'raw', 'dev'])
 

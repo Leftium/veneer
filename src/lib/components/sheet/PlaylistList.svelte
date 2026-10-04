@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte'
-	import StickyHeaderGrid from '$lib/components/StickyHeaderSummaryDetailsGrid.svelte'
+	import StickyHeaderGrid from '#lib/components/StickyHeaderSummaryDetailsGrid.svelte'
 
 	/** Format "8:47 PM" -> "8:47p", "10:34 AM" -> "10:34a" */
 	function formatPlayTime(value: string): string {
@@ -73,7 +73,7 @@
 </div>
 
 <style lang="scss">
-	@use '$lib/styles/sheet-base' as sheet;
+	@use '../../styles/sheet-base' as sheet;
 	@use 'open-props-scss' as *;
 
 	@include sheet.base;

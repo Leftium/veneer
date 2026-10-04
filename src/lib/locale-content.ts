@@ -206,7 +206,7 @@ export function segmentBilingualContent(text: string): ContentSegment[] | null {
 // Batch transform for Question arrays
 // ---------------------------------------------------------------------------
 
-import type { Question } from '$lib'
+import type { Question } from '#lib'
 
 export interface BilingualQuestion extends Question {
 	/** Bilingual split of the title, if detected */

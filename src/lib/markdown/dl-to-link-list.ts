@@ -26,7 +26,7 @@
  * language is shown as a native tooltip (title attribute).
  */
 
-import { splitBilingualLabel, localeText } from '$lib/locale-content'
+import { splitBilingualLabel, localeText } from '#lib/locale-content.js'
 
 const ICON_STYLE = 'vertical-align: -0.125em; margin-left: -20px; margin-right: 4px;'
 

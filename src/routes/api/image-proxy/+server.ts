@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types'
-import { isGoogleFormsImageUrl } from '$lib/google-document-util/google-image-url'
+import { isGoogleFormsImageUrl } from '#lib/google-document-util/google-image-url.js'
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024
 const MAX_REDIRECTS = 3

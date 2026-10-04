@@ -1,5 +1,5 @@
 import { Err, Ok } from 'wellcrafted/result'
-import type { QuestionType, Question } from '$lib'
+import type { QuestionType, Question } from '#lib'
 import { gg } from '@leftium/gg'
 import { extractGoogleFormsImageUrls } from './google-image-url'
 

@@ -1,31 +1,31 @@
-import { dev } from '$app/environment'
+import { dev } from '$app/env'
 
 import { Err, isErr, isOk, Ok } from 'wellcrafted/result'
 
-import { m } from '$lib/paraglide/messages.js'
+import { m } from '#lib/paraglide/messages.js'
 import {
 	PRESETS,
 	resolvePresetName,
 	GOOGLE_FORM_ACCENT,
 	GOOGLE_FORM_BG,
 	darkenHex,
-} from '$lib/presets'
+} from '#lib/presets.js'
 
-import { scanSheetLinks } from '$lib/google-document-util/scan-sheet-links'
-import { stripHidden } from '$lib/google-document-util/google-sheets.js'
+import { scanSheetLinks } from '#lib/google-document-util/scan-sheet-links.js'
+import { stripHidden } from '#lib/google-document-util/google-sheets.js'
 import type {
 	GoogleSheet,
 	GoogleFormDocument,
 	GoogleDocumentError,
 	ResultGoogleForm,
 	ResultGoogleSheet,
-} from '$lib/google-document-util/types'
+} from '#lib/google-document-util/types.js'
 import type { Result } from 'wellcrafted/result'
-import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-with-id'
-import { detectSheetType, type SheetType } from '$lib/google-document-util/detect-sheet-type'
-import { getLocale } from '$lib/paraglide/runtime.js'
-import { addBilingualData, splitBilingualLabel } from '$lib/locale-content'
-import { googleImageUrl } from '$lib/google-document-util/google-image-url'
+import { fetchWithDocumentId } from '#lib/google-document-util/fetch-document-with-id.js'
+import { detectSheetType, type SheetType } from '#lib/google-document-util/detect-sheet-type.js'
+import { getLocale } from '#lib/paraglide/runtime.js'
+import { addBilingualData, splitBilingualLabel } from '#lib/locale-content.js'
+import { googleImageUrl } from '#lib/google-document-util/google-image-url.js'
 
 type DocumentResult = Result<GoogleSheet | GoogleFormDocument, GoogleDocumentError>
 

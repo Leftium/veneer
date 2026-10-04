@@ -2,8 +2,8 @@
 // Lightweight duplicate of client-side detection (~5 regex tests on column titles).
 // Full row transforms (ci, stats, grouping) remain client-side.
 
-import { REGEX_DANCE_NAME, REGEX_DANCE_ROLE } from '$lib/dance-constants'
-import { REGEX_PLAYLIST_TITLE, REGEX_PLAYLIST_ARTIST } from '$lib/playlist-constants'
+import { REGEX_DANCE_NAME, REGEX_DANCE_ROLE } from '#lib/dance-constants.js'
+import { REGEX_PLAYLIST_TITLE, REGEX_PLAYLIST_ARTIST } from '#lib/playlist-constants.js'
 
 export type SheetType = 'dance-event' | 'playlist' | null
 

@@ -1,14 +1,14 @@
-import { json, type RequestHandler } from '@sveltejs/kit'
+import type { RequestHandler } from '@sveltejs/kit'
 import { isOk } from 'wellcrafted/result'
-import { fetchWithDocumentId } from '$lib/google-document-util/fetch-document-with-id'
-import { scanSheetLinks } from '$lib/google-document-util/scan-sheet-links'
+import { fetchWithDocumentId } from '#lib/google-document-util/fetch-document-with-id.js'
+import { scanSheetLinks } from '#lib/google-document-util/scan-sheet-links.js'
 
 type AutoSheet = { veneerId: string; title: string }
 
 export const GET: RequestHandler = async ({ url }) => {
 	const id = url.searchParams.get('id')
 	if (!id) {
-		return json({ title: '', headerImageUrl: null, accentColor: null, bgColor: null })
+		return Response.json({ title: '', headerImageUrl: null, accentColor: null, bgColor: null })
 	}
 
 	const result = await fetchWithDocumentId(id)
@@ -25,7 +25,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		const autoSheets: AutoSheet[] = sheets.map(({ veneerId, title }) => ({ veneerId, title }))
 
-		return json({
+		return Response.json({
 			type: 'form' as const,
 			title: result.data.title,
 			headerImageUrl: result.data.headerImageUrl,
@@ -36,7 +36,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	}
 
 	if (isOk(result) && result.data.type === 'sheet') {
-		return json({
+		return Response.json({
 			type: 'sheet' as const,
 			title: result.data.title,
 			headerImageUrl: null,
@@ -47,7 +47,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	}
 
 	// Error — degrade gracefully
-	return json({
+	return Response.json({
 		type: null,
 		title: '',
 		headerImageUrl: null,
