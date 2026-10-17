@@ -30,6 +30,7 @@ export const DOMAIN_PRESETS: Record<string, string | null> = {
 
 	// Party site
 	'party.leftium.com': 'party',
+	'bbq.leftium.com': 'bbq',
 
 	// Veneer home — no preset, shows launcher
 	'veneer.leftium.com': null,
@@ -105,6 +106,17 @@ export const PRESETS: Record<string, Preset> = {
 		mergeKeys: ['name|닉네임'],
 	},
 
+
+	bbq: {
+		defaultFormId: 'f.1FAIpQLSfV6r_58PZXGNlseDcz4ixbcEwZUZ3cyifHeNYPCNdRLFiOHQ',
+		defaultSheetId: 's.1HKvaMmIaWm3N3PpDWxtpbqqPNnhWHLRfNMDS1OEquAg',
+		headerImage: null,
+		headerColor: '#0b4474',
+		headerHeight: '100px',
+		headerTextColor: 'white',
+		headerImageFit: 'cover',
+		mergeKeys: ['name|닉네임'],
+	},
 
 	party: {
 		defaultFormId: 'g.DQszzU7SKC7U96hq7',
