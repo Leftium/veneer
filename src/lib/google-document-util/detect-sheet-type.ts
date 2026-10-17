@@ -2,7 +2,7 @@
 // Lightweight duplicate of client-side detection (~5 regex tests on column titles).
 // Full row transforms (ci, stats, grouping) remain client-side.
 
-import { REGEX_DANCE_NAME, REGEX_DANCE_ROLE, findDanceRoleColumn } from '#lib/dance-constants.js'
+import { REGEX_DANCE_NAME, findDanceRoleColumn } from '#lib/dance-constants.js'
 import type { Preset } from '#lib/presets.js'
 import { REGEX_PLAYLIST_TITLE, REGEX_PLAYLIST_ARTIST } from '#lib/playlist-constants.js'
 
@@ -10,7 +10,10 @@ export type SheetType = 'dance-event' | 'playlist' | null
 
 const REGEX_NUMERIC = /^[0-9-.,/: ]*$/
 
-export function detectSheetType(rows: (string | (string | number)[])[][], dancerList?: Preset['dancerList']): SheetType {
+export function detectSheetType(
+	rows: (string | (string | number)[])[][],
+	dancerList?: Preset['dancerList'],
+): SheetType {
 	if (!rows.length) return null
 
 	// Find header row: the row with the most non-empty, non-numeric cells (text labels).

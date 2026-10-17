@@ -107,8 +107,6 @@ export const PRESETS: Record<string, Preset> = {
 		headerImageFit: 'cover',
 		mergeKeys: ['name|닉네임'],
 	},
-
-
 	bbq: {
 		defaultFormId: 'f.1FAIpQLSfV6r_58PZXGNlseDcz4ixbcEwZUZ3cyifHeNYPCNdRLFiOHQ',
 		defaultSheetId: 's.1HKvaMmIaWm3N3PpDWxtpbqqPNnhWHLRfNMDS1OEquAg',

@@ -19,7 +19,10 @@ export function findDanceRoleColumn(titles: string[], config?: Preset['dancerLis
 }
 
 /** Map configured value labels first, falling back to ordinary dance-role labels. */
-export function dancerRole(value: string, config?: Preset['dancerList']): 'lead' | 'follow' | 'both' | 'unknown' {
+export function dancerRole(
+	value: string,
+	config?: Preset['dancerList'],
+): 'lead' | 'follow' | 'both' | 'unknown' {
 	const normalized = value.trim()
 	const configuredLead = config?.roles.lead.some((v) => v === normalized) ?? false
 	const configuredFollow = config?.roles.follow.some((v) => v === normalized) ?? false
