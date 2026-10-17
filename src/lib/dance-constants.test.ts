@@ -30,4 +30,15 @@ describe('preset-specific dancer list roles', () => {
 		expect(dancerRole('Follower')).toBe('follow')
 		expect(dancerRole('Leader, Follower')).toBe('both')
 	})
+
+	it('uses explicit mappings before regex classification', () => {
+		const config = {
+			roleColumn: 'Role',
+			roles: { lead: ['Follower', 'Either'], follow: ['Leader', 'Either'] },
+		}
+		expect(dancerRole('Follower', config)).toBe('lead')
+		expect(dancerRole('Leader', config)).toBe('follow')
+		expect(dancerRole('Either', config)).toBe('both')
+		expect(dancerRole('리더', config)).toBe('lead')
+	})
 })

@@ -29,4 +29,3 @@ describe('domain presets', () => {
 		expect(resolvePresetName('unknown.leftium.com')).toBeNull()
 	})
 })
-

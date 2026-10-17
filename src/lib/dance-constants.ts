@@ -26,8 +26,11 @@ export function dancerRole(
 	const normalized = value.trim()
 	const configuredLead = config?.roles.lead.some((v) => v === normalized) ?? false
 	const configuredFollow = config?.roles.follow.some((v) => v === normalized) ?? false
-	const lead = configuredLead || REGEX_DANCE_LEADER.test(normalized)
-	const follow = configuredFollow || REGEX_DANCE_FOLLOW.test(normalized)
+	if (configuredLead && configuredFollow) return 'both'
+	if (configuredLead) return 'lead'
+	if (configuredFollow) return 'follow'
+	const lead = REGEX_DANCE_LEADER.test(normalized)
+	const follow = REGEX_DANCE_FOLLOW.test(normalized)
 	if (lead && follow) return 'both'
 	if (lead) return 'lead'
 	if (follow) return 'follow'
