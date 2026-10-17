@@ -351,7 +351,7 @@ export const load = async ({ cookies, locals, params, url }) => {
 		sheet = Ok(stripHidden(sheet.data, allCols, allRows))
 	}
 
-	const sheetType = isOk(sheet) ? detectSheetType(sheet.data.rows) : null
+	const sheetType = isOk(sheet) ? detectSheetType(sheet.data.rows, preset.dancerList) : null
 
 	// --- Compute visible tabs (unified: sheet type + info heuristic + preset/param overrides) ---
 	const infoLines = info.trimEnd().split('\n').length
@@ -435,5 +435,6 @@ export const load = async ({ cookies, locals, params, url }) => {
 		ogImage: googleImageUrl(ogImage, url.origin),
 		sheetType,
 		mergeKeys: preset.mergeKeys,
+		dancerList: preset.dancerList,
 	}
 }

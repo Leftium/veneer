@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
-import { REGEX_DANCE_LEADER, REGEX_DANCE_FOLLOW } from '#lib/dance-constants.js'
+import { dancerRole } from '#lib/dance-constants.js'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
@@ -147,18 +147,6 @@ export function assignDancerImages(formTitle: string, dancers: DancerRow[]): num
 }
 
 /**
- * Detect a dancer's role from the role column text.
- */
-function detectRole(roleText: string): DancerRow['role'] {
-	const isLead = REGEX_DANCE_LEADER.test(roleText)
-	const isFollow = REGEX_DANCE_FOLLOW.test(roleText)
-	if (isLead && isFollow) return 'both'
-	if (isLead) return 'lead'
-	if (isFollow) return 'follow'
-	return 'unknown'
-}
-
-/**
  * Derive DancerRow[] and firstSignupTs from processed sheet data.
  * Shared by Sheet.svelte (list tab) and the layout footer dance party.
  */
@@ -171,7 +159,7 @@ export function getDancersFromSheetData(
 
 	const dancers: DancerRow[] = rows.map((row: any, i: number) => ({
 		name: row[ci.name]?.render ?? '',
-		role: detectRole(row[ci.role]?.render ?? ''),
+		role: dancerRole(row[ci.role]?.value ?? row[ci.role]?.render ?? '', extra.dancerList),
 		index: i,
 		ts: row.find((cell: any) => cell?.ts != null)?.ts ?? null,
 		wish: row[ci.wish]?.render || undefined,

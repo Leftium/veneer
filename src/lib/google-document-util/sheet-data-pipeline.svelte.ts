@@ -183,16 +183,16 @@ export function renderRelativeTimes({ extra, columns, rows }: SheetDataPipe) {
 }
 
 import {
-	REGEX_DANCE_ROLE,
+	findDanceRoleColumn,
+	dancerRole,
 	REGEX_DANCE_NAME,
 	REGEX_DANCE_WISH,
 	REGEX_DANCE_PAID,
 	REGEX_DANCE_GROUP,
-	REGEX_DANCE_LEADER,
-	REGEX_DANCE_FOLLOW,
 } from '#lib/dance-constants.js'
 
 import { parse as parseGroupMembers } from '#lib/group-registration/serialization.js'
+import type { Preset } from '#lib/presets.js'
 
 /**
  * Factory that returns a pipeline transform to merge rows with duplicate key values.
@@ -297,41 +297,51 @@ export function mergeDuplicateRows(mergeKeys?: string[]) {
 	}
 }
 
-export function collectExtraDance({ extra, columns, rows }: SheetDataPipe) {
-	gg.time('⏱️ sheet-pipeline:collectExtraDance')
-	const ci = {
-		role: columns.findIndex((c) => REGEX_DANCE_ROLE.test(c.title)),
-		name: columns.findIndex((c) => REGEX_DANCE_NAME.test(c.title)),
-		paid: columns.findIndex((c) => REGEX_DANCE_PAID.test(c.title)),
-		wish: columns.findIndex((c) => REGEX_DANCE_WISH.test(c.title)),
-		group: columns.findIndex((c) => REGEX_DANCE_GROUP.test(c.title)),
-	}
+export function collectExtraDance(config?: Preset['dancerList']) {
+	return ({ extra, columns, rows }: SheetDataPipe) => {
+		gg.time('⏱️ sheet-pipeline:collectExtraDance')
+		const ci = {
+			role: findDanceRoleColumn(
+				columns.map((c) => c.title),
+				config,
+			),
+			name: columns.findIndex((c) => REGEX_DANCE_NAME.test(c.title)),
+			paid: columns.findIndex((c) => REGEX_DANCE_PAID.test(c.title)),
+			wish: columns.findIndex((c) => REGEX_DANCE_WISH.test(c.title)),
+			group: columns.findIndex((c) => REGEX_DANCE_GROUP.test(c.title)),
+		}
 
-	if (ci.name === -1 || ci.role === -1) {
+		if (ci.name === -1 || ci.role === -1) {
+			gg.timeEnd('⏱️ sheet-pipeline:collectExtraDance')
+			return { extra, columns, rows }
+		}
+
+		// Reverse rows so newest registrations appear first
+		rows = rows.reverse()
+
+		// Expand group members into additional rows
+		rows = expandGroupMembers(rows, ci)
+
+		const count = {
+			total: rows.length,
+			follows: rows.filter((row) =>
+				['follow', 'both'].includes(dancerRole(row[ci.role]?.value ?? '', config)),
+			).length,
+			leaders: rows.filter((row) =>
+				['lead', 'both'].includes(dancerRole(row[ci.role]?.value ?? '', config)),
+			).length,
+		}
+
+		extra = {
+			type: 'dance-event',
+			count,
+			ci,
+			dancerList: config,
+		}
+
 		gg.timeEnd('⏱️ sheet-pipeline:collectExtraDance')
 		return { extra, columns, rows }
 	}
-
-	// Reverse rows so newest registrations appear first
-	rows = rows.reverse()
-
-	// Expand group members into additional rows
-	rows = expandGroupMembers(rows, ci)
-
-	const count = {
-		total: rows.length,
-		follows: rows.filter((row) => REGEX_DANCE_FOLLOW.test(row[ci.role]?.value)).length,
-		leaders: rows.filter((row) => REGEX_DANCE_LEADER.test(row[ci.role]?.value)).length,
-	}
-
-	extra = {
-		type: 'dance-event',
-		count,
-		ci,
-	}
-
-	gg.timeEnd('⏱️ sheet-pipeline:collectExtraDance')
-	return { extra, columns, rows }
 }
 
 /**

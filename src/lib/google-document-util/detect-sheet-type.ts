@@ -2,14 +2,18 @@
 // Lightweight duplicate of client-side detection (~5 regex tests on column titles).
 // Full row transforms (ci, stats, grouping) remain client-side.
 
-import { REGEX_DANCE_NAME, REGEX_DANCE_ROLE } from '#lib/dance-constants.js'
+import { REGEX_DANCE_NAME, findDanceRoleColumn } from '#lib/dance-constants.js'
+import type { Preset } from '#lib/presets.js'
 import { REGEX_PLAYLIST_TITLE, REGEX_PLAYLIST_ARTIST } from '#lib/playlist-constants.js'
 
 export type SheetType = 'dance-event' | 'playlist' | null
 
 const REGEX_NUMERIC = /^[0-9-.,/: ]*$/
 
-export function detectSheetType(rows: (string | (string | number)[])[][]): SheetType {
+export function detectSheetType(
+	rows: (string | (string | number)[])[][],
+	dancerList?: Preset['dancerList'],
+): SheetType {
 	if (!rows.length) return null
 
 	// Find header row: the row with the most non-empty, non-numeric cells (text labels).
@@ -37,7 +41,7 @@ export function detectSheetType(rows: (string | (string | number)[])[][]): Sheet
 
 	// Dance-event: requires both name and role columns (takes precedence over playlist)
 	const hasName = titles.some((t) => REGEX_DANCE_NAME.test(t))
-	const hasRole = titles.some((t) => REGEX_DANCE_ROLE.test(t))
+	const hasRole = findDanceRoleColumn(titles, dancerList) !== -1
 	if (hasName && hasRole) return 'dance-event'
 
 	// Playlist: requires both title and artist columns

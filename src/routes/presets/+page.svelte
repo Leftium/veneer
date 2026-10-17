@@ -10,6 +10,7 @@
 		{ name: 'btango-class', domain: 'tangoclass.btango.com', preset: 'btango-class' },
 		{ name: 'btango-dj', domain: 'tangodj.btango.com', preset: 'btango-dj' },
 		{ name: 'vivimil', domain: 'vivimil.com', preset: 'vivimil' },
+		{ name: 'bbq', domain: 'bbq.leftium.com', preset: 'bbq' },
 	]
 
 	// All domains from DOMAIN_PRESETS for dev helpers

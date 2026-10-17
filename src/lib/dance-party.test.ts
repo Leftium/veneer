@@ -1364,7 +1364,7 @@ describe('edge cases', () => {
 		expect(placed).toHaveLength(5)
 	})
 
-	it('50+ dancers: all get placed', () => {
+	it('50+ dancers: all get placed when the unit cap is disabled', () => {
 		const dancers: DancerRow[] = Array.from({ length: 60 }, (_, i) => ({
 			name: `Dancer${i}`,
 			role: i % 3 === 0 ? 'lead' : i % 3 === 1 ? 'follow' : 'both',
@@ -1374,7 +1374,10 @@ describe('edge cases', () => {
 			paid: i % 5 === 0,
 		}))
 
-		const placed = computeDanceFloor(dancers, FORM, 1)
+		const placed = computeDanceFloor(dancers, FORM, 1, {
+			...DEFAULT_CONFIG,
+			layout: { ...DEFAULT_LAYOUT, maxUnits: 0 },
+		})
 
 		// Total members should equal input
 		const totalMembers = placed.reduce((sum, u) => sum + u.members.length, 0)
@@ -1385,6 +1388,15 @@ describe('edge cases', () => {
 			expect(p.x).toBeGreaterThanOrEqual(0)
 			expect(p.x).toBeLessThanOrEqual(1)
 		}
+	})
+
+	it('caps large crowds at the default number of visible units', () => {
+		const dancers = Array.from({ length: 60 }, (_, i) => makeDancer(`L${i}`, 'lead'))
+		const placed = computeDanceFloor(dancers, FORM, 1)
+		expect(placed).toHaveLength(DEFAULT_LAYOUT.maxUnits)
+		expect(new Set(placed.flatMap((unit) => unit.members.map((dancer) => dancer.index))).size).toBe(
+			DEFAULT_LAYOUT.maxUnits,
+		)
 	})
 
 	it('song clamping: getSongNumber handles edge values', () => {

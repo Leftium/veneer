@@ -105,7 +105,7 @@
 			renderRelativeTimes,
 			mergeDuplicateRows(data.mergeKeys),
 			addIndex,
-			collectExtraDance,
+			collectExtraDance(data.dancerList),
 			collectExtraPlaylist,
 		),
 	)
