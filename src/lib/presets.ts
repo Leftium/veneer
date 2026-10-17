@@ -52,6 +52,8 @@ export interface Preset {
 	 *  Rows with matching key values are merged (newest wins, oldest timestamp kept).
 	 *  If unset or empty, no merging is done. */
 	mergeKeys?: string[]
+	/** Optional mapping for categorizing a non-standard column as dancer roles. */
+	dancerList?: { roleColumn: string; roles: { lead: string[]; follow: string[] } }
 }
 
 export const PRESETS: Record<string, Preset> = {
@@ -116,6 +118,7 @@ export const PRESETS: Record<string, Preset> = {
 		headerTextColor: 'white',
 		headerImageFit: 'cover',
 		mergeKeys: ['name|닉네임'],
+		dancerList: { roleColumn: '성별', roles: { lead: ['남자'], follow: ['여자'] } },
 	},
 
 	party: {

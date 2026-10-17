@@ -18,6 +18,7 @@ describe('domain presets', () => {
 		['vivimil.com', 'vivimil'],
 		['xn--pg3bl5ba.com', 'vivimil'],
 		['party.leftium.com', 'party'],
+		['bbq.leftium.com', 'bbq'],
 	])('preserves %s as %s', (hostname, name) => {
 		expect(resolvePresetName(hostname)).toBe(name)
 		expect(PRESETS).toHaveProperty(name)
@@ -28,3 +29,4 @@ describe('domain presets', () => {
 		expect(resolvePresetName('unknown.leftium.com')).toBeNull()
 	})
 })
+
