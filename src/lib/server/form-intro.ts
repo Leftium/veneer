@@ -33,7 +33,9 @@ export function extractFormIntro(form: Pick<GoogleFormDocument, 'fields'>) {
 		markdown.push(block)
 		if (parts.length) text.push(parts.join('\n'))
 	}
-	const sections = markdown.join('\n').split(/^={3,}\s*(?<header>.*?)\s*={3,}$/m)
+	const sections = markdown
+		.join('\n')
+		.split(/^={3,}[^\S\r\n]*(?<header>[^=\s].*?)[^\S\r\n]*={3,}[^\S\r\n]*$/m)
 	const info = sections.shift() || 'EMPTY'
 	const footers = sections.reduce((result, footer, i) => {
 		if (i % 2 === 0) {
