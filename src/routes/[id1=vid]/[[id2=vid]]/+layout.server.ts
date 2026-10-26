@@ -1,3 +1,4 @@
+import { extractFormIntro } from '#lib/server/form-intro.js'
 import { dev } from '$app/env'
 
 import { Err, isErr, isOk, Ok } from 'wellcrafted/result'
@@ -223,44 +224,9 @@ export const load = async ({ cookies, locals, params, url }) => {
 	}
 
 	if (isOk(form)) {
-		// Set info to markdown of initial non-question fields.
-		let skippedFirstTitle = false
-		const infoAndFooters = form.data.fields
-			.slice(0, form.data.firstInput === -1 ? undefined : form.data.firstInput)
-			.map((f) => {
-				let s = ''
-				function add(t: string | null, prefix = '') {
-					if (t) {
-						s += `${prefix}${t}\n`
-					}
-				}
-				if (f.type === 'TITLE_AND_DESCRIPTION') {
-					if (!skippedFirstTitle) {
-						skippedFirstTitle = true
-					} else {
-						add(f.title, '# ')
-					}
-					add(f.description)
-				} else if (f.type === 'IMAGE') {
-					add(f.title, '# ')
-					add(`![](${googleImageUrl(f.imgUrl?.replace(/=w\d+$/i, ''))})`)
-				}
-				return s
-			})
-			.join('\n')
-			.split(/^={3,}\s*(?<header>.*?)\s*={3,}$/m)
-
-		footers = infoAndFooters
-		info = footers.shift() || 'EMPTY'
-
-		footers = footers.reduce((result, footer, i, footers) => {
-			if (i % 2 === 0) {
-				const header = footer ? `# ${footer}` : ''
-				const body = footers[i + 1] || ''
-				result.push(`${header}\n<div>${body}</div>`)
-			}
-			return result
-		}, [] as string[])
+		const intro = extractFormIntro(form.data)
+		info = intro.info
+		footers = intro.footers
 
 		// OG image: check for an IMAGE field whose title starts with "og:" (case-insensitive)
 		markedOgImage =

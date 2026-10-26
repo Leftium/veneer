@@ -102,7 +102,7 @@ export function parseGoogleForm(html: string) {
 
 	for (const field of arrayOfFields) {
 		if (field.length < 4) {
-			gg('Non-submittable field or field without answer', field.length, field)
+			gg('Skipping malformed Form field')
 			continue
 		}
 
@@ -250,7 +250,18 @@ export function adjustGoogleFormData(json: Form) {
 		id: '',
 	})
 
-	const INPUT_TYPES = ['TEXT', 'PARAGRAPH_TEXT', 'MULTIPLE_CHOICE', 'DROPDOWN', 'CHECKBOXES']
+	const INPUT_TYPES = [
+		'TEXT',
+		'PARAGRAPH_TEXT',
+		'MULTIPLE_CHOICE',
+		'DROPDOWN',
+		'CHECKBOXES',
+		'SCALE',
+		'GRID',
+		'DATE',
+		'TIME',
+		'FILE_UPLOAD',
+	]
 
 	let inputIndex = 1
 	newJson.fields.forEach((field, index) => {
