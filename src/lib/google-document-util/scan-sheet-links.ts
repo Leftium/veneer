@@ -33,6 +33,33 @@ export async function scanSheetLinks(
 	const all = options?.all ?? false
 	const sheets: DetectedSheet[] = []
 
+	const hrefs = extractSheetLinkCandidates(descriptionHtml, descriptionText)
+
+	let numLinksChecked = 0
+	for (const href of hrefs) {
+		gg(`Smart sheet ID scan #${++numLinksChecked}: ${href}`)
+		const googleDocumentId = await getGoogleDocumentId(href)
+		if (isOk(googleDocumentId) && googleDocumentId.data.documentId[0] === 's') {
+			const document = await fetchWithDocumentId(googleDocumentId.data.documentId)
+			if (isOk(document) && document.data.type === 'sheet') {
+				sheets.push({
+					veneerId: document.data.veneerId ?? googleDocumentId.data.documentId,
+					title: document.data.title,
+					result: document as Result<GoogleSheet, GoogleDocumentError>,
+				})
+				if (!all) break
+			}
+		}
+	}
+
+	return { sheets, numLinksChecked }
+}
+
+/** Shared discovery only; callers choose how much document data to fetch. */
+export function extractSheetLinkCandidates(
+	descriptionHtml: string | null,
+	descriptionText: string,
+) {
 	// Extract href URLs from HTML description (catches hyperlinks whose
 	// display text differs from the URL, e.g. <a href="...sheet...">신청확인</a>)
 	const htmlHrefs = [...(descriptionHtml ?? '').matchAll(/href="([^"]+)"/g)]
@@ -53,24 +80,5 @@ export async function scanSheetLinks(
 	}
 
 	// HTML hrefs first (higher signal), then reordered text hrefs as fallback
-	const hrefs = [...new Set([...htmlHrefs, ...textHrefs])]
-
-	let numLinksChecked = 0
-	for (const href of hrefs) {
-		gg(`Smart sheet ID scan #${++numLinksChecked}: ${href}`)
-		const googleDocumentId = await getGoogleDocumentId(href)
-		if (isOk(googleDocumentId) && googleDocumentId.data.documentId[0] === 's') {
-			const document = await fetchWithDocumentId(googleDocumentId.data.documentId)
-			if (isOk(document) && document.data.type === 'sheet') {
-				sheets.push({
-					veneerId: document.data.veneerId ?? googleDocumentId.data.documentId,
-					title: document.data.title,
-					result: document as Result<GoogleSheet, GoogleDocumentError>,
-				})
-				if (!all) break
-			}
-		}
-	}
-
-	return { sheets, numLinksChecked }
+	return [...new Set([...htmlHrefs, ...textHrefs])]
 }
