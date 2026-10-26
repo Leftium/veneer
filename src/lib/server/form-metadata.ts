@@ -46,6 +46,21 @@ function documentFromUrl(value: string) {
 	return { type, id, documentId: `${type === 'form' ? 'f' : 's'}.${id}` }
 }
 
+function isSheetLinkCandidate(value: string) {
+	try {
+		const url = new URL(value)
+		// Shorteners remain ambiguous until resolved. Other document types and
+		// unrelated hosts cannot produce a Sheet through the supported resolver.
+		return (
+			Object.hasOwn(SHORT_HOSTS, url.hostname) ||
+			(url.hostname === 'docs.google.com' && /^\/spreadsheets(?:\/|$)/.test(url.pathname)) ||
+			(url.hostname === 'sheets.googleapis.com' && /^\/v4\/spreadsheets(?:\/|$)/.test(url.pathname))
+		)
+	} catch {
+		return false
+	}
+}
+
 /** Request-local budgets and reuse only. No document data is persisted. */
 export async function getFormMetadata(input: string) {
 	const signal = AbortSignal.timeout(15_000)
@@ -125,7 +140,9 @@ export async function getFormMetadata(input: string) {
 	if (isErr(parsed) || typeof parsed.data.title !== 'string') throw new MetadataError('unavailable')
 	const form = adjustGoogleFormData(parsed.data)
 	const { description, infoText } = extractFormIntro(form)
-	const candidates = extractSheetLinkCandidates(form.descriptionHtml, infoText)
+	const candidates = extractSheetLinkCandidates(form.descriptionHtml, infoText).filter(
+		isSheetLinkCandidate,
+	)
 	const autoSheets: { veneerId: string; title: string }[] = []
 	const seenSheets = new Set<string>()
 	let autoSheetsStatus: 'complete' | 'partial' = candidates.length > 8 ? 'partial' : 'complete'

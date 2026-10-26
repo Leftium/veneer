@@ -247,6 +247,49 @@ describe('/api/form-meta', () => {
 		expect(upstream).toHaveBeenCalledTimes(20)
 	})
 
+	it.each([
+		'https://map.naver.com/p/entry/place/123456789',
+		'https://maps.google.com/?q=venue',
+		'mailto:organizer@example.test',
+		'https://docs.google.com/forms/d/e/other-form/viewform',
+		'https://docs.google.com/document/d/document-id/edit',
+		'https://docs.google.com/presentation/d/slides-id/edit',
+		'https://example.test/event',
+	])('keeps Sheet discovery complete for an unrelated link: %s', async (link) => {
+		upstream.mockResolvedValue({ status: 200, text: fixture(`Venue: ${link}`) })
+		expect(await (await metadata('f.public-form')).json()).toMatchObject({
+			status: 'ok',
+			autoSheets: [],
+			autoSheetsStatus: 'complete',
+		})
+		expect(upstream).toHaveBeenCalledTimes(1)
+	})
+
+	it('filters irrelevant links before applying the Sheet candidate budget', async () => {
+		const links = Array.from({ length: 10 }, (_, i) => `https://map.naver.com/p/entry/place/${i}`)
+		links.push('https://docs.google.com/spreadsheets/d/sheet-id/edit')
+		upstream
+			.mockResolvedValueOnce({ status: 200, text: fixture(links.join('\n')) })
+			.mockResolvedValue({ status: 200, text: '{"properties":{"title":"Confirmation"}}' })
+		expect(await (await metadata('f.public-form')).json()).toMatchObject({
+			autoSheets: [{ veneerId: 's.sheet-id', title: 'Confirmation' }],
+			autoSheetsStatus: 'complete',
+		})
+		expect(upstream).toHaveBeenCalledTimes(2)
+	})
+
+	it('keeps discovery partial for an unresolved supported shortener', async () => {
+		upstream
+			.mockResolvedValueOnce({ status: 200, text: fixture('https://bit.ly/unknown') })
+			.mockRejectedValue(new MetadataError('unavailable'))
+		expect(await (await metadata('f.public-form')).json()).toMatchObject({
+			status: 'ok',
+			autoSheets: [],
+			autoSheetsStatus: 'partial',
+		})
+		expect(upstream).toHaveBeenCalledTimes(2)
+	})
+
 	it('rejects cross-origin calls and missing input without fetching', async () => {
 		expect((await metadata('f.public-form', 'https://other.test')).status).toBe(403)
 		expect((await (await metadata(null)).json()).status).toBe('invalid_input')

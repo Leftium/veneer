@@ -98,7 +98,11 @@ fall back to an unchecked fetch on unsupported runtimes.
 
 Sheet suggestions reuse the existing link discovery and request only
 `properties(title)` from the Sheets API, using the server's configured
-`GCP_API_KEY`. No cells, rows, grids or attendee entries are fetched. A Sheet
+`GCP_API_KEY`. Only Google spreadsheet links and supported shorteners count
+toward the candidate limit. Unrelated links, including maps, email links and
+other Google document types, are ignored. Failed Sheet lookups, unresolved
+supported shorteners and exhausted budgets produce `autoSheetsStatus: "partial"`.
+No cells, rows, grids or attendee entries are fetched. A Sheet
 that cannot return public API metadata is unavailable; published-only Sheet IDs
 may therefore have no suggestion. The Form metadata remains available when
 Sheet discovery is partial.
