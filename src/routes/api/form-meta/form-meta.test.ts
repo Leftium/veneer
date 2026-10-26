@@ -83,6 +83,16 @@ describe('/api/form-meta', () => {
 		expect(upstream).toHaveBeenCalledTimes(1)
 	})
 
+	it('preserves bilingual source order and literal dividers in infoText', async () => {
+		const description = '한국어 안내\n====================\nEnglish information'
+		upstream.mockResolvedValue({ status: 200, text: fixture(description) })
+		const body = await (await metadata('f.public-form')).json()
+		expect(body.description).toBe(description)
+		expect(body.infoText).toBe(
+			`${description}\n\nDetails\nBring shoes.\nBring water.\n\nTravel\n=== Venue ===\nHall A`,
+		)
+	})
+
 	it.each([5, 7, 9, 10, 13])('stops introduction at input type %s', async (inputType) => {
 		upstream.mockResolvedValue({ status: 200, text: fixture('Intro', inputType) })
 		const body = await (await metadata('f.public-form')).json()
